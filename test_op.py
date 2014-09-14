@@ -7,4 +7,6 @@ x.name = 'test'
 
 x = [ 1, 2 , 4 , 5]
 
-tokenize(open('tokenize.py').read())
+test( 1, 2 )
+
+r = tokenize(open('tokenize.py').read())

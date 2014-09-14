@@ -53,6 +53,21 @@ class ParserCtx:
 			r = self.tree.pop()
 			l = self.tree.pop()
 			self.tree.append([v, l, r])
+	def addOp2(self, t):
+		v = self.tree.pop()
+		self.tree.append([t, v, None])
+	def addOp1(self, t):
+		self.tree.append([t, None])
+	def addList(self):
+		v = self.tree.pop()
+		if isinstance(v, list):
+			if v[0] == ',':
+				v[0] = 'list'
+			print(v)
+			self.tree.append(v)
+		else:
+			self.tree.append(['list', v])
+
 	def show(self):
 		#print(self.tree)
 		def f(v):
@@ -87,31 +102,18 @@ def factor(p):
 	if t in ['number', 'string', 'name']:
 		p.next()
 		p.add(token)
-		if p.token.type == '(':
-			p.next()
-			if p.token.type == ')':
-				p.add(None)
-				p.addOp('$')
-			else:
-				expr(p)
-				p.expect(')')
-				p.addOp('$')
-		elif p.token.type == '[':
-			p.next()
-			if p.token.type == ']':
-				p.add(None)
-				p.addOp('$')
-			else:
-				expr(p)
-				p.expect(']')
-				p.addOp('.')
 	elif t in ['+', '-']:
 		p.next()
 		p.addOp(token)
 	elif t == '[':
 		p.next()
-		expr(p)
-		p.expect(']')
+		if p.token.type == ']':
+			p.next()
+			p.add(['list', None])
+		else:
+			expr(p)
+			p.expect(']')
+			p.addList()
 	elif t == '(':
 		p.next()
 		expr(p)
@@ -124,7 +126,7 @@ def _expr( func, val):
 			token = p.token
 			p.next()
 			func(p)
-			p.addOp(val)
+			p.addOp(token.type)
 	return f
 def _expr2(func, val):
 	def f(p):
@@ -133,10 +135,35 @@ def _expr2(func, val):
 			token = p.token
 			p.next()
 			func(p)
-			p.addOp(token)
+			p.addOp(token.type)
 	return f
-dot_call_get = _expr2(factor, '.')
-item2 = _expr2(dot_call_get, ['*', '/', '%'])
+
+
+def _expr4(func):
+	def f(p):
+		func(p)
+		while p.token.type in ['.', '[', '(']:
+			t = p.token.type
+			p.next()
+			if t == '[':
+				expr(p)
+				p.expect(']')
+				p.addOp('.')
+			elif t == '(':
+				if p.token.type == ')':
+					p.next()
+					p.addOp2('$')
+				else:
+					expr(p)
+					p.expect(')')
+					p.addOp('$')
+			else:
+				func(p)
+				p.addOp('.')
+	return f
+
+dot_expr = _expr4(factor)
+item2 = _expr2(dot_expr, ['*', '/', '%'])
 item = _expr2(item2, ['+', '-'])
 in_expr = _expr(item, 'in')
 compare = _expr2(in_expr, ['>', '<', '>=', '<=', '==', '!='])
@@ -170,6 +197,13 @@ def skip_nl(p):
 	while p.token.type == 'nl':
 		p.next()
 
+def do_raise(p):
+	p.next()
+	if p.tolen.type == 'nl':
+		p.add(['raise', None])
+	else:
+		expr(p)
+		p.addOp2('raise')
 
 def do_block(p):
 	while p.token.type != 'eof':
@@ -183,6 +217,8 @@ def do_block(p):
 			do_assert(p)
 		elif t == 'def':
 			do_def(p)
+		elif t == 'raise':
+			do_raise(p)
 		else:
 			expr(p)
 
