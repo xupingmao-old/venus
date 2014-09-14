@@ -1,6 +1,8 @@
 class Token:
-    def __init__(self,pos=(0,0),type='symbol',val=None,items=None):
-        self.pos,self.type,self.val,self.items=pos,type,val,items
+    def __init__(self,type='symbol',val=None,pos=(0,0)):
+        self.pos,self.type,self.val=pos,type,val
+    def show(self):
+        print(self.type +' => ' + str(self.val))
 
 def u_error(ctx,s,i):
     y,x = i
@@ -27,7 +29,7 @@ class TData:
     def __init__(self):
         self.y,self.yi,self.nl = 1,0,True
         self.res,self.indent,self.braces = [],[0],0
-    def add(self,t,v): self.res.append(Token(self.f,t,v))
+    def add(self,t,v): self.res.append(Token(t,v,self.f))
 
 def clean(s):
     s = s.replace('\r\n','\n')
@@ -99,7 +101,7 @@ def do_symbol(s,i,l):
         v,i = v+c,i+1
         if v in SYMBOLS: symbols.append(v)
     v = symbols.pop(); n = len(v); i = f+n
-    T.add('symbol',v)
+    T.add(v,v)
     if v in B_BEGIN: T.braces += 1
     if v in B_END: T.braces -= 1
     return i
@@ -125,7 +127,7 @@ def do_name(s,i,l):
         c = s[i]
         if (c < 'a' or c > 'z') and (c < 'A' or c > 'Z') and (c < '0' or c > '9') and c != '_': break
         v,i = v+c,i+1
-    if v in SYMBOLS: T.add('symbol',v)
+    if v in SYMBOLS: T.add(v,v)
     else: T.add('name',v)
     return i
 

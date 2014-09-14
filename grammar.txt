@@ -1,0 +1,68 @@
+
+
+expr -> list
+		dict
+		get
+		op
+		call
+
+list -> '[' expr ']' 
+		'[' ']'
+
+node -> expr ':' expr
+
+dict -> '{}' 
+		'{' node '}'
+		'{' node (',' node )+'}'
+
+get -> expr '[' expr ']'
+
+op -> expr '.' expr
+	  expr '+' expr
+	  expr '-' expr
+	  expr '*' expr
+	  expr '/' expr
+	  expr '%' expr
+	  expr '=' expr
+	  expr ',' expr
+	  expr 'in' expr
+	  expr 'and' expr
+	  expr 'or' expr
+
+'''
+prior ->
+
+low -> high
+		
+		=
+		,
+		or
+		and
+		cmp
+		* / %
+		+ -
+'''
+
+call -> expr '()' 
+		expr '(' expr ')'
+
+
+stat -> expr
+		'pass'
+		'break'
+		'continue'
+		'return'
+		'return' expr
+		'raise'
+		'raise' expr
+
+block -> stat+
+
+if -> 'if' expr ':' block 
+	  'if' expr ':' block 'else:' expr
+	  'if' expr ':' block ('elif' expr ':' block)+
+	  'if' expr ':' block ('elif' expr ':' block)+ 'else:' block
+
+while -> 'while' expr ':' block
+
+for -> 'for' expr ':' block
