@@ -26,9 +26,7 @@ def show(tree):
 			s = ''
 			for i in v:
 				s += f(n, i) + '\n'
-			if s[-1] == '\n':
-				s = s[:-1]
-			return s
+			return '[\n' + s + ']'
 		elif isinstance(v, AST_LIST):
 			rs = 'list:\n' + f(n + 2, v.val)
 		elif isinstance(v, Token):
