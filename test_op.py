@@ -18,7 +18,7 @@ def test():
 def test(a, b = 2, c = 4):
 	pass
 
-def test3(a = 3, b):
+def test3(a , b = 34):
 	pass
 
 def test(*v):

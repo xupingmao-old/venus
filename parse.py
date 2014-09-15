@@ -1,5 +1,29 @@
 from tokenize import *
 
+
+class AST_IF:
+	def __init__(self):
+		self._if = None
+		self._elif = None
+		self._else = None
+
+class AST_OP:
+	def __init__(self, op, left, right):
+		self.op = op
+		self.left = left
+		self.right = right
+
+class AST_FUNC:
+	def __init__(self):
+		pass
+class AST_RETURN:
+	def __init__(self, v):
+		self.val = v
+class Arg:
+	def __init__(self):
+		self.val = None
+
+
 class ParserCtx:
 	def __init__(self, r):
 		r.append(Token('eof'))
@@ -54,7 +78,7 @@ class ParserCtx:
 		else:
 			r = self.tree.pop()
 			l = self.tree.pop()
-			self.tree.append([v, l, r])
+			self.tree.append(AST_OP(v, l, r))
 	def addOp2(self, t):
 		v = self.tree.pop()
 		self.tree.append([t, v, None])
@@ -90,25 +114,15 @@ class ParserCtx:
 			self.tree.append(['return', None])
 		else:
 			self.tree.append(['return', self.tree.pop()])
-	def show(self):
-		#print(self.tree)
-		def f(v):
-			if isinstance(v, list):
-				s='('
-				for i in v:
-					s += f(i)
-					s += " "
-				s+=')'
-				return s
-			elif isinstance(v, Token):
-				return str(v.val)
-			elif isinstance(v, Arg):
-				return 'name:'+v.name+',type:'+v.type+',val:'+str(v.val)
-			else:
-				return str(v)
-		for i in self.tree:
-			s = f(i)
-			print(s)
+	def enterBlock(self, func):
+		self.tree.append('block')
+		func(self)
+		body = []
+		v = self.tree.pop()
+		while v != 'block':
+			body.append(v)
+			v = self.tree.pop()
+		return body
 	def showTokens(self):
 		for i in self.r:
 			i.show()
@@ -116,7 +130,7 @@ class ParserCtx:
 def parse(v):
 	r = tokenize(v)
 	p = ParserCtx(r)
-	do_prog(p)
+	return do_prog(p)
 
 # recursive desent
 
@@ -217,7 +231,6 @@ def do_import(p):
 	p.addOp("import")
 
 def skip_nl(p):
-	p.next()
 	while p.token.type == 'nl':
 		p.next()
 
@@ -248,19 +261,43 @@ def do_stm(p):
 	elif t == 'pass':
 		p.next()
 		p.add('pass')
-	else:
+	elif t == 'if':
+		do_if(p)
+	elif t == 'name':
 		expr(p)
+	else:
+		raise Exception('unknown expression, type = ' + t 
+			+ ', pos = ' + str(p.token.pos))
 
 def do_block(p):
-	while p.token.type == 'nl':
-		p.next()
+	skip_nl(p)
 	if p.token.type == 'indent':
 		p.next()
 		while p.token.type != 'dedent':
 			do_stm(p)
+			skip_nl(p)
 		p.next()
 	else:
 		do_stm(p)
+
+def do_if(p):
+	ast = AST_IF()
+	p.next()
+	expr(p)
+	ast.cond = p.pop()
+	p.expect(':')
+	ast._if = p.enterBlock(do_block)
+	if p.token.type == 'elif':
+		body = []
+		while p.token.type == 'elif':
+			p.next()
+			body.append( p.enterBlock(do_block) )
+		ast._elif = body
+	if p.token.type == 'else':
+		p.expect(':')
+		ast._else = p.enterBlock(do_block)
+	p.add(ast)
+
 
 def do_assert(p):
 	p.next()
@@ -268,9 +305,6 @@ def do_assert(p):
 	p.add(None)
 	p.addOp("assert")
 
-class Arg:
-	def __init__(self):
-		self.val = None
 def do_arg(p):
 	p.expect('(')
 	if p.token.type == ')':
@@ -304,7 +338,7 @@ def do_arg(p):
 			# 3 : *
 			for arg in args:
 				if state == 2:
-					assert arg.val != None, 'invalid arguments'
+					assert arg.val != None, 'invalid arguments ' + str(p.token.pos)
 				elif state == '*':
 					raise
 				if arg.type == '*':state = 3
@@ -315,24 +349,25 @@ def do_arg(p):
 def do_def(p):
 	p.next()
 	assert p.token.type == 'name'
-	name = p.token.val
+	func = AST_FUNC()
+	func.name = p.token.val
 	p.next()
-	args = do_arg(p)
+	func.args = do_arg(p)
 	p.expect(':')
-	p.add('func_start')
-	do_block(p)
-	p.makeFunc(name, args)
+	func.body = p.enterBlock(do_block)
+	p.add(func)
 
 def do_return(p):
 	p.next()
 	if p.token.type in ['nl', 'dedent']:
-		p.setReturn()
+		p.add( AST_RETURN (None))
 	else:
 		expr(p)
-		p.setReturn(1)
+		p.add(AST_RETURN(p.pop()))
 
 def do_prog(p):
 	#p.showTokens()
+	p.next()
 	while p.token.type != 'eof':
 		do_block(p)
-	p.show()
+	return p.tree
