@@ -21,23 +21,41 @@ r = tokenize(open('tokenize.py').read())
 def show(tree):
 	#print(self.tree)
 	def f(n, v):
+		rs = ''
 		if isinstance(v, list):
 			s = ''
 			for i in v:
-				s += f(0, i) + ' '
-			return n * ' ' +  s
+				s += f(n, i) + '\n'
+			if s[-1] == '\n':
+				s = s[:-1]
+			return s
+		elif isinstance(v, AST_LIST):
+			rs = 'list:\n' + f(n + 2, v.val)
 		elif isinstance(v, Token):
-			return n * ' ' + str(v.val)
+			if v.type == 'string':
+				rs = "'" + v.val + "'"
+			else:rs = str(v.val)
 		elif isinstance(v, Arg):
-			return ' ' * n + 'arg:'+v.name+',type:'+v.type+',val:'+str(v.val)
+			rs = 'arg:'+v.name+',type:'+v.type+',val:'+str(v.val)
 		elif isinstance(v, AST_OP):
-			return ' ' * n + 'op:'+ v.op + '\n' + f(n + 2 , v.left) + '\n' + f(n + 2, v.right)
+			rs = 'op:'+ v.op + '\n' + f(n + 2 , v.left) + '\n' + f(n + 2, v.right)
 		elif isinstance(v, AST_FUNC):
-			return ' ' * n + 'func:' + v.name + '\n' + f(n + 2, v.args) + '\n' + f(n + 2, v.body)
+			rs = 'func:' + v.name + '\n' + f(n + 2, v.args) + '\n' + f(n + 2, v.body)
 		elif isinstance(v, AST_RETURN):
-			return ' ' * n + 'return' + '\n' + f(n + 2, v.val)
+			rs = 'return' + '\n' + f(n + 2, v.val)
+		elif isinstance(v, AST_CALL):
+			rs = '$func:\n' + f(n + 2, v.name) + '\n' + f(n + 2, v.args)
+		elif isinstance(v, AST_FOR):
+			rs = 'for\n' + f(n + 2, v.cond) + '\n' + f(n + 2, v.body)
+		elif isinstance(v, AST_IF):
+			rs = 'if\n' + f(n + 2, v.cond) + '\n' + f(n + 2, v._if)
+			rs += '\n' + f(n + 2, v._elif)
+			rs += '\n' + f(n + 2, v._else)
+		elif isinstance(v, AST_ELIF):
+			rs = 'elif\n' + f(n+2, v.cond) + '\n' + f(n+2, v.body)
 		else:
-			return n * ' ' + str(v)
+			rs = str(v)
+		return n * ' ' + rs
 	for i in tree:
 		s = f(0, i)
 		print(s)

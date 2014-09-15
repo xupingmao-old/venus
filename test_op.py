@@ -12,6 +12,20 @@ test( 1, 2 )
 r = tokenize(open('tokenize.py').read())
 
 
+if x == 0:
+    print(x )
+elif x == 1:
+    print(1)
+elif x == 2:
+    print(2)
+else:
+    print('hello')
+
+def complex(a, b, c):
+    a = b * c 
+    c = a + b
+    return a + c
+
 def test():
 	return 'hello,world'
 

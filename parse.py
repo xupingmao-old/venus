@@ -7,6 +7,15 @@ class AST_IF:
 		self._elif = None
 		self._else = None
 
+class AST_ELIF:
+	def __init__(self, cond, body):
+		self.cond = cond
+		self.body = body
+
+class AST_FOR:
+	def __init__(self):
+		pass
+
 class AST_OP:
 	def __init__(self, op, left, right):
 		self.op = op
@@ -19,6 +28,14 @@ class AST_FUNC:
 class AST_RETURN:
 	def __init__(self, v):
 		self.val = v
+class AST_LIST:
+	def __init__(self, v):
+		self.val = v
+
+class AST_CALL:
+	def __init__(self, v, args):
+		self.name = v
+		self.args = args
 class Arg:
 	def __init__(self):
 		self.val = None
@@ -70,11 +87,11 @@ class ParserCtx:
 		if v == ',':
 			r = self.tree.pop()
 			l = self.tree.pop()
-			if isinstance(l, list):
-				l.append(r)
+			if isinstance(l, AST_LIST):
+				l.val.append(r)
 				self.tree.append(l)
 			else:
-				self.tree.append([',', l, r])
+				self.tree.append(AST_LIST([l,r]))
 		else:
 			r = self.tree.pop()
 			l = self.tree.pop()
@@ -122,6 +139,7 @@ class ParserCtx:
 		while v != 'block':
 			body.append(v)
 			v = self.tree.pop()
+		body.reverse() # reverse the body
 		return body
 	def showTokens(self):
 		for i in self.r:
@@ -190,11 +208,12 @@ def _expr4(func):
 			elif t == '(':
 				if p.token.type == ')':
 					p.next()
-					p.addOp2('$')
+					p.add( AST_CALL(p.pop(), None))
 				else:
 					expr(p)
 					p.expect(')')
-					p.addOp('$')
+					args = p.pop()
+					p.add( AST_CALL(p.pop(), args))
 			else:
 				func(p)
 				p.addOp('.')
@@ -254,6 +273,8 @@ def do_stm(p):
 		do_assert(p)
 	elif t == 'def':
 		do_def(p)
+	elif t == 'for':
+		do_for(p)
 	elif t == 'return':
 		do_return(p)
 	elif t == 'raise':
@@ -291,13 +312,27 @@ def do_if(p):
 		body = []
 		while p.token.type == 'elif':
 			p.next()
-			body.append( p.enterBlock(do_block) )
+			expr(p)
+			p.expect(':')
+			cond = p.pop()
+			b = p.enterBlock(do_block)
+			body.append( AST_ELIF(cond, b) )
 		ast._elif = body
 	if p.token.type == 'else':
+		p.next()
 		p.expect(':')
 		ast._else = p.enterBlock(do_block)
 	p.add(ast)
 
+
+def do_for(p):
+	ast = AST_FOR()
+	p.next()
+	expr(p)
+	ast.cond = p.pop()
+	p.expect(':')
+	ast.body = p.enterBlock(do_block)
+	p.add(ast)
 
 def do_assert(p):
 	p.next()
