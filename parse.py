@@ -7,7 +7,7 @@ class ParserCtx:
 		self.i = 0
 		self.l = len(r)
 		self.tree = []
-		self.token = Token("start")
+		self.token = Token("nl")
 		self.eof = Token("eof")
 	def match(self, v):
 		x = self.next()
@@ -25,6 +25,8 @@ class ParserCtx:
 	def back(self):
 		if self.i != 0:
 			self.i -= 1
+	def pop(self):
+		return self.tree.pop()
 	def expect(self, v):
 		# print("cur=" + str(self.i))
 		# print("curtoken="+ str(self.r[self.i-1].val))
@@ -63,11 +65,31 @@ class ParserCtx:
 		if isinstance(v, list):
 			if v[0] == ',':
 				v[0] = 'list'
-			print(v)
 			self.tree.append(v)
 		else:
 			self.tree.append(['list', v])
-
+	def setArgs(self, n):
+		if n == 0:
+			self.tree.append(['setArgs', None])
+			return
+		args = []
+		while n > 0:
+			v = self.tree.pop()
+			args.append(v)
+			n-=1
+		self.tree.append(['setArgs', args])
+	def makeFunc(self, name, args):
+		body = []
+		v = self.tree.pop()
+		while v != 'func_start':
+			body.append(v)
+			v = self.tree.pop()
+		self.tree.append(['def', name, args, body])
+	def setReturn(self, return_val = None):
+		if not return_val:
+			self.tree.append(['return', None])
+		else:
+			self.tree.append(['return', self.tree.pop()])
 	def show(self):
 		#print(self.tree)
 		def f(v):
@@ -80,6 +102,8 @@ class ParserCtx:
 				return s
 			elif isinstance(v, Token):
 				return str(v.val)
+			elif isinstance(v, Arg):
+				return 'name:'+v.name+',type:'+v.type+',val:'+str(v.val)
 			else:
 				return str(v)
 		for i in self.tree:
@@ -205,37 +229,110 @@ def do_raise(p):
 		expr(p)
 		p.addOp2('raise')
 
+def do_stm(p):
+	while p.token.type == 'nl':
+		p.next()
+	t = p.token.type
+	if t == 'from':
+		do_from(p)
+	elif t == 'import':
+		do_import(p)
+	elif t == "assert":
+		do_assert(p)
+	elif t == 'def':
+		do_def(p)
+	elif t == 'return':
+		do_return(p)
+	elif t == 'raise':
+		do_raise(p)
+	elif t == 'pass':
+		p.next()
+		p.add('pass')
+	else:
+		expr(p)
+
 def do_block(p):
-	while p.token.type != 'eof':
-		skip_nl(p)
-		t = p.token.type
-		if t == 'from':
-			do_from(p)
-		elif t == 'import':
-			do_import(p)
-		elif t == "assert":
-			do_assert(p)
-		elif t == 'def':
-			do_def(p)
-		elif t == 'raise':
-			do_raise(p)
-		else:
-			expr(p)
+	while p.token.type == 'nl':
+		p.next()
+	if p.token.type == 'indent':
+		p.next()
+		while p.token.type != 'dedent':
+			do_stm(p)
+		p.next()
+	else:
+		do_stm(p)
 
 def do_assert(p):
-	p.next(p)
+	p.next()
 	expr(p)
 	p.add(None)
 	p.addOp("assert")
 
+class Arg:
+	def __init__(self):
+		self.val = None
+def do_arg(p):
+	p.expect('(')
+	if p.token.type == ')':
+		p.next()
+		return None
+	else:
+		args = []
+		while p.token.type in ['*', 'name']:
+			arg = Arg()
+			if p.token.type == '*':
+				p.next()
+				arg.type = '*'
+			else:
+				arg.type = 'normal'
+			assert p.token.type == 'name'
+			arg.name = p.token.val
+			p.next()
+			if p.token.type == '=':
+				p.next()
+				factor(p)
+				arg.val = p.pop()
+			args.append(arg)
+			if p.token.type != ',':
+				break
+			p.next()
+		#check sequence
+		if len(args) > 0:
+			state = 1
+			# 1 : normal no default value
+			# 2 : normal with default value
+			# 3 : *
+			for arg in args:
+				if state == 2:
+					assert arg.val != None, 'invalid arguments'
+				elif state == '*':
+					raise
+				if arg.type == '*':state = 3
+				elif arg.val != None:state = 2
+		p.expect(')')
+		return args
 
 def do_def(p):
-	p.next(p)
-	do_arg(p)
+	p.next()
+	assert p.token.type == 'name'
+	name = p.token.val
+	p.next()
+	args = do_arg(p)
 	p.expect(':')
+	p.add('func_start')
 	do_block(p)
+	p.makeFunc(name, args)
+
+def do_return(p):
+	p.next()
+	if p.token.type in ['nl', 'dedent']:
+		p.setReturn()
+	else:
+		expr(p)
+		p.setReturn(1)
 
 def do_prog(p):
 	#p.showTokens()
-	do_block(p)
+	while p.token.type != 'eof':
+		do_block(p)
 	p.show()

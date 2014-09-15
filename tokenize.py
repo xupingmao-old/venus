@@ -3,6 +3,8 @@ class Token:
         self.pos,self.type,self.val=pos,type,val
     def show(self):
         print(self.type +' => ' + str(self.val))
+    def __str__(self):
+        return str(self.val)
 
 def u_error(ctx,s,i):
     y,x = i
