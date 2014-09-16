@@ -30,12 +30,13 @@ def show(tree):
 		elif isinstance(v, Token):
 			if v.type == 'string':
 				rs = "'" + v.val + "'"
-			else:rs = str(v.val)
+			else:
+				rs = str(v.val)
 		elif isinstance(v, AstNode):
 			if v.type in ['neg', 'pos', 'not', 'list']:
 				rs = v.type + '\n' + f(n+2, v.val)
 			elif v.type in ['from', '+', '-', '*', '/', '%', ',' ,'=', '+=', '-=', '/=', '*=', 'get', 'attr', 
-					"==", "!=", ">", "<", ">=", "<=", "and", "or", "for", "in"]:
+					"==", "!=", ">", "<", ">=", "<=", "and", "or", "for","while", "in"]:
 				rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
 			elif v.type == '$':
 				rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
@@ -45,8 +46,13 @@ def show(tree):
 			elif v.type == 'def':
 				rs = 'def ' + f(0 , v.name , 'name => ') + \
 					'\n' + f(n+2, v.args, 'args => ') + '\n' + f(n+2, v.body, "body => ")
+			elif v.type == 'class':
+				rs = 'class ' + f( 0, v.name, 'name => ') + \
+					'\n' + f(n+2, v.body, 'body => ')
 			elif v.type in ['varg', 'arg']:
 				rs = v.type + f(1 , v.name, 'name => ') + f(1,  v.val, 'dafault => ')
+			elif v.type == 'return':
+				rs = v.type + '\n' + f(n+2, v.val)
 			else:
 				rs = v.type
 		else:
@@ -55,6 +61,11 @@ def show(tree):
 	for i in tree:
 		s = f(0, i)
 		print(s)
-
-tree = parse(open('test.py').read())
+x = 0
+x = 12 if x > 10 else 3
+tree = parse(open('parse.py').read())
 show(tree)
+# import json
+
+# txt = json.dumps(tree)
+# print(txt)

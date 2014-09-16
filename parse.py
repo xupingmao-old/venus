@@ -195,7 +195,7 @@ def factor_(p):
 	elif t == '(':
 		p.next()
 		node = AstNode()
-		node.type == 'list'
+		node.type = 'list'
 		if p.token.type == ')':
 			p.next()
 			node.val = None
@@ -300,6 +300,19 @@ def do_raise(p):
 		expr(p)
 		p.addOp2('raise')
 
+def stm_next_if(p):
+	if p.token.type == 'if':
+		p.next()
+		node = AstNode()
+		node.type = 'if'
+		expr(p)
+		node.cond = p.pop()
+		node.body = p.pop()
+		p.expect('else')
+		expr(p)
+		node._else = p.pop()
+		p.add(node)
+
 def do_stm(p):
 	skip_nl(p)
 	t = p.token.type
@@ -311,13 +324,14 @@ def do_stm(p):
 		do_assert(p)
 	elif t == 'def':
 		do_def(p)
-	elif t == 'for':
-		do_for(p)
-	elif t == 'return':
-		do_return(p)
-	elif t == 'raise':
-		do_raise(p)
-	elif t == 'pass':
+	elif t == 'class':
+		do_class(p)
+	elif t in ('for', 'while'):
+		do_for_while(p, t)
+	elif t in ('return', "raise"):
+		do_stm1(p, t)
+		stm_next_if(p)
+	elif t in ("break", "continue", "pass"):
 		p.next()
 		node = AstNode()
 		node.type = "pass"
@@ -326,9 +340,9 @@ def do_stm(p):
 		do_if(p)
 	elif t == 'name':
 		expr(p)
+		stm_next_if(p)
 	else:
-		raise Exception('unknown expression, type = ' + t 
-			+ ', pos = ' + str(p.token.pos))
+		raise Exception('unknown expression, type = ' + t + ', pos = ' + str(p.token.pos))
 	skip_nl(p)
 
 def do_block(p):
@@ -369,9 +383,9 @@ def do_if(p):
 	p.add(temp)
 
 
-def do_for(p):
+def do_for_while(p, type):
 	ast = AstNode()
-	ast.type = 'for'
+	ast.type = type
 	p.next()
 	expr(p)
 	ast.a = p.pop()
@@ -432,10 +446,21 @@ def do_def(p):
 	func.body = p.enterBlock(do_block)
 	p.add(func)
 
-def do_return(p):
+def do_class(p):
+	p.next()
+	assert p.token.type == 'name'
+	clazz = AstNode()
+	clazz.type = 'class'
+	clazz.name = p.token.val
+	p.next()
+	p.expect(':')
+	clazz.body = p.enterBlock(do_block)
+	p.add(clazz)
+
+def do_stm1(p, type):
 	p.next()
 	node = AstNode()
-	node.type = 'return'
+	node.type = type
 	if p.token.type in ['nl', 'dedent']:
 		node.val = None
 	else:
