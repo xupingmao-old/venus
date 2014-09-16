@@ -178,11 +178,11 @@ def factor(p):
 		p.next()
 		if p.token.type == ']':
 			p.next()
-			p.add(['list', None])
+			p.add(AST_LIST(None))
 		else:
 			expr(p)
 			p.expect(']')
-			p.addList()
+			p.add( AST_LIST( p.pop()))
 	elif t == '(':
 		p.next()
 		expr(p)
