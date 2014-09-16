@@ -4,6 +4,8 @@ from tokenize import *
 class AstNode:
 	def __init__(self):
 		self.type = None
+	def list(self, left, right):
+		self.val = [left, right]
 
 class AST_IF:
 	def __init__(self):
@@ -35,6 +37,8 @@ class AST_RETURN:
 class AST_LIST:
 	def __init__(self, v):
 		self.val = v
+	def list(self, left, right):
+		self.val = [left, right]
 
 class AST_CALL:
 	def __init__(self, v, args):
@@ -93,18 +97,13 @@ class ParserCtx:
 	def add(self, v):
 		self.tree.append(v)
 	def addOp(self,v):
-		if v == ',':
-			r = self.tree.pop()
-			l = self.tree.pop()
-			if isinstance(l, AST_LIST):
-				l.val.append(r)
-				self.tree.append(l)
-			else:
-				self.tree.append(AST_LIST([l,r]))
-		else:
-			r = self.tree.pop()
-			l = self.tree.pop()
-			self.tree.append(AST_OP(v, l, r))
+		r = self.tree.pop()
+		l = self.tree.pop()
+		node = AstNode()
+		node.type = v
+		node.a = l
+		node.b = r
+		self.tree.append( node )
 	def addOp2(self, t):
 		v = self.tree.pop()
 		self.tree.append([t, v, None])
@@ -162,31 +161,48 @@ def parse(v):
 # recursive desent
 
 def factor(p):
+	factor_(p)
+	while p.token.type in ['+', '-', 'not']:
+		p.next()
+		t = p.token.type
+		if t == '+':t='pos'
+		elif t == '-':t='neg'
+		factor_(p)
+		node = AstNode()
+		node.type = t
+		node.val = p.pop()
+		p.add(node)
+
+def factor_(p):
 	t = p.token.type
 	token = p.token
 	if t in ['number', 'string', 'name']:
 		p.next()
 		p.add(token)
-	elif t in ['+', '-']:
-		p.next()
-		factor(p)
-		node = AstNode()
-		node.type = t
-		node.val = p.pop()
-		p.add( node )
 	elif t == '[':
 		p.next()
+		node = AstNode()
+		node.type = 'list'
 		if p.token.type == ']':
 			p.next()
-			p.add(AST_LIST(None))
+			node.val = None
 		else:
 			expr(p)
 			p.expect(']')
-			p.add( AST_LIST( p.pop()))
+			node.val = p.pop()
+		p.add( node )
 	elif t == '(':
 		p.next()
-		expr(p)
-		p.expect(')')
+		node = AstNode()
+		node.type == 'list'
+		if p.token.type == ')':
+			p.next()
+			node.val = None
+		else:
+			expr(p)
+			p.expect(')')
+			node.val = p.pop()
+		p.add(node)
 
 def _expr( func, val):
 	def f(p):
@@ -217,19 +233,23 @@ def _expr4(func):
 			if t == '[':
 				expr(p)
 				p.expect(']')
-				p.addOp('.')
+				p.addOp('get')
 			elif t == '(':
+				node = AstNode()
+				node.type = '$'
+				node.name = p.pop()
 				if p.token.type == ')':
 					p.next()
-					p.add( AST_CALL(p.pop(), None))
+					node.args = None
+					p.add( node )
 				else:
 					expr(p)
 					p.expect(')')
-					args = p.pop()
-					p.add( AST_CALL(p.pop(), args))
+					node.args = p.pop()
+					p.add( node )
 			else:
 				func(p)
-				p.addOp('.')
+				p.addOp( 'attr' )
 	return f
 
 dot_expr = _expr4(factor)
@@ -249,12 +269,16 @@ def do_from(p):
 	p.next()
 	expr(p)
 	p.expect("import")
+	node = AstNode()
+	node.type='from'
+	node.a = p.pop()
 	if p.token.type == "*":
-		p.add(p.token)
+		node.b = '*'
 		p.next()
 	else:
 		expr(p)
-	p.addOp("import")
+		node.b = p.pop()
+	p.add( node )
 
 def do_import(p):
 	p.next()
@@ -361,12 +385,13 @@ def do_arg(p):
 	else:
 		args = []
 		while p.token.type in ['*', 'name']:
-			arg = Arg()
+			arg = AstNode()
+			arg.val = None
 			if p.token.type == '*':
 				p.next()
-				arg.type = '*'
+				arg.type = 'varg'
 			else:
-				arg.type = 'normal'
+				arg.type = 'arg'
 			assert p.token.type == 'name'
 			arg.name = p.token.val
 			p.next()

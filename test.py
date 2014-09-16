@@ -52,7 +52,12 @@ def show(tree):
 		elif isinstance(v, AST_ELIF):
 			rs = 'elif\n' + f(n+2, v.cond) + '\n' + f(n+2, v.body)
 		elif isinstance(v, AstNode):
-			rs = 'type:' + v.type + '\n' + f(n+2, f.val)
+			if v.type in ['neg', 'pos', 'not', 'list']:
+				rs = 'type:' + v.type + '\n' + f(n+2, v.val)
+			elif v.type in ['from', '+', '-', '*', '/', '%', ',' ,'=', '+=', '-=', '/=', '*=', 'get', 'attr']:
+				rs = 'type:' + v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
+			elif v.type == '$':
+				rs = 'type:$\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
 		else:
 			rs = str(v)
 		return n * ' ' + rs
