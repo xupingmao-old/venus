@@ -161,22 +161,23 @@ def parse(v):
 # recursive desent
 
 def factor(p):
-	factor_(p)
-	while p.token.type in ['+', '-', 'not']:
-		p.next()
+	if p.token.type in ['+', '-', 'not']:
 		t = p.token.type
+		p.next()
 		if t == '+':t='pos'
 		elif t == '-':t='neg'
-		factor_(p)
+		factor(p)
 		node = AstNode()
 		node.type = t
 		node.val = p.pop()
 		p.add(node)
+	else:
+		factor_(p)
 
 def factor_(p):
 	t = p.token.type
 	token = p.token
-	if t in ['number', 'string', 'name']:
+	if t in ['number', 'string', 'name', 'constants']:
 		p.next()
 		p.add(token)
 	elif t == '[':
@@ -208,19 +209,20 @@ def _expr( func, val):
 	def f(p):
 		func(p)
 		while p.token.type == val:
-			token = p.token
+			t = p.token.type
 			p.next()
 			func(p)
-			p.addOp(token.type)
+			p.addOp(t)
 	return f
 def _expr2(func, val):
 	def f(p):
 		func(p)
 		while p.token.type in val:
-			token = p.token
+			t = p.token.type
+			#print(t)
 			p.next()
 			func(p)
-			p.addOp(token.type)
+			p.addOp(t)
 	return f
 
 
@@ -299,8 +301,7 @@ def do_raise(p):
 		p.addOp2('raise')
 
 def do_stm(p):
-	while p.token.type == 'nl':
-		p.next()
+	skip_nl(p)
 	t = p.token.type
 	if t == 'from':
 		do_from(p)
@@ -318,7 +319,9 @@ def do_stm(p):
 		do_raise(p)
 	elif t == 'pass':
 		p.next()
-		p.add('pass')
+		node = AstNode()
+		node.type = "pass"
+		p.add( node )
 	elif t == 'if':
 		do_if(p)
 	elif t == 'name':
@@ -326,6 +329,7 @@ def do_stm(p):
 	else:
 		raise Exception('unknown expression, type = ' + t 
 			+ ', pos = ' + str(p.token.pos))
+	skip_nl(p)
 
 def do_block(p):
 	skip_nl(p)
@@ -333,33 +337,36 @@ def do_block(p):
 		p.next()
 		while p.token.type != 'dedent':
 			do_stm(p)
-			skip_nl(p)
 		p.next()
 	else:
 		do_stm(p)
 
 def do_if(p):
-	ast = AST_IF()
+	ast = AstNode()
+	ast.type = 'if'
+	ast._else = None
 	p.next()
 	expr(p)
 	ast.cond = p.pop()
 	p.expect(':')
-	ast._if = p.enterBlock(do_block)
+	ast.body = p.enterBlock(do_block)
+	temp = cur = ast # temp 
 	if p.token.type == 'elif':
-		body = []
 		while p.token.type == 'elif':
+			node = AstNode()
+			node.type , node._else = 'if', None
 			p.next()
 			expr(p)
 			p.expect(':')
-			cond = p.pop()
-			b = p.enterBlock(do_block)
-			body.append( AST_ELIF(cond, b) )
-		ast._elif = body
+			node.cond = p.pop()
+			node.body = p.enterBlock(do_block)
+			cur._else = node
+			cur = node
 	if p.token.type == 'else':
 		p.next()
 		p.expect(':')
-		ast._else = p.enterBlock(do_block)
-	p.add(ast)
+		cur._else = p.enterBlock(do_block)
+	p.add(temp)
 
 
 def do_for(p):
@@ -384,45 +391,39 @@ def do_arg(p):
 		return None
 	else:
 		args = []
-		while p.token.type in ['*', 'name']:
+		# []
+		# [ arg * ]
+		# [ arg , arg = v ]
+		while p.token.type == 'name':
 			arg = AstNode()
+			arg.type = 'arg'
 			arg.val = None
-			if p.token.type == '*':
-				p.next()
-				arg.type = 'varg'
-			else:
-				arg.type = 'arg'
-			assert p.token.type == 'name'
 			arg.name = p.token.val
 			p.next()
 			if p.token.type == '=':
 				p.next()
-				factor(p)
+				factor(p) # problem
 				arg.val = p.pop()
 			args.append(arg)
-			if p.token.type != ',':
-				break
+			if p.token.type != ',':break
 			p.next()
-		#check sequence
-		if len(args) > 0:
-			state = 1
-			# 1 : normal no default value
-			# 2 : normal with default value
-			# 3 : *
-			for arg in args:
-				if state == 2:
-					assert arg.val != None, 'invalid arguments, error at ' + str(p.token.pos)
-				elif state == '*':
-					raise
-				if arg.type == '*':state = 3
-				elif arg.val != None:state = 2
+		if p.token.type == '*':
+			p.next()
+			assert p.token.type == 'name', 'invalide arguments at ' + str(p.token.pos)
+			arg = AstNode()
+			arg.type = 'varg'
+			arg.val = None
+			arg.name = p.token.val
+			args.append(arg)
+			p.next()
 		p.expect(')')
-		return args
+		return args if len(args) > 0 else None
 
 def do_def(p):
 	p.next()
 	assert p.token.type == 'name'
-	func = AST_FUNC()
+	func = AstNode()
+	func.type = 'def'
 	func.name = p.token.val
 	p.next()
 	func.args = do_arg(p)
@@ -432,11 +433,14 @@ def do_def(p):
 
 def do_return(p):
 	p.next()
+	node = AstNode()
+	node.type = 'return'
 	if p.token.type in ['nl', 'dedent']:
-		p.add( AST_RETURN (None))
+		node.val = None
 	else:
 		expr(p)
-		p.add(AST_RETURN(p.pop()))
+		node.val = p.pop()
+	p.add(node)
 
 def do_prog(p):
 	#p.showTokens()

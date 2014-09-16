@@ -38,5 +38,11 @@ def test3(a , b = 34):
 def test(*v):
 	return v[0] + v[1]
 
+x = a + b
+
 def add(a, b):
 	return a + b
+
+x = not not 1
+
+y = --- x + +++ 34

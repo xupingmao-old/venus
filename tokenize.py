@@ -20,11 +20,14 @@ ISYMBOLS = '`-=[];,./~!@$%^&*()+{}:<>?'
 SYMBOLS = [
     'def','class','yield','return','pass','and','or','not','in','import',
     'is','while','break','for','continue','if','else','elif','try',
-    'except','raise','True','False','None','global','del','from',
+    'except','raise','global','del','from',
     '-','+','*','**','/','%','<<','>>',
     '-=','+=','*=','/=','=','==','!=','<','>',
     '<=','>=','[',']','{','}','(',')','.',':',',',';','&','|','!',
     ]
+CONSTANTS = [
+    'True', 'False', 'None'
+]
 B_BEGIN,B_END = ['[','(','{'],[']',')','}']
 
 class TData:
@@ -130,6 +133,7 @@ def do_name(s,i,l):
         if (c < 'a' or c > 'z') and (c < 'A' or c > 'Z') and (c < '0' or c > '9') and c != '_': break
         v,i = v+c,i+1
     if v in SYMBOLS: T.add(v,v)
+    elif v in CONSTANTS : T.add('constants', v)
     else: T.add('name',v)
     return i
 

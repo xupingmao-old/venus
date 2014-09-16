@@ -20,50 +20,41 @@ r = tokenize(open('tokenize.py').read())
 
 def show(tree):
 	#print(self.tree)
-	def f(n, v):
+	def f(n, v, pre = ""):
 		rs = ''
 		if isinstance(v, list):
 			s = ''
 			for i in v:
-				s += f(n, i) + '\n'
-			return '[\n' + s + ']'
-		elif isinstance(v, AST_LIST):
-			rs = 'list:\n' + f(n + 2, v.val)
+				s += '\n' + f(n+2, i)
+			rs = s
 		elif isinstance(v, Token):
 			if v.type == 'string':
 				rs = "'" + v.val + "'"
 			else:rs = str(v.val)
-		elif isinstance(v, Arg):
-			rs = 'arg:'+v.name+',type:'+v.type+',val:'+str(v.val)
-		elif isinstance(v, AST_OP):
-			rs = 'op:'+ v.op + '\n' + f(n + 2 , v.left) + '\n' + f(n + 2, v.right)
-		elif isinstance(v, AST_FUNC):
-			rs = 'func:' + v.name + '\n' + f(n + 2, v.args) + '\n' + f(n + 2, v.body)
-		elif isinstance(v, AST_RETURN):
-			rs = 'return' + '\n' + f(n + 2, v.val)
-		elif isinstance(v, AST_CALL):
-			rs = '$func:\n' + f(n + 2, v.name) + '\n' + f(n + 2, v.args)
-		elif isinstance(v, AST_FOR):
-			rs = 'for\n' + f(n + 2, v.cond) + '\n' + f(n + 2, v.body)
-		elif isinstance(v, AST_IF):
-			rs = 'if\n' + f(n + 2, v.cond) + '\n' + f(n + 2, v._if)
-			rs += '\n' + f(n + 2, v._elif)
-			rs += '\n' + f(n + 2, v._else)
-		elif isinstance(v, AST_ELIF):
-			rs = 'elif\n' + f(n+2, v.cond) + '\n' + f(n+2, v.body)
 		elif isinstance(v, AstNode):
 			if v.type in ['neg', 'pos', 'not', 'list']:
-				rs = 'type:' + v.type + '\n' + f(n+2, v.val)
-			elif v.type in ['from', '+', '-', '*', '/', '%', ',' ,'=', '+=', '-=', '/=', '*=', 'get', 'attr']:
-				rs = 'type:' + v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
+				rs = v.type + '\n' + f(n+2, v.val)
+			elif v.type in ['from', '+', '-', '*', '/', '%', ',' ,'=', '+=', '-=', '/=', '*=', 'get', 'attr', 
+					"==", "!=", ">", "<", ">=", "<=", "and", "or"]:
+				rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
 			elif v.type == '$':
-				rs = 'type:$\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
+				rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
+			elif v.type == 'if':
+				rs = 'if\n' + f(n+2, v.cond, 'cond => ') + \
+					'\n' + f(n+2, v.body, 'body => ') + '\n' + f(n+2, v._else, 'else => ')
+			elif v.type == 'def':
+				rs = 'def ' + f(0 , v.name , 'name => ') + \
+					'\n' + f(n+2, v.args, 'args => ') + '\n' + f(n+2, v.body, "body => ")
+			elif v.type in ['varg', 'arg']:
+				rs = v.type + f(1 , v.name, 'name => ') + f(1,  v.val, 'dafault => ')
+			else:
+				rs = v.type
 		else:
 			rs = str(v)
-		return n * ' ' + rs
+		return ' ' * n + pre + rs
 	for i in tree:
 		s = f(0, i)
 		print(s)
 
-tree = parse(open('test.py').read())
+tree = parse(open('test_op.py').read())
 show(tree)
