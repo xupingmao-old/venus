@@ -1,6 +1,10 @@
 from tokenize import *
 
 
+class AstNode:
+	def __init__(self):
+		self.type = None
+
 class AST_IF:
 	def __init__(self):
 		self._if = None
@@ -36,6 +40,11 @@ class AST_CALL:
 	def __init__(self, v, args):
 		self.name = v
 		self.args = args
+
+class AST_PRE:
+	def __init__(self, t, v):
+		self.op = t
+		self.val = v
 class Arg:
 	def __init__(self):
 		self.val = None
@@ -73,7 +82,7 @@ class ParserCtx:
 		# print("curtoken="+ str(self.r[self.i-1].val))
 		# print("p.token="+str(self.token.val))
 		# print("expect="+v)
-		assert self.token.val == v
+		assert self.token.val == v, 'error at ' + str(self.token.pos)
 		self.next()
 	def nextName(self):
 		self.next()
@@ -160,7 +169,11 @@ def factor(p):
 		p.add(token)
 	elif t in ['+', '-']:
 		p.next()
-		p.addOp(token)
+		factor(p)
+		node = AstNode()
+		node.type = t
+		node.val = p.pop()
+		p.add( node )
 	elif t == '[':
 		p.next()
 		if p.token.type == ']':
@@ -227,7 +240,7 @@ compare = _expr2(in_expr, ['>', '<', '>=', '<=', '==', '!='])
 and_expr = _expr(compare, 'and')
 or_expr = _expr(and_expr, 'or')
 comma = _expr(or_expr, ',')
-assign = _expr(comma, '=')
+assign = _expr2(comma, ['=', '+=', '-=', '*=', '/='])
 
 expr = assign
 
@@ -373,7 +386,7 @@ def do_arg(p):
 			# 3 : *
 			for arg in args:
 				if state == 2:
-					assert arg.val != None, 'invalid arguments ' + str(p.token.pos)
+					assert arg.val != None, 'invalid arguments, error at ' + str(p.token.pos)
 				elif state == '*':
 					raise
 				if arg.type == '*':state = 3

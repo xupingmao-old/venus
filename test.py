@@ -53,6 +53,8 @@ def show(tree):
 			rs += '\n' + f(n + 2, v._else)
 		elif isinstance(v, AST_ELIF):
 			rs = 'elif\n' + f(n+2, v.cond) + '\n' + f(n+2, v.body)
+		elif isinstance(v, AstNode):
+			rs = 'type:' + v.type + '\n' + f(n+2, f.val)
 		else:
 			rs = str(v)
 		return n * ' ' + rs
@@ -60,5 +62,5 @@ def show(tree):
 		s = f(0, i)
 		print(s)
 
-tree = parse(open('test_op.py').read())
+tree = parse(open('test.py').read())
 show(tree)
