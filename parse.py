@@ -370,12 +370,13 @@ def do_if(p):
 
 
 def do_for(p):
-	ast = AST_FOR()
+	ast = AstNode()
+	ast.type = 'for'
 	p.next()
 	expr(p)
-	ast.cond = p.pop()
+	ast.a = p.pop()
 	p.expect(':')
-	ast.body = p.enterBlock(do_block)
+	ast.b = p.enterBlock(do_block)
 	p.add(ast)
 
 def do_assert(p):

@@ -35,7 +35,7 @@ def show(tree):
 			if v.type in ['neg', 'pos', 'not', 'list']:
 				rs = v.type + '\n' + f(n+2, v.val)
 			elif v.type in ['from', '+', '-', '*', '/', '%', ',' ,'=', '+=', '-=', '/=', '*=', 'get', 'attr', 
-					"==", "!=", ">", "<", ">=", "<=", "and", "or"]:
+					"==", "!=", ">", "<", ">=", "<=", "and", "or", "for", "in"]:
 				rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
 			elif v.type == '$':
 				rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
@@ -56,5 +56,5 @@ def show(tree):
 		s = f(0, i)
 		print(s)
 
-tree = parse(open('test_op.py').read())
+tree = parse(open('test.py').read())
 show(tree)
