@@ -52,7 +52,9 @@ def do_tokenize(s):
     T.f = (T.y,i-T.yi+1)
     while i < l:
         c = s[i]; T.f = (T.y,i-T.yi+1)
-        if T.nl: T.nl = False; i = do_indent(s,i,l)
+        if T.nl: 
+            T.nl = False
+            i = do_indent(s,i,l)
         elif c == '\n': i = do_nl(s,i,l)
         elif c in ISYMBOLS: i = do_symbol(s,i,l)
         elif c >= '0' and c <= '9': i = do_number(s,i,l)

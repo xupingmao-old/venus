@@ -86,7 +86,7 @@ class ParserCtx:
 		# print("curtoken="+ str(self.r[self.i-1].val))
 		# print("p.token="+str(self.token.val))
 		# print("expect="+v)
-		assert self.token.val == v, 'error at ' + str(self.token.pos)
+		assert self.token.type == v, 'error at ' + str(self.token.pos)
 		self.next()
 	def nextName(self):
 		self.next()
@@ -139,9 +139,9 @@ class ParserCtx:
 			self.tree.append(['return', None])
 		else:
 			self.tree.append(['return', self.tree.pop()])
-	def enterBlock(self, func):
+	def enterBlock(self):
 		self.tree.append('block')
-		func(self)
+		do_block(self)
 		body = []
 		v = self.tree.pop()
 		while v != 'block':
@@ -152,6 +152,8 @@ class ParserCtx:
 	def showTokens(self):
 		for i in self.r:
 			i.show()
+	def error(self):
+		return ' at ' + str(self.token.pos) + ' type = ' + self.token.type
 
 def parse(v):
 	r = tokenize(v)
@@ -180,6 +182,7 @@ def factor_(p):
 	if t in ['number', 'string', 'name', 'constants']:
 		p.next()
 		p.add(token)
+		factor_next_if(p)
 	elif t == '[':
 		p.next()
 		node = AstNode()
@@ -219,7 +222,6 @@ def _expr2(func, val):
 		func(p)
 		while p.token.type in val:
 			t = p.token.type
-			#print(t)
 			p.next()
 			func(p)
 			p.addOp(t)
@@ -257,8 +259,8 @@ def _expr4(func):
 dot_expr = _expr4(factor)
 item2 = _expr2(dot_expr, ['*', '/', '%'])
 item = _expr2(item2, ['+', '-'])
-in_expr = _expr(item, 'in')
-compare = _expr2(in_expr, ['>', '<', '>=', '<=', '==', '!='])
+in_expr = _expr2(item, ['in', 'notin'])
+compare = _expr2(in_expr, ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
 and_expr = _expr(compare, 'and')
 or_expr = _expr(and_expr, 'or')
 comma = _expr(or_expr, ',')
@@ -289,7 +291,7 @@ def do_import(p):
 	p.addOp("import")
 
 def skip_nl(p):
-	while p.token.type == 'nl':
+	while p.token.type in ('nl', ';'):
 		p.next()
 
 def do_raise(p):
@@ -300,11 +302,11 @@ def do_raise(p):
 		expr(p)
 		p.addOp2('raise')
 
-def stm_next_if(p):
+def factor_next_if(p):
 	if p.token.type == 'if':
 		p.next()
 		node = AstNode()
-		node.type = 'if'
+		node.type = 'choose'
 		expr(p)
 		node.cond = p.pop()
 		node.body = p.pop()
@@ -314,7 +316,6 @@ def stm_next_if(p):
 		p.add(node)
 
 def do_stm(p):
-	skip_nl(p)
 	t = p.token.type
 	if t == 'from':
 		do_from(p)
@@ -328,22 +329,47 @@ def do_stm(p):
 		do_class(p)
 	elif t in ('for', 'while'):
 		do_for_while(p, t)
+	elif t == 'if':
+		do_if(p)
 	elif t in ('return', "raise"):
 		do_stm1(p, t)
-		stm_next_if(p)
+		#stm_next_if(p)
 	elif t in ("break", "continue", "pass"):
 		p.next()
 		node = AstNode()
 		node.type = "pass"
 		p.add( node )
-	elif t == 'if':
-		do_if(p)
 	elif t == 'name':
 		expr(p)
-		stm_next_if(p)
+		#stm_next_if(p)
+	elif t == 'try':
+		do_try(p)
+	elif t == 'global':
+		p.next()
+		node = AstNode()
+		node.type = 'global'
+		assert p.token.type == 'name', p.error()
+		p.next()
+		node.val = p.token.val
+		p.add( node )
 	else:
-		raise Exception('unknown expression, type = ' + t + ', pos = ' + str(p.token.pos))
+		raise Exception('unknown expression'+ p.error())
 	skip_nl(p)
+
+def do_try(p):
+	p.next()
+	p.expect(':')
+	node = AstNode()
+	node.type = 'try'
+	node.body = p.enterBlock()
+	p.expect('except')
+	if p.token.type == 'name':
+		p.error = p.token
+		p.next()
+	p.expect(':')
+	node.catch = p.enterBlock()
+	p.add( node )
+
 
 def do_block(p):
 	skip_nl(p)
@@ -354,6 +380,7 @@ def do_block(p):
 		p.next()
 	else:
 		do_stm(p)
+			
 
 def do_if(p):
 	ast = AstNode()
@@ -363,7 +390,7 @@ def do_if(p):
 	expr(p)
 	ast.cond = p.pop()
 	p.expect(':')
-	ast.body = p.enterBlock(do_block)
+	ast.body = p.enterBlock()
 	temp = cur = ast # temp 
 	if p.token.type == 'elif':
 		while p.token.type == 'elif':
@@ -373,13 +400,13 @@ def do_if(p):
 			expr(p)
 			p.expect(':')
 			node.cond = p.pop()
-			node.body = p.enterBlock(do_block)
+			node.body = p.enterBlock()
 			cur._else = node
 			cur = node
 	if p.token.type == 'else':
 		p.next()
 		p.expect(':')
-		cur._else = p.enterBlock(do_block)
+		cur._else = p.enterBlock()
 	p.add(temp)
 
 
@@ -390,7 +417,7 @@ def do_for_while(p, type):
 	expr(p)
 	ast.a = p.pop()
 	p.expect(':')
-	ast.b = p.enterBlock(do_block)
+	ast.b = p.enterBlock()
 	p.add(ast)
 
 def do_assert(p):
@@ -424,7 +451,7 @@ def do_arg(p):
 			p.next()
 		if p.token.type == '*':
 			p.next()
-			assert p.token.type == 'name', 'invalide arguments at ' + str(p.token.pos)
+			assert p.token.type == 'name', 'invalide arguments ' + p.error()
 			arg = AstNode()
 			arg.type = 'varg'
 			arg.val = None
@@ -443,18 +470,24 @@ def do_def(p):
 	p.next()
 	func.args = do_arg(p)
 	p.expect(':')
-	func.body = p.enterBlock(do_block)
+	func.body = p.enterBlock()
 	p.add(func)
 
 def do_class(p):
 	p.next()
-	assert p.token.type == 'name'
+	assert p.token.type == 'name', 'ClassException' + p.error()
 	clazz = AstNode()
 	clazz.type = 'class'
 	clazz.name = p.token.val
 	p.next()
+	if p.token.type == '(':
+		p.next()
+		assert p.token.type == 'name', 'ClassException'+p.error()
+		p.parent = p.token.val
+		p.next()
+		p.expect(')')
 	p.expect(':')
-	clazz.body = p.enterBlock(do_block)
+	clazz.body = p.enterBlock()
 	p.add(clazz)
 
 def do_stm1(p, type):

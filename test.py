@@ -35,23 +35,24 @@ def show(tree):
 		elif isinstance(v, AstNode):
 			if v.type in ['neg', 'pos', 'not', 'list']:
 				rs = v.type + '\n' + f(n+2, v.val)
-			elif v.type in ['from', '+', '-', '*', '/', '%', ',' ,'=', '+=', '-=', '/=', '*=', 'get', 'attr', 
+			elif v.type in ['from', '+', '-', '*', '/', '%', ',' ,'=', 
+					'+=', '-=', '/=', '*=', 'get', 'attr', 
 					"==", "!=", ">", "<", ">=", "<=", "and", "or", "for","while", "in"]:
 				rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
 			elif v.type == '$':
 				rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
-			elif v.type == 'if':
-				rs = 'if\n' + f(n+2, v.cond, 'cond => ') + \
+			elif v.type in ['if', 'choose']:
+				rs = v.type+'\n' + f(n+2, v.cond, 'cond => ') + \
 					'\n' + f(n+2, v.body, 'body => ') + '\n' + f(n+2, v._else, 'else => ')
 			elif v.type == 'def':
-				rs = 'def ' + f(0 , v.name , 'name => ') + \
+				rs = 'def\n' + f(n + 2 , v.name , 'name => ') + \
 					'\n' + f(n+2, v.args, 'args => ') + '\n' + f(n+2, v.body, "body => ")
 			elif v.type == 'class':
 				rs = 'class ' + f( 0, v.name, 'name => ') + \
 					'\n' + f(n+2, v.body, 'body => ')
 			elif v.type in ['varg', 'arg']:
 				rs = v.type + f(1 , v.name, 'name => ') + f(1,  v.val, 'dafault => ')
-			elif v.type == 'return':
+			elif v.type in ('return', 'global'):
 				rs = v.type + '\n' + f(n+2, v.val)
 			else:
 				rs = v.type
