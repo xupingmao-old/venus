@@ -64,8 +64,19 @@ def show(tree):
 		print(s)
 x = 0
 x = 12 if x > 10 else 3
-tree = parse(open('parse.py').read())
-show(tree)
+# tree = parse(open('parse.py').read())
+
+def main():
+	import sys
+	argv = sys.argv
+	if len(argv) > 1:
+		f = argv[1]
+	else:
+		f = 'parse.py'
+	tree = parse( open(f).read() )
+	show(tree)
+
+main()
 # import json
 
 # txt = json.dumps(tree)
