@@ -32,6 +32,7 @@ def test():
 def test(a, b = 2, c = 4):
 	pass
 
+x = test(1,3,4)
 def test3(a , b = 34):
 	pass
 
