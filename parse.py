@@ -7,53 +7,6 @@ class AstNode:
 	def list(self, left, right):
 		self.val = [left, right]
 
-class AST_IF:
-	def __init__(self):
-		self._if = None
-		self._elif = None
-		self._else = None
-
-class AST_ELIF:
-	def __init__(self, cond, body):
-		self.cond = cond
-		self.body = body
-
-class AST_FOR:
-	def __init__(self):
-		pass
-
-class AST_OP:
-	def __init__(self, op, left, right):
-		self.op = op
-		self.left = left
-		self.right = right
-
-class AST_FUNC:
-	def __init__(self):
-		pass
-class AST_RETURN:
-	def __init__(self, v):
-		self.val = v
-class AST_LIST:
-	def __init__(self, v):
-		self.val = v
-	def list(self, left, right):
-		self.val = [left, right]
-
-class AST_CALL:
-	def __init__(self, v, args):
-		self.name = v
-		self.args = args
-
-class AST_PRE:
-	def __init__(self, t, v):
-		self.op = t
-		self.val = v
-class Arg:
-	def __init__(self):
-		self.val = None
-
-
 class ParserCtx:
 	def __init__(self, r):
 		r.append(Token('eof'))
@@ -296,11 +249,14 @@ def skip_nl(p):
 
 def do_raise(p):
 	p.next()
+	node = AstNode()
+	node.type = 'raise'
 	if p.tolen.type == 'nl':
-		p.add(['raise', None])
+		node.val = None
 	else:
 		expr(p)
-		p.addOp2('raise')
+		node.val = p.pop()
+	p.add(node)
 
 def factor_next_if(p):
 	if p.token.type == 'if':
