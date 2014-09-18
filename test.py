@@ -55,6 +55,7 @@ def show(tree):
 			elif v.type in ('return', 'global', 'raise'):
 				rs = v.type + '\n' + f(n+2, v.val)
 			else:
+				# print(str(type(v))+":"+str(v))
 				rs = v.type
 		else:
 			rs = str(v)

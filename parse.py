@@ -230,7 +230,8 @@ def do_from(p):
 	node.type='from'
 	node.a = p.pop()
 	if p.token.type == "*":
-		node.b = '*'
+		p.token.type = 'star'
+		node.b = p.token
 		p.next()
 	else:
 		expr(p)
