@@ -406,6 +406,13 @@ def do_arg(p):
 			args.append(arg)
 			if p.token.type != ',':break
 			p.next()
+		#check arguments
+		arg_with_default_val = False
+		for arg in args:
+			if arg_with_default_val and arg.val == None:
+				raise Exception('parameter without default value can not behind parameter with default value')
+			if arg.val != None:
+				arg_with_default_val = True
 		if p.token.type == '*':
 			p.next()
 			assert p.token.type == 'name', 'invalide arguments ' + p.error()
