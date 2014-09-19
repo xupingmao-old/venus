@@ -206,7 +206,7 @@ def _expr4(func):
 					p.add( node )
 			else:
 				func(p)
-				p.addOp( 'attr' )
+				p.addOp( 'get' )
 	return f
 
 dot_expr = _expr4(factor)
@@ -230,7 +230,7 @@ def do_from(p):
 	node.type='from'
 	node.a = p.pop()
 	if p.token.type == "*":
-		p.token.type = 'star'
+		p.token.type = 'string'
 		node.b = p.token
 		p.next()
 	else:
@@ -397,7 +397,7 @@ def do_arg(p):
 			arg = AstNode()
 			arg.type = 'arg'
 			arg.val = None
-			arg.name = p.token.val
+			arg.name = p.token
 			p.next()
 			if p.token.type == '=':
 				p.next()
@@ -430,7 +430,7 @@ def do_def(p):
 	assert p.token.type == 'name'
 	func = AstNode()
 	func.type = 'def'
-	func.name = p.token.val
+	func.name = p.token
 	p.next()
 	func.args = do_arg(p)
 	p.expect(':')

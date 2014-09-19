@@ -19,71 +19,74 @@ def store(t):
 def store_name(t):
     emit('store ' + t)
 
-def load(t):
-    if t.type in ['number', 'string', 'name', 'star']:
-        emit('load '+t.val)
-        return 1
-    elif t.type == ',':
-        x = load(t.a)
-        return x +load(t.b)
-    elif t.type == 'attr':
-        load(t.a)
-        load(t.b)
-        emit('GET')
-        return 1
-
-def import_(des, src = None):
-    load(Token('name','import'))
-    n = load(des)
-    if src:n += load(src)
-    emit('call '+str(n))
-
-
 def encode_item( tk ):
+    if tk == None: return 0
     if isinstance(tk, list):
         for i in tk:
             encode_item(i)
+            if i.type == '$': emit('POP')
         return
     t = tk.type
-    if tk.type == '=':
+    if t == '=':
         encode_item(tk.b)
         store(tk.a)
-    elif tk.type == ',':
-        load(tk)
+    elif t == ',':
+        return encode_item( tk.a ) + encode_item(tk.b)
     elif tk.type == 'list':
-        n = load(tk.val)
+        n = encode_item(tk.val)
         emit('list '+str(n))
+    elif t == '$':
+        encode_item(tk.name)
+        n = encode_item(tk.args)
+        emit('call ' + str(n))
     elif t == 'arg':
         if tk.val:
             encode_item(tk.val)
             store(tk.name)
-        emit('set_arg '+tk.name)
+        #emit('set_arg '+tk.name)
     elif t == 'def':
         emit('DEF')
         encode_item(tk.args)
+        emit('LOAD_PARAMS')
         encode_item(tk.body)
         emit('EOF')
-        store_name(tk.name)
+        store(tk.name)
     elif t == 'return':
         if tk.val:encode_item(tk.val)
         emit('return')
     elif t == 'from':
-        import_(tk.b, tk.a)
+        encode_item(Token('name','importfrom'))
+        n = encode_item(tk.a)
+        n += encode_item(tk.b)
+        emit('call '+str(n))
+        emit('POP')
     elif t in  ['+', '-', '*', '/', '%', 
-                    '+=', '-=', '/=', '*=', 'get', 'attr', 
+                    '+=', '-=', '/=', '*=', 'get',
                     "==", "!=", ">", "<", ">=", "<=", "and", "or", "for","while", "in"]:
         encode_item(tk.a)
         encode_item(tk.b)
         emit(tk.type)
-    elif tk.type in ['number', 'string', 'name', 'star']:
-        load(tk)
+        return 1
+    elif t in ['number', 'name']:
+        emit('load '+tk.val)
+        return 1
+    elif t == 'string':
+        emit('load "' + tk.val + '"')
+        return 1
     else:
         pass
 
 
 def encode(content):
     r = parse(content)
-    try:encode_item(r)
-    except Exception as e:print(e)
+    encode_item(r)
 
-encode(open('test1.py').read())
+
+def main( ):
+    import sys
+    name = 'test1.py'
+    if len(sys.argv) > 1:
+        name = sys.argv[1]
+    encode( open(name).read() )
+
+main()

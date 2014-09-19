@@ -36,7 +36,7 @@ def show(tree):
 			if v.type in ['neg', 'pos', 'not', 'list']:
 				rs = v.type + '\n' + f(n+2, v.val)
 			elif v.type in ['from', '+', '-', '*', '/', '%', ',' ,'=', 
-					'+=', '-=', '/=', '*=', 'get', 'attr', 
+					'+=', '-=', '/=', '*=', 'get',
 					"==", "!=", ">", "<", ">=", "<=", "and", "or", "for","while", "in"]:
 				rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
 			elif v.type == '$':
