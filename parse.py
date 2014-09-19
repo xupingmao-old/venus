@@ -266,10 +266,10 @@ def factor_next_if(p):
 		node.type = 'choose'
 		expr(p)
 		node.cond = p.pop()
-		node.body = p.pop()
+		node.left = p.pop()
 		p.expect('else')
 		expr(p)
-		node._else = p.pop()
+		node.right = p.pop()
 		p.add(node)
 
 def do_stm(p):
@@ -342,28 +342,28 @@ def do_block(p):
 def do_if(p):
 	ast = AstNode()
 	ast.type = 'if'
-	ast._else = None
+	ast.right = None
 	p.next()
 	expr(p)
 	ast.cond = p.pop()
 	p.expect(':')
-	ast.body = p.enterBlock()
+	ast.left = p.enterBlock()
 	temp = cur = ast # temp 
 	if p.token.type == 'elif':
 		while p.token.type == 'elif':
 			node = AstNode()
-			node.type , node._else = 'if', None
+			node.type , node.right = 'if', None
 			p.next()
 			expr(p)
 			p.expect(':')
 			node.cond = p.pop()
-			node.body = p.enterBlock()
-			cur._else = node
+			node.left = p.enterBlock()
+			cur.right = node
 			cur = node
 	if p.token.type == 'else':
 		p.next()
 		p.expect(':')
-		cur._else = p.enterBlock()
+		cur.right = p.enterBlock()
 	p.add(temp)
 
 

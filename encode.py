@@ -54,14 +54,25 @@ def encode_item( tk ):
     elif t == 'return':
         if tk.val:encode_item(tk.val)
         emit('return')
+    elif t == 'if':
+        encode_item(tk.cond)
+        emit('jump_on_false')
+        encode_item(tk.left)
+        emit('jump_to_end')
+        encode_item(tk.right)
     elif t == 'from':
         encode_item(Token('name','importfrom'))
         n = encode_item(tk.a)
         n += encode_item(tk.b)
         emit('call '+str(n))
         emit('POP')
+    elif t == '+=':
+        encode_item(tk.b)
+        encode_item(tk.a)
+        emit('+')
+        store(tk.a)
     elif t in  ['+', '-', '*', '/', '%', 
-                    '+=', '-=', '/=', '*=', 'get',
+                     '-=', '/=', '*=', 'get',
                     "==", "!=", ">", "<", ">=", "<=", "and", "or", "for","while", "in"]:
         encode_item(tk.a)
         encode_item(tk.b)

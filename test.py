@@ -43,7 +43,7 @@ def show(tree):
 				rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
 			elif v.type in ['if', 'choose']:
 				rs = v.type+'\n' + f(n+2, v.cond, 'cond => ') + \
-					'\n' + f(n+2, v.body, 'body => ') + '\n' + f(n+2, v._else, 'else => ')
+					'\n' + f(n+2, v.left, 'body => ') + '\n' + f(n+2, v.right, 'else => ')
 			elif v.type == 'def':
 				rs = 'def\n' + f(n + 2 , v.name , 'name => ') + \
 					'\n' + f(n+2, v.args, 'args => ') + '\n' + f(n+2, v.body, "body => ")
