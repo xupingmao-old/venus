@@ -1,30 +1,64 @@
 # encode for
 
 from parse import *
+from instruction import *
 
-def emit(s):
-    print(s)
 
 def store(t):
     if t.type == 'name':
-        emit('store '+t.val)
-    elif t.type in ['attr', 'get']:
+        emit_store(t.val)
+    elif t.type == 'get':
         encode_item(t.b)
         encode_item(t.a)
-        emit('SET')
+        emit(SET)
     elif t.type == ',':
         store(t.b)
         store(t.a)
 
-def store_name(t):
-    emit('store ' + t)
+tag_count = 0
+def newtag():
+    global tag_count
+    tag_count+=1
+    return tag_count
+
+def jump( p, ins = JUMP):
+    emit( ins, p)
+
+def tag( p):
+    emit(TAG, p)
+
+op_map = {
+    '+':ADD,
+    '-':SUB,
+    '*':MUL,
+    '/':DIV,
+    '%':MOD,
+    '>' : GT,
+    '<' : LT,
+    '>=': GTEQ,
+    '<=': LTEQ,
+    '==': EQEQ,
+    '!=': NOTEQ,
+    'get': GET,
+    'in' : IN
+}
+op_list = op_map.keys()
+op_ext_map = {
+    '+=' : ADD,
+    '-=' : SUB,
+    '*=' : MUL,
+    '/=' : DIV,
+    '%=' : MOD
+}
+op_ext_list = op_ext_map.keys()
+
 
 def encode_item( tk ):
     if tk == None: return 0
     if isinstance(tk, list):
         for i in tk:
             encode_item(i)
-            if i.type == '$': emit('POP')
+            if i.type == '$': emit(POP)
         return
     t = tk.type
     if t == '=':
@@ -34,55 +68,57 @@ def encode_item( tk ):
         return encode_item( tk.a ) + encode_item(tk.b)
     elif tk.type == 'list':
         n = encode_item(tk.val)
-        emit('list '+str(n))
+        emit(LIST, n)
     elif t == '$':
         encode_item(tk.name)
         n = encode_item(tk.args)
-        emit('call ' + str(n))
+        emit(CALL , n)
     elif t == 'arg':
         if tk.val:
             encode_item(tk.val)
             store(tk.name)
         #emit('set_arg '+tk.name)
     elif t == 'def':
-        emit('DEF')
+        emit(DEF)
         encode_item(tk.args)
-        emit('LOAD_PARAMS')
+        emit(LOAD_PARAMS)
         encode_item(tk.body)
-        emit('EOF')
+        emit(EOF)
         store(tk.name)
     elif t == 'return':
         if tk.val:encode_item(tk.val)
-        emit('return')
+        emit(RETURN)
     elif t == 'if':
         encode_item(tk.cond)
-        emit('jump_on_false')
+        else_tag,end_tag = newtag(), newtag()
+        jump(else_tag, JUMP_ON_FALSE)
         encode_item(tk.left)
-        emit('jump_to_end')
+        jump(end_tag)
+        tag(else_tag)
         encode_item(tk.right)
+        tag(end_tag)
     elif t == 'from':
         encode_item(Token('name','importfrom'))
         n = encode_item(tk.a)
         n += encode_item(tk.b)
-        emit('call '+str(n))
-        emit('POP')
-    elif t == '+=':
+        emit(CALL, n)
+        emit(POP)
+    elif t in op_list:
+        encode_item(tk.a)
+        encode_item(tk.b)
+        emit( op_map[t])
+    elif t in op_ext_list:
         encode_item(tk.b)
         encode_item(tk.a)
-        emit('+')
+        emit( op_ext_map[t] )
         store(tk.a)
-    elif t in  ['+', '-', '*', '/', '%', 
-                     '-=', '/=', '*=', 'get',
-                    "==", "!=", ">", "<", ">=", "<=", "and", "or", "for","while", "in"]:
+    elif t in  [ "and", "or", "for","while", "in"]:
         encode_item(tk.a)
         encode_item(tk.b)
         emit(tk.type)
         return 1
-    elif t in ['number', 'name']:
-        emit('load '+tk.val)
-        return 1
-    elif t == 'string':
-        emit('load "' + tk.val + '"')
+    elif t in ['number', 'name', "string"]:
+        emit_load( tk )
         return 1
     else:
         pass
