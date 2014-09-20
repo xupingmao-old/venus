@@ -132,7 +132,7 @@ def factor(p):
 def factor_(p):
 	t = p.token.type
 	token = p.token
-	if t in ['number', 'string', 'name', 'constants']:
+	if t in ['number', 'string', 'name', 'None']:
 		p.next()
 		p.add(token)
 		factor_next_if(p)

@@ -6,7 +6,7 @@ from instruction import *
 
 def store(t):
     if t.type == 'name':
-        emit_store(t.val)
+        emit_store( t )
     elif t.type == 'get':
         encode_item(t.b)
         encode_item(t.a)
@@ -40,7 +40,8 @@ op_map = {
     '==': EQEQ,
     '!=': NOTEQ,
     'get': GET,
-    'in' : IN
+    'in' : IN,
+    'notin' : NOTIN
 }
 op_list = op_map.keys()
 op_ext_map = {
@@ -91,7 +92,7 @@ def encode_item( tk ):
     elif t == 'if':
         encode_item(tk.cond)
         else_tag,end_tag = newtag(), newtag()
-        jump(else_tag, JUMP_ON_FALSE)
+        jump(else_tag, POP_JUMP_ON_FALSE)
         encode_item(tk.left)
         jump(end_tag)
         tag(else_tag)
@@ -112,12 +113,26 @@ def encode_item( tk ):
         encode_item(tk.a)
         emit( op_ext_map[t] )
         store(tk.a)
-    elif t in  [ "and", "or", "for","while", "in"]:
+    elif t == 'and':
+        end = newtag()
+        encode_item(tk.a)
+        emit(JUMP_ON_FALSE, end)
+        encode_item(tk.b)
+        emit(AND)
+        tag( end )
+    elif t == 'or':
+        end = newtag()
+        encode_item(tk.a)
+        emit( JUMP_ON_TRUE, end)
+        encode_item( tk.b )
+        emit(OR)
+        tag( end )
+    elif t in  [ "and", "or", "for","while"]:
         encode_item(tk.a)
         encode_item(tk.b)
         emit(tk.type)
         return 1
-    elif t in ['number', 'name', "string"]:
+    elif t in ['number', 'name', "string", 'None']:
         emit_load( tk )
         return 1
     else:
@@ -135,5 +150,8 @@ def main( ):
     if len(sys.argv) > 1:
         name = sys.argv[1]
     encode( open(name).read() )
+    print('\n\n==========constants=============')
+    print_constants()
+    # input("pause")
 
 main()
