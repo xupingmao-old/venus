@@ -135,6 +135,7 @@ typedef struct tm_vm
 #include "gc.h"
 #include "ops.h"
 #include "instruction.h"
+#include "map.h"
 
 inline
 tm_obj tm_number(double v){
@@ -156,6 +157,7 @@ tm_obj tm_number(double v){
 #include "gc.c"
 #include "stream.c"
 #include "test.c"
+#include "map.c"
 
 #endif
 

@@ -206,3 +206,5 @@ int tm_eq(tm_obj a, tm_obj b){
 	}
 	return 0;
 }
+
+#define tm_equals tm_eq
