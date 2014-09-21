@@ -24,6 +24,11 @@ void* tm_realloc( tm_vm* tm, void* o, size_t osize, size_t nsize)
 	return block;
 }
 
+void tm_free( tm_vm* tm, void* o, size_t size){
+	free(o);
+	tm->allocated_mem -= size;
+}
+
 void tm_raise(tm_vm* tm)
 {
 	if( tm->error.type != TM_NON )
@@ -59,5 +64,6 @@ void obj_free(tm_vm* tm, tm_obj o){
 	case TM_METHOD:
 	case TM_NATIVE_METHOD:
 	case TM_FNC: func_free(  tm, o.value.func);break;
+	case TM_MAP: map_free(tm, o.value.map);break;
 	}
 }

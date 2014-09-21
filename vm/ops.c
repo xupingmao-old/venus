@@ -112,7 +112,7 @@ int tm_get_int(tm_vm* tm, tm_obj v){
 	return (int)v.value.dv;
 }
 
-void tm_set( tm_vm* tm, tm_obj self, tm_obj k, tm_obj v){
+void tm_set( tm_obj self, tm_obj k, tm_obj v){
 	switch( self.type ){
 	case TM_LST:
 	{
@@ -123,6 +123,7 @@ void tm_set( tm_vm* tm, tm_obj self, tm_obj k, tm_obj v){
 	case TM_DCT:
 		dict_set(tm, self.value.dict, k, v);
 		break;
+	case TM_MAP: map_set(tm, self.value.map, k, v);break;
 	}
 }
 
@@ -178,6 +179,7 @@ tm_obj tm_add( tm_vm* tm, tm_obj a, tm_obj b){
 	_tm_raise("tm_add: type can not add");
 	return tm->none;
 }
+
 
 int tm_eq(tm_obj a, tm_obj b){
 	if( a.type != b.type ) return 0;

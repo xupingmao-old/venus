@@ -6,6 +6,7 @@
 #define TM_STREAM 6 // stream
 #define TM_NON 7
 #define TM_END 8 // end of list or dict
+#define TM_MAP 9
 
 #define TM_NATIVE_FNC 20
 #define TM_USER_FNC   21

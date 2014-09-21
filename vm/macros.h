@@ -16,6 +16,7 @@
 
 #define get_list(obj) get_val(obj).list
 #define get_dict(obj) get_val(obj).dict
+#define get_map(obj) get_val(obj).map
 
 #define get_nodes(obj)  get_list(obj)->nodes
 #define get_keys(obj)   get_dict(obj)->keys
@@ -26,6 +27,12 @@
 #define dict_len(obj)  get_keys(obj)->len
 
 #define _tm_raise( s ) tm->error = string_new(tm, s); tm_raise(tm);
+
+
+#define ptr_addr( ptr ) (long) (ptr) / sizeof(char*)
+
+#define S(s) string_new(tm, s)
+#define N(n) tm_number(n)
 
 #endif
 

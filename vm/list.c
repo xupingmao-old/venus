@@ -41,9 +41,8 @@ void list_free( tm_vm* tm, tm_list* list){
 #if DEBUG_GC
 	int old = tm->allocated_mem;
 #endif
-	tm->allocated_mem -= list->cap * sizeof(tm_obj) + sizeof( tm_list );
-	free(list->nodes);
-	free(list);
+	tm_free(tm, list->nodes, list->cap * sizeof(tm_obj));
+	tm_free(tm, list, sizeof(list));
 #if DEBUG_GC
 	printf("free list %x, from %d to %d, freed: %d\n", list,
 			old, tm->allocated_mem,

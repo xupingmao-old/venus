@@ -3,7 +3,7 @@
 #ifndef tm_h
 #define tm_h
 
-#define DEBUG_GC 1
+#define DEBUG_GC 0
 
 #include <stdio.h>
 #include <string.h>
@@ -46,6 +46,7 @@ typedef union tm_value
 	struct tm_dict* dict;
 	struct tm_stream* stream;
 	struct tm_func* func;
+	struct tm_map* map;
 }tm_value;
 
 
@@ -125,6 +126,10 @@ typedef struct tm_vm
 
 }tm_vm;
 
+/**
+ * 系统就一个全局变量tm， 也就是虚拟机的structure
+ */
+tm_vm* tm;
 
 #include "object.h"
 #include "macros.h"
@@ -156,8 +161,8 @@ tm_obj tm_number(double v){
 #include "ops.c"
 #include "gc.c"
 #include "stream.c"
-#include "test.c"
 #include "map.c"
+#include "test.c"
 
 #endif
 

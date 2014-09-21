@@ -4,6 +4,8 @@
 
 void* tm_alloc( tm_vm* tm, size_t size);
 void* tm_realloc( tm_vm* tm, void* o, size_t osize, size_t nsize);
+void tm_free(tm_vm*tm, void* o, size_t size);
+
 tm_obj obj_new(int type, void* value);
 void obj_free(tm_vm* tm, tm_obj obj);
 void tm_raise(tm_vm* tm);

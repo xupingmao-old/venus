@@ -36,12 +36,16 @@ tm_obj gc_track(tm_vm* tm, tm_obj v){
 	case TM_NUM:
 		return v;
 	case TM_STR:
-		return gc_do_string(tm, v);
+		v.value.str->marked = 1;
+		return v;
 	case TM_LST:
 		v.value.list->marked = 1;
 		break;
 	case TM_DCT:
 		v.value.dict->marked = 1;
+		break;
+	case TM_MAP:
+		v.value.map->marked = 1;
 		break;
 	}
 	list_push(tm, tm->all, v);

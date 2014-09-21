@@ -1,5 +1,6 @@
 #include "tm.h"
 
+
 tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params){
 	tm_obj m = tm->none;
 	if( mod != NULL ){
@@ -18,11 +19,11 @@ tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params){
 
 void constants_init(tm_vm* tm){
 	tm->none.type = TM_NON;
-	tm->none_str = string_new(tm, "None");
-	tm->empty_str = string_new(tm, "");
+	tm->none_str = S("None");
+	tm->empty_str = S("");
 
 	// init chars;
-	// 这些字符不会被清除掉，因为字符串缓存的原因
+	// 锟斤拷些锟街凤拷岜伙拷锟斤拷锟斤拷锟斤拷锟轿拷址锟斤拷锟斤拷原锟斤拷
 	int i;
 	for(i = 0; i < 256; i++){
 		char *s = tm_alloc(tm, 2);
@@ -34,8 +35,8 @@ void constants_init(tm_vm* tm){
 }
 
 void builtins_method_init(tm_vm* tm){
-	tm->string_methods = dict_new(tm);
-	tm->list_methods = dict_new(tm);
+	tm->string_methods = map_new(tm);
+	tm->list_methods = map_new(tm);
 	struct nfl{
 		char* name;
 		tm_obj (*native_func) (tm_vm*, tm_obj);
@@ -56,13 +57,13 @@ void builtins_method_init(tm_vm* tm){
 	for( i = 0; native_string_methods[i].name ; i++){
 		tm_obj name = string_new(tm, native_string_methods[i].name);
 		tm_obj func = native_method_new(tm, native_string_methods[i].native_func);
-		tm_set(tm, tm->string_methods, name, func);
+		tm_set( tm->string_methods, name, func);
 	}
 
 	for( i = 0; native_list_methods[i].name; i++){
 		tm_obj name = string_new(tm, native_list_methods[i].name);
 		tm_obj method = native_method_new(tm, native_list_methods[i].native_func);
-		tm_set(tm, tm->list_methods, name, method);
+		tm_set( tm->list_methods, name, method);
 	}
 
 	list_push(tm, tm->root, tm->string_methods);
@@ -89,7 +90,7 @@ void builtins_init(tm_vm* tm){
 	for( i = 0; native_func_list[i].name ; i++){
 		tm_obj name = string_new(tm, native_func_list[i].name);
 		tm_obj func = native_func_new(tm, native_func_list[i].native_func);
-		tm_set(tm, tm->builtins, name, func);
+		tm_set( tm->builtins, name, func);
 	}
 //	tm_print(tm, tm_arg1(tm, tm->builtins));
 }
@@ -99,7 +100,7 @@ void modules_init(tm_vm*tm){
 }
 
 int tm_init(int argc, char* argv[]){
-	tm_vm* tm = malloc( sizeof(tm_vm) );
+	tm = malloc( sizeof(tm_vm) );
 	if( tm == NULL ){
 		puts("vm init fail");
 		return -1;
@@ -110,6 +111,7 @@ int tm_init(int argc, char* argv[]){
 	builtins_method_init(tm);
 	modules_init(tm);
 
+	test_map(tm);
 
 	tm->cur = 0;
 

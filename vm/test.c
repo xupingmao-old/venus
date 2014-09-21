@@ -1,4 +1,5 @@
 #include "tm.h"
+#include "../test/test_map.c"
 tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params);
 
 void test_func_call(tm_vm* tm){
@@ -11,7 +12,7 @@ void test_func_call(tm_vm* tm){
 }
 
 void test_print(tm_vm* tm){
-	tm_set( tm, tm->modules, string_new(tm, "io"), string_new(tm, "test"));
+	tm_set(  tm->modules, string_new(tm, "io"), string_new(tm, "test"));
 	tm_obj args = tm_arg1(tm, tm->modules);
 	tm_print(tm, args);
 

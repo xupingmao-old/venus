@@ -63,8 +63,15 @@ void __tm_print(tm_obj o, int depth){
 		break;
 	case TM_NON:
 		printf("None");break;
+
+	case TM_MAP:
+		map_print(o.value.map);break;
 	}
 	}
+}
+
+void cprint(tm_obj o){
+	__tm_print(o, 4);
 }
 
 void _tm_print(tm_obj o){
