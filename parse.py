@@ -132,7 +132,7 @@ def factor(p):
 def factor_(p):
 	t = p.token.type
 	token = p.token
-	if t in ['number', 'string', 'name', 'None']:
+	if t in ('number', 'string', 'name', 'None'):
 		p.next()
 		p.add(token)
 		factor_next_if(p)
@@ -419,7 +419,7 @@ def do_arg(p):
 			arg = AstNode()
 			arg.type = 'varg'
 			arg.val = None
-			arg.name = p.token.val
+			arg.name = p.token
 			args.append(arg)
 			p.next()
 		p.expect(')')
@@ -442,7 +442,7 @@ def do_class(p):
 	assert p.token.type == 'name', 'ClassException' + p.error()
 	clazz = AstNode()
 	clazz.type = 'class'
-	clazz.name = p.token.val
+	clazz.name = p.token
 	p.next()
 	if p.token.type == '(':
 		p.next()

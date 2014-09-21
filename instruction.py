@@ -11,7 +11,7 @@ def emit(ins, val = None):
 
 def emit_load( v ):
 	t = v.type
-	if t == 'string':
+	if t == 'string' or t == 'number':
 		load_g( v.val )
 	elif t == 'None':
 		emit(NONE)
@@ -23,28 +23,33 @@ def emit_load( v ):
 		else:
 			load_g( v.val )
 	else:
-		print('LOAD ' + str(v.val))
+		print('LOAD_LOCAL ' + str(v.val))
+
+def def_local( v ):
+	if v not in cur_scope.locals:
+		cur_scope.locals.append( v )
 
 def load_l( v ):
 	if v not in cur_scope.locals:
 		cur_scope.locals.append( v )
-	emit( LOAD, cur_scope.locals.index(v) )
+	emit( LOAD_LOCAL, cur_scope.locals.index(v) )
 def load_g( v ):
 	if v not in constants:
 		constants.append(v)
-	emit( LOADG, constants.index(v))
+	emit( LOAD_GLOBAL, constants.index(v))
 
 def store_g( v ):
 	if v not in constants:
 		constants.append(v)
-	emit( STOREG, constants.index(v))
+	emit( STORE_GLOBAL, constants.index(v))
 
 def store_l( v ):
 	if v not in cur_scope.locals:
 		cur_scope.locals.append( v )
-	emit( STORE, cur_scope.locals.index(v) )
+	emit( STORE_LOCAL, cur_scope.locals.index(v) )
 
 def emit_store( v ):
+	# the scope is global
 	if len( scopes ) == 1:
 		store_g( v.val )
 	elif v.val in cur_scope.g:
@@ -61,7 +66,7 @@ class Scope:
 	def def_global(self, v):
 		if v not in self.cg:
 			self.g.append(v)
-scopes = []
+
 cur_scope = Scope()
 scopes = [cur_scope]
 constants = []
@@ -105,14 +110,15 @@ OR = 'OR'
 # memory
 SET = 'SET'
 GET = 'GET'
-STORE = 'STORE'
-STOREG = 'STOREG'
-LOAD = 'LOAD'
-LOADG = 'LOADG'
+STORE_LOCAL = 'STORE_LOCAL'
+STORE_GLOBAL = 'STORE_GLOBAL'
+LOAD_LOCAL = 'LOAD_LOCAL'
+LOAD_GLOBAL = 'LOAD_GLOBAL'
 POP = 'POP'
 
 # data
 LIST = 'LIST'
+DICT = 'DICT'
 
 # jump
 JUMP = 'JUMP'

@@ -51,7 +51,7 @@ def show(tree):
 				rs = 'class ' + f( 0, v.name, 'name => ') + \
 					'\n' + f(n+2, v.body, 'body => ')
 			elif v.type in ['varg', 'arg']:
-				rs = v.type + f(1 , v.name, 'name => ') + f(1,  v.val, 'dafault => ')
+				rs = v.type + f(1 , v.name, 'name => ') + '\n'+ f(n + 2,  v.val, 'dafault => ')
 			elif v.type in ('return', 'global', 'raise'):
 				rs = v.type + '\n' + f(n+2, v.val)
 			else:

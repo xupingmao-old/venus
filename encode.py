@@ -1,3 +1,5 @@
+if 'tinytm' not in globals():
+    from boot import *
 # encode for
 
 from parse import *
@@ -53,8 +55,21 @@ op_ext_map = {
 }
 op_ext_list = op_ext_map.keys()
 
+start_tag_list = [-1]
+end_tag_list = [-1]
+
+in_class = False
+
+def print_tok_pos( tk ):
+    if isinstance(tk, Token):
+        print(tk.pos)
+    elif hasattr(tk, 'a'):
+        print_tok_pos(tk.a)
+    elif hasattr(tk, 'val'):
+        print_tok_pos(tk.val)
 
 def encode_item( tk ):
+    global in_class
     if tk == None: return 0
     if isinstance(tk, list):
         for i in tk:
@@ -75,17 +90,29 @@ def encode_item( tk ):
         n = encode_item(tk.args)
         emit(CALL , n)
     elif t == 'arg':
+        def_local(tk.name.val)
         if tk.val:
             encode_item(tk.val)
             store(tk.name)
         #emit('set_arg '+tk.name)
     elif t == 'def':
         emit(DEF)
+        new_scope()
         encode_item(tk.args)
         emit(LOAD_PARAMS)
         encode_item(tk.body)
         emit(EOF)
+        quit_scope()
+        if in_class:
+            emit_load(tk.name)
+        else:
+            emit_store(tk.name)
+    elif t == 'class':
+        in_class = True
+        encode_item(tk.body)
+        emit(DICT, len(tk.body))
         store(tk.name)
+        in_class = False
     elif t == 'return':
         if tk.val:encode_item(tk.val)
         emit(RETURN)
@@ -98,6 +125,25 @@ def encode_item( tk ):
         tag(else_tag)
         encode_item(tk.right)
         tag(end_tag)
+    elif t == 'while':
+        start_tag, end_tag = newtag(), newtag()
+        # set while stack
+        start_tag_list.append( start_tag )
+        end_tag_list.append( end_tag )
+        ###
+        tag(start_tag)
+        encode_item(tk.a)
+        jump(end_tag, POP_JUMP_ON_FALSE)
+        encode_item(tk.b)
+        jump(start_tag)
+        tag(end_tag)
+        # clear while stack
+        start_tag_list.pop()
+        end_tag_list.pop()
+    elif t == 'break':
+        jump( end_tag_list [-1] )
+    elif t == 'continue':
+        jump( end_tag_list[-1] )
     elif t == 'from':
         encode_item(Token('name','importfrom'))
         n = encode_item(tk.a)
@@ -127,16 +173,15 @@ def encode_item( tk ):
         encode_item( tk.b )
         emit(OR)
         tag( end )
-    elif t in  [ "and", "or", "for","while"]:
+    elif t in  ( "and", "or", "for","while" ):
         encode_item(tk.a)
         encode_item(tk.b)
         emit(tk.type)
-        return 1
-    elif t in ['number', 'name', "string", 'None']:
+    elif t in ('number', 'name', "string", 'None'):
         emit_load( tk )
-        return 1
     else:
         pass
+    return 1
 
 
 def encode(content):
@@ -147,8 +192,8 @@ def encode(content):
 def main( ):
     import sys
     name = 'test1.py'
-    if len(sys.argv) > 1:
-        name = sys.argv[1]
+    if len( argv ) > 1:
+        name = argv[1]
     encode( open(name).read() )
     print('\n\n==========constants=============')
     print_constants()
