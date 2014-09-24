@@ -23,7 +23,7 @@ def main():
     f.connect(ip, 21)
     f.login(user, password)
     def callback(line):
-        print(line[line.index(' '):])
+        print(line[line.index(' '):].lstrip())
     while 1:
         print(time.asctime())
 
