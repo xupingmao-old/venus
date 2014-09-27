@@ -1,6 +1,6 @@
 #include "tm.h"
-#include "../test/test_map.c"
-tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params);
+#include "./test/test_map.c"
+/*tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params);
 
 void test_func_call(tm_vm* tm){
 	tm_obj arg = tm_arg1(tm, string_new(tm, "test"));
@@ -21,8 +21,8 @@ void test_print(tm_vm* tm){
 	tm_obj d = string_new(tm, "hellworld");
 
 	tm_obj o;
-	o.type = TM_DCT;
-	o.value.dict = tm->strings;
+	o.type = TM_MAP;
+	o.value.map = tm->strings;
 	tm_print(tm, tm_arg1(tm, o));
 }
 
@@ -46,5 +46,6 @@ void test_list_insert(tm_vm* tm){
 
 void test(tm_vm* tm){
 //	test_func_call(tm);
-	test_list_insert(tm);
+	test_list_insert();
 }
+*/

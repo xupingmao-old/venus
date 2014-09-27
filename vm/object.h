@@ -8,10 +8,9 @@
 #ifndef OBJECT_H_
 #define OBJECT_H_
 
-tm_obj string_new(tm_vm* tm, char* s);
+tm_obj string_new(char* s, int size);
+tm_obj list_new(int cap);
 
-tm_obj list_new(tm_vm* tm);
-
-tm_obj dict_new(tm_vm* tm);
+void list_set( tm_list* list, int n, tm_obj v);
 
 #endif /* OBJECT_H_ */

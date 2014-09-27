@@ -20,10 +20,10 @@ typedef struct tm_string{
 
 typedef struct tm_list
 {
+	int marked;
 	int len;
 	int cap;
 	int cur;
-	int marked;
 	int nodesize;
 	struct tm_obj* nodes;
 }tm_list;
@@ -38,12 +38,13 @@ typedef struct tm_dict
 
 typedef union tm_value
 {
+	int marked;
 	double dv;
 	int iv;
 	long lv;
 	struct tm_string* str;
 	struct tm_list* list;
-	struct tm_dict* dict;
+/*	struct tm_dict* dict;*/
 	struct tm_stream* stream;
 	struct tm_func* func;
 	struct tm_map* map;
@@ -66,10 +67,11 @@ typedef struct tm_vm tm_vm;
 typedef struct tm_func
 {
 	int marked;
+	int fnc_type;
 	tm_obj self;
 	tm_obj globals;
 	char* code;
-	tm_obj (*native_func)(tm_vm*, tm_obj);
+	tm_obj (*native_func)( tm_obj);
 }tm_func;
 
 
@@ -86,6 +88,8 @@ typedef struct tm_frame
 	int jmp;
 
 }tm_frame;
+
+#include "map.h"
 
 typedef struct tm_vm
 {
@@ -119,7 +123,7 @@ typedef struct tm_vm
 	tm_list* all;
 	tm_list* black;
 	tm_list* white;
-	tm_dict* strings;
+	tm_map* strings;
 
 	int allocated_mem;
 	int used_mem;
@@ -140,7 +144,6 @@ tm_vm* tm;
 #include "gc.h"
 #include "ops.h"
 #include "instruction.h"
-#include "map.h"
 
 inline
 tm_obj tm_number(double v){
@@ -153,7 +156,7 @@ tm_obj tm_number(double v){
 
 #include "string.c"
 #include "list.c"
-#include "dict.c"
+/*#include "dict.c"*/
 #include "func.c"
 #include "core.c"
 #include "args.c"

@@ -24,10 +24,11 @@ typedef struct tm_map
 /* 公开接口
  *
  */
-tm_obj map_new(tm_vm* tm);
-void map_free(tm_vm*tm, tm_map* map);
-void map_set(tm_vm* tm, tm_map* map, tm_obj key, tm_obj val);
-int map_iget(tm_vm* tm, tm_map* map, tm_obj *des, tm_obj key);
-int map_inext(tm_vm* tm, tm_map* map, tm_obj *key, tm_obj* val);
+tm_obj map_new();
+tm_map* _map_new();
+void map_free(tm_map* map);
+void map_set( tm_map* map, tm_obj key, tm_obj val);
+int map_iget(tm_map* map, tm_obj key, tm_obj *des);
+int map_inext(tm_map* map, tm_obj *key, tm_obj* val);
 void map_print(tm_map* map);
 #endif

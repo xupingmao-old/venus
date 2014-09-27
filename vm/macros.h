@@ -25,13 +25,14 @@
 
 #define list_len(obj)  get_list(obj)->len
 #define dict_len(obj)  get_keys(obj)->len
+#define map_len( obj)  get_map(obj)->len
 
 #define _tm_raise( s ) tm->error = string_new(tm, s); tm_raise(tm);
 
 
 #define ptr_addr( ptr ) (long) (ptr) / sizeof(char*)
 
-#define S(s) string_new(tm, s)
+#define S(s) string_new(s,0)
 #define N(n) tm_number(n)
 
 #endif

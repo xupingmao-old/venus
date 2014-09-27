@@ -1,6 +1,6 @@
 #include "tm.h"
 
-
+/*
 tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params){
 	tm_obj m = tm->none;
 	if( mod != NULL ){
@@ -17,7 +17,7 @@ tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params){
 	return tm_call(tm, f0, params);
 }
 
-void constants_init(tm_vm* tm){
+void constants_init(){
 	tm->none.type = TM_NON;
 	tm->none_str = S("None");
 	tm->empty_str = S("");
@@ -34,9 +34,9 @@ void constants_init(tm_vm* tm){
 	}
 }
 
-void builtins_method_init(tm_vm* tm){
-	tm->string_methods = map_new(tm);
-	tm->list_methods = map_new(tm);
+void builtins_method_init(){
+	tm->string_methods = map_new();
+	tm->list_methods = map_new();
 	struct nfl{
 		char* name;
 		tm_obj (*native_func) (tm_vm*, tm_obj);
@@ -74,8 +74,8 @@ void builtins_method_init(tm_vm* tm){
 	_tm_print( o);
 }
 
-void builtins_init(tm_vm* tm){
-	tm->builtins = dict_new(tm);
+void builtins_init(){
+	tm->builtins = map_new(tm);
 	struct nfl{
 		char* name;
 		tm_obj (*native_func) (tm_vm*, tm_obj);
@@ -95,9 +95,9 @@ void builtins_init(tm_vm* tm){
 //	tm_print(tm, tm_arg1(tm, tm->builtins));
 }
 
-void modules_init(tm_vm*tm){
-	tm->modules = dict_new(tm);
-}
+void modules_init(){
+	tm->modules = map_new(tm);
+}*/
 
 int tm_init(int argc, char* argv[]){
 	tm = malloc( sizeof(tm_vm) );
@@ -105,18 +105,18 @@ int tm_init(int argc, char* argv[]){
 		puts("vm init fail");
 		return -1;
 	}
-	gc_init(tm);
-	constants_init(tm);
-	builtins_init(tm);
-	builtins_method_init(tm);
-	modules_init(tm);
+	gc_init();
+	// constants_init();
+	// builtins_init();
+	// builtins_method_init();
+	// modules_init();
 
-	test_map(tm);
-
+	test_map();
 	tm->cur = 0;
-
+	tm_obj v = obj_new(TM_LST, tm->all);
+	cprint(v);
 	//test(tm);
-	gc_free(tm);
+	gc_free();
 	return 0;
 }
 

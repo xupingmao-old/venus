@@ -1,69 +1,61 @@
 
 #include "tm.h"
 
-void* tm_alloc( tm_vm* tm, size_t size)
+void* tm_alloc( size_t size)
 {
 	void* block = malloc( size );
+#if DEBUG_GC
+	printf("%d -> %d , +%d\n", tm->allocated_mem, tm->allocated_mem + size, size);
+#endif
 	if( block == NULL )
 	{
-		tm->error = string_new(tm, "tm_alloc: fail to alloc memory block");
-		tm_raise(tm);
+		tm_raise("tm_alloc: fail to alloc memory block");
 	}
 	tm->allocated_mem += size;
 	return block;
 }
 
-void* tm_realloc( tm_vm* tm, void* o, size_t osize, size_t nsize)
+void* tm_realloc( void* o, size_t osize, size_t nsize)
 {
-	void* block = realloc( o, nsize);
-	if( block == NULL ){
-		tm->error = string_new(tm, "tm_realloc:fail to realloc memory block");
-		tm_raise(tm);
-	}
-	tm->allocated_mem += nsize - osize;
+	void* block = tm_alloc( nsize );
+	memcpy(block, o, osize);
+	tm_free(o, osize);
 	return block;
 }
 
-void tm_free( tm_vm* tm, void* o, size_t size){
+void tm_free(void* o, size_t size){
+#if DEBUG_GC
+	printf("%d -> %d , -%d\n", tm->allocated_mem, tm->allocated_mem - size, size);
+#endif
 	free(o);
 	tm->allocated_mem -= size;
 }
 
-void tm_raise(tm_vm* tm)
+void tm_raise(char* fmt, ...)
 {
-	if( tm->error.type != TM_NON )
-	{
-		_tm_print(tm->error);
-		exit(-1);
-		list_push( tm, tm->exception_stack, tm->error);
-	}
+	
 }
 
-tm_obj obj_new( int type, void* value)
-{
-	tm_obj v;
+tm_obj obj_new( int type , void * value){
+	tm_obj o;
+	o.type = type;
 	switch( type ){
-	case TM_STR:
-		v.type = TM_STR;
-		v.value.str = value;
-		return v;
-	case TM_DCT:
-		v.type = TM_DCT;
-		v.value.dict = value;
-		return v;
+		case TM_STR: o.value.str = value;
+		break;
+		case TM_LST: o.value.list = value;
+		break;
+		case TM_MAP: o.value.map = value;
+		break;
 	}
+	return o;
 }
 
-void obj_free(tm_vm* tm, tm_obj o){
+void obj_free( tm_obj o){
 	switch( o.type ){
-	case TM_STR: string_free(tm, o.value.str);break;
-	case TM_LST: list_free(  tm, o.value.list);break;
-	case TM_DCT: dict_free(  tm, o.value.dict);break;
-	case TM_USER_FNC:
-	case TM_NATIVE_FNC:
-	case TM_METHOD:
-	case TM_NATIVE_METHOD:
-	case TM_FNC: func_free(  tm, o.value.func);break;
-	case TM_MAP: map_free(tm, o.value.map);break;
+	case TM_STR: string_free( o.value.str);break;
+	case TM_LST: list_free( o.value.list);break;
+	case TM_MAP: map_free(o.value.map);break;
+	/*case TM_DCT: dict_free(  tm, o.value.dict);break;*/
+	case TM_FNC: func_free( o.value.func);break;
 	}
 }

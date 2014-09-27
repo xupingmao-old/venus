@@ -1,79 +1,39 @@
 
 #include "tm.h"
 
-tm_obj string_new(tm_vm* tm, char *s )
+tm_obj string_new( char *s , int size)
 {
-	tm_string* str = tm_alloc( tm, sizeof( tm_string ));
-	str->value = s;
-	str->len = strlen(s);
-	str->inHeap = 0;
-	tm_obj v;
-	v.type = TM_STR;
-	v.value.str = str;
-	return gc_track(tm, v);
-}
-
-// 不建议使用， 内容没有确定， gc无法判断能不能删除。
-tm_obj string_alloc( tm_vm* tm, int len){
-	tm_string* str = tm_alloc( tm, sizeof(tm_string) + len + 1);
-	str->len = len;
-	str->inHeap = 1;
-	tm_obj v;
-	v.type = TM_STR;
-	v.value.str = str;
-/*
-#if DEBUG_GC
-	printf("string_new\n");
-#endif
-*/
-	return gc_track(tm, v);
-}
-
-tm_obj string_new_(tm_vm* tm, char *s, int len )
-{
-	tm_string* str = tm_alloc( tm, sizeof( tm_string ));
-	str->value = s;
-	str->len = len;
-	str->inHeap = 1;
-	tm_obj v;
-	v.type = TM_STR;
-	v.value.str = str;
-/*
-#if DEBUG_GC
-	printf("string_new\n");
-#endif
-*/
-	return gc_track(tm, v);
-}
-
-
-void string_free( tm_vm* tm, tm_string *str){
-/*
-#if DEBUG_GC
-	if( str->inHeap)
-		printf("free string: '%s', free %d B\n", str->value, str->len + 1 + sizeof(tm_string));
-	else
-		printf("free static string: '%s', free %d B\n", str->value, sizeof(tm_string));
-#endif
-*/
-	if( str->inHeap ){
-		tm->allocated_mem -= str->len + 1;
-		free( str->value);
+	tm_string* str = tm_alloc( sizeof( tm_string ));
+	if( size > 0 ){
+		str->inHeap = 1;
+		str->value = tm_alloc( size + 1);
+		str->len = size;
+		if( s != NULL ){
+			memcpy(str->value, s, size);
+		}
+		str->value[size] = '\0'; 
+	}else{
+		str->inHeap = 0;
+		str->len = strlen(s);
+		str->value = s;
 	}
-	free(str);
-	tm->allocated_mem -= sizeof(tm_string);
+	tm_obj v;
+	v.type = TM_STR;
+	v.value.str = str;
+	return gc_track(v);
+}
+
+void string_free( tm_string *str){
+	if( str->inHeap ){
+		tm_free( str->value, str->len + 1);
+	}
+	tm_free(str, sizeof(tm_string));
 }
 
 
-tm_obj string_new2(tm_vm* tm, char *s, tm_obj v){
-	tm_obj a = string_new(tm, s);
-	tm_obj b = tm_str(tm, v);
-	return tm_add(tm, a, b);
-}
-
-tm_obj string_find(tm_vm* tm, tm_obj params){
-	tm_obj self = get_arg(tm, params, 0, TM_STR);
-	tm_obj str  = get_arg(tm, params, 1, TM_STR);
+tm_obj string_find( tm_obj params){
+	tm_obj self = get_arg( params, 0, TM_STR);
+	tm_obj str  = get_arg( params, 1, TM_STR);
 	char* self_v = get_str(self);
 	char* str_v  = get_str(self);
 	char* p = strstr(self_v, str_v);
@@ -83,55 +43,56 @@ tm_obj string_find(tm_vm* tm, tm_obj params){
 	return tm_number(self_v - p);
 }
 
-tm_obj string_substr(tm_vm* tm, tm_obj params){
-	tm_obj self = get_arg(tm, params, 0, TM_STR);
-	tm_obj start = get_arg(tm, params, 1, TM_NUM);
-	tm_obj len = get_arg(tm, params, 2, TM_NUM);
+tm_obj blt_string_substring(tm_obj params){
+	tm_obj self = get_arg( params, 0, TM_STR);
+	tm_obj start = get_arg(params, 1, TM_NUM);
+	tm_obj end = get_arg( params, 2, TM_NUM);
 
 	int start_i = get_num(start);
-	int len_i = get_num(len);
+	int end_i = get_num(end);
 
-	int osize = get_str_len(self);
-	start_i = start_i > 0 ? start_i : start_i + osize;
+	int len = end_i - start_i + 1;
+	if( len < 0 )
+		tm_raise("substring: index overflow");
 
-	if( start_i >= osize || start_i < 0 ){
-		return tm->empty_str;
+	tm_obj nstr = string_new(NULL, len);
+	int src_len = get_str_len(self);
+	char*src = get_str(self);
+	char*s = get_str(nstr);
+
+	int i, j;for(i = start_i, j = 0; i < src_len && i <= end_i;i++, j++){
+		s[j] = src[i];
 	}
-
-	int nsize = get_num( len );
-	if( nsize <= 0)
-		return tm->empty_str;
-
-	tm_obj nstr = string_alloc(tm, nsize);
-	memcpy( get_str(nstr), get_str(self) + start_i, nsize);
-	get_str(nstr)[nsize-1] = '\0';
+	s[j] = '\0';
 	return nstr;
 }
 
-tm_obj string_get(tm_vm* tm, tm_string* str, int n){
+tm_obj string_get(tm_string* str, int n){
 	if( n < 0 || n >= str->len){
-		_tm_raise("string_get: index overflow");
+		tm_raise("string_get: index overflow");
 	}
 	return tm->chars[str->value[n]];
 }
 
-tm_obj string_upper(tm_vm* tm, tm_obj params){
-	tm_obj self = get_arg(tm,params, 0, TM_STR);
+tm_obj string_upper(tm_obj params){
+	tm_obj self = get_arg(params, 0, TM_STR);
 	int i;
 	char*s = get_str(self);
 	int len = str_len(self);
-	char* news = tm_alloc( tm, len + 1);
+	tm_obj nstr = string_new(NULL, len);
+	char*news = get_str(nstr);
 	for(i = 0; i < len; i++){
-		if ( s[i] >= 'a' && s[i] <= 'a'){
+		if ( s[i] >= 'a' && s[i] <= 'z'){
 			news[i] = s[i] + 'A' - 'a';
 		}else{
 			news[i] = s[i];
 		}
 	}
 	news[len] = '\0';
-	return string_new_(tm, s, len);
+	return nstr;
 }
 
+/*
 tm_obj string_replace(tm_vm* tm, tm_obj params){
 	tm_obj self = get_arg( tm, params, 0, TM_STR);
 	tm_obj src = get_arg( tm, params, 1, TM_STR);
@@ -146,7 +107,7 @@ tm_obj string_replace(tm_vm* tm, tm_obj params){
 	char* self_s = get_str(self);
 
 	int len = str_len( self );
-	char* nstr = tm_alloc( tm, len + 1);
+	char* nstr = tm_alloc(len + 1);
 
 	int i;
 	char*s = nstr;
@@ -156,7 +117,7 @@ tm_obj string_replace(tm_vm* tm, tm_obj params){
 		if( nlen >= len){
 			cap = cap * 3 / 2 + dl;
 			free(nstr);
-			nstr = tm_alloc( tm, cap + 1);
+			nstr = tm_alloc(cap + 1);
 			s = nstr + nlen;
 		}
 		if( strncmp( s, src_s, sl) == 0){
@@ -169,5 +130,6 @@ tm_obj string_replace(tm_vm* tm, tm_obj params){
 		}
 	}
 	*s = '\0';
-	return string_new_(tm, nstr, nlen);
+	return string_new_(nstr, nlen);
 }
+*/

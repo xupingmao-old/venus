@@ -13,16 +13,15 @@ HashMap实现，采用链路分离法
 */
 int map_index( tm_obj obj, int size);
 void map_check_size( tm_map* map);
-tm_map* map_new_(tm_vm* tm);
 void map_iter_init(tm_map* map);
 
 #include "tm.h"
 
 // 新的映射容器, 默认size=7 , 最好跟计算机常用大小不一致,
-tm_map* map_new_( tm_vm *tm){
+tm_map* _map_new(){
 	int size = 7;
-	tm_map * map = tm_alloc( tm, sizeof( tm_map));
-	map->nodes = tm_alloc( tm, sizeof(map_node*) * size );
+	tm_map * map = tm_alloc(sizeof( tm_map));
+	map->nodes = tm_alloc(sizeof(map_node*) * size );
 	map_node** nodes = map->nodes;
 	// 标记对象未使用
 	int i;for(i = 0; i < size; i++){
@@ -34,14 +33,14 @@ tm_map* map_new_( tm_vm *tm){
 	return map;
 }
 
-tm_obj map_new(tm_vm* tm){
+tm_obj map_new(){
 	tm_obj o;
 	o.type = TM_MAP;
-	get_map( o ) = map_new_(tm);
-	return gc_track(tm, o);
+	get_map( o ) = _map_new();
+	return gc_track( o);
 }
 
-void map_set( tm_vm* tm,tm_map* map, tm_obj key, tm_obj val){
+void map_set(tm_map* map, tm_obj key, tm_obj val){
 	map_check_size( map);
 	int hash = map_index( key, map->cap);
 	map_node** nodes = map->nodes;
@@ -58,7 +57,7 @@ void map_set( tm_vm* tm,tm_map* map, tm_obj key, tm_obj val){
 	}
 	// 新增一个节点
 	map->len++;
-	node = tm_alloc(tm, sizeof(map_node));
+	node = tm_alloc(sizeof(map_node));
 	node->key = key;
 	node->val = val;
 	node->next = NULL;
@@ -101,7 +100,7 @@ void map_check_size(tm_map* map){
 	map->cap = nsize;
 	// 先临时存储之前的nodes
 	map_node** nodes = map->nodes;
-	map->nodes = tm_alloc(tm,  nsize * sizeof(map_node*) );
+	map->nodes = tm_alloc( nsize * sizeof( map_node* ));
 	// 重置新的nodes
 	for(i = 0; i < nsize; i++){
 		map->nodes[i] = NULL;
@@ -117,10 +116,10 @@ void map_check_size(tm_map* map){
 		}
 	}
 	// 释放老的内存
-	tm_free( tm, nodes, osize * sizeof(map_node*));
+	tm_free(nodes, osize * sizeof(map_node*));
 }
 
-int map_iget(tm_vm* tm, tm_map* map,tm_obj *des, tm_obj key){
+int map_iget(tm_map* map,tm_obj key,tm_obj *des){
 	int hash = map_index( key, map->cap);
 	map_node* node = map->nodes[hash];
 	while( node != NULL ){
@@ -144,7 +143,7 @@ void map_iter_init(tm_map* map ){
  * 如果能够遍历返回1
  * 不能遍历返回0
  */
-int map_inext(tm_vm* tm, tm_map* map, tm_obj* key, tm_obj *val){
+int map_inext(tm_map* map, tm_obj* key, tm_obj *val){
 	map_node** nodes = map->nodes;
 	int cur = map->cur;
 	if( cur >= map->len){
@@ -174,37 +173,46 @@ int map_index( tm_obj obj , int size){
 			int i = 0;
 			int len = obj.value.str->len;
 			char* val = obj.value.str->value;
-			int step = len / size + 1;
-			int hash = val[0] + len;
-			/*for( i = 0; i < len; i += step){
-				hash += val[i] << 2;
-			}*/
-			return hash & (size - 1);
+			switch( len ){
+				case 0: return 0;
+				case 1: return (val[0] ) & (size-1);
+				default: return (val[0] + val[1]) & ( size -1 );
+			}
 		}
 		case TM_NUM:
 			return (int)get_num(obj) % size;
-		case TM_LST:
+		/*case TM_LST:
 			return ptr_addr( get_list(obj) ) % size;
-		case TM_DCT:
-			return ptr_addr( get_dict(obj) ) % size;
+		case TM_MAP:
+			return ptr_addr( get_map(obj) ) % size;*/
 	}
 	return 0;
 }
 
-void map_free_node( tm_vm*tm, map_node* node){
+void map_free_node(map_node* node){
 	if( node == NULL ){
 		return;
 	}
-	map_free_node(tm, node->next );
-	tm_free(tm, node, sizeof(map_node));
+	map_free_node(node->next );
+	tm_free(node, sizeof(map_node));
 }
 
-void map_free(tm_vm *tm, tm_map* map){
+void map_free(tm_map* map){
 	int cap = map->cap;
 	int i;
+#if DEBUG_GC
+	int old = tm->allocated_mem;
+	printf("before map_free %d, ", old);
+#endif
 	for(i = 0; i < cap; i++){
-		map_free_node( tm, map->nodes[i] );
+		map_free_node( map->nodes[i] );
 	}
+	tm_free(map->nodes, sizeof(map_node*) * cap);
+	tm_free(map, sizeof(tm_map));
+#if DEBUG_GC
+	int new_ = tm->allocated_mem;
+	printf("after map_free %d : freed : %d ", new_, old - new_);
+#endif
 }
 
 void map_print(tm_map* map){

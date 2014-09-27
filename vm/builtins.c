@@ -1,6 +1,6 @@
 #include "tm.h"
 
-void __tm_print(tm_obj o, int depth){
+void _tm_print(tm_obj o, int depth){
 	depth--;
 	if( depth < 0 )
 		return;
@@ -28,7 +28,7 @@ void __tm_print(tm_obj o, int depth){
 		tm_list* list = get_list(o);
 		printf("[");
 		for(i = 0; i < list->len; i++){
-			__tm_print(list->nodes[i], depth);
+			_tm_print(list->nodes[i], depth);
 			if( i+1 != list->len){
 				putchar(',');
 			}
@@ -36,7 +36,22 @@ void __tm_print(tm_obj o, int depth){
 		printf("]");
 		break;
 	}
-	case TM_DCT:
+/*	case TM_MAP:
+	{
+		int i = 0;
+		tm_obj k,v;
+		tm_map* map = get_map( o );
+		putchar('{');
+		while( map_inext(map, &k, &v)){
+			_tm_print(k, depth);
+			putchar(':');
+			_tm_print(v, depth);
+			putchar(',');
+		}
+		putchar('}');
+		break;
+	}*/
+/*	case TM_DCT:
 	{
 		int i = 0;
 		tm_list* keys = get_keys(o);
@@ -51,15 +66,9 @@ void __tm_print(tm_obj o, int depth){
 			}
 		}
 		printf("}");
-		break;
+		break;*/
 	case TM_FNC:
-	case TM_USER_FNC:
-	case TM_NATIVE_FNC:
 		printf("<function %x>", o.value.func);
-		break;
-	case TM_METHOD:
-	case TM_NATIVE_METHOD:
-		printf("<method %x>", o.value.func);
 		break;
 	case TM_NON:
 		printf("None");break;
@@ -67,32 +76,31 @@ void __tm_print(tm_obj o, int depth){
 	case TM_MAP:
 		map_print(o.value.map);break;
 	}
-	}
 }
 
 void cprint(tm_obj o){
-	__tm_print(o, 4);
+	_tm_print(o, 4);
 }
 
-void _tm_print(tm_obj o){
-	__tm_print(o, 4);
-	putchar('\n');
+void cprintln(tm_obj o){
+	cprint(o);
+	puts("");
 }
 
 
-tm_obj tm_print(tm_vm* tm, tm_obj params){
+tm_obj tm_print(tm_obj params){
 	int i = 0;
 	tm_list* list = get_list(params);
 	for(i = 0; i < list->len; i++ ){
-		_tm_print(list->nodes[i]);
+		cprint(list->nodes[i]);
 	}
 	putchar('\n');
 	return tm->none;
 }
 
-tm_obj tm_sleep(tm_vm* tm, tm_obj p){
+tm_obj tm_sleep( tm_obj p){
 	int i = 0;
-	tm_obj time = get_arg(tm, p, 0, TM_NUM);
+	tm_obj time = get_arg(p, 0, TM_NUM);
 	int t = get_num(time);
 #ifdef _WINDOWS_H
 	Sleep(t);
@@ -102,15 +110,12 @@ tm_obj tm_sleep(tm_vm* tm, tm_obj p){
 	return tm->none;
 }
 
-tm_obj tm_input(tm_vm* tm, tm_obj p){
+tm_obj tm_input(tm_obj p){
 	int i = 0;
 	if( list_len(p) > 0){
-		tm_print(tm, p);
+		tm_print(p);
 	}
 	char buf[2048];
 	fgets(buf, 2048, stdin);
-	int len = strlen(buf);
-	char* s = tm_alloc(tm, len+1);
-	strcpy(s, buf);
-	return string_new_(tm, s, len);
+	return string_new(buf, strlen(buf));
 }
