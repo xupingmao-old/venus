@@ -5,10 +5,13 @@ tm_obj _tm_call(tm_vm* tm, tm_obj func, tm_obj params){
 }
 
 
-tm_obj tm_call( tm_vm* tm, tm_obj func, tm_obj params){
+tm_obj tm_call( tm_obj func, tm_obj params){
 	tm_func* f = func.value.func;
 	if( f->native_func != NULL ){
 		return f->native_func(params);
+	}
+	if( f->self.type != TM_NON){
+		list_insert( get_list(params), 0, f->self);
 	}
 	return tm->none;
 }
@@ -67,7 +70,7 @@ tm_obj tm_copy(tm_vm* tm, tm_obj o){
 			tm_obj list = list_new( list_len(o));
 			int i;
 			for(i = 0; i < list_len(o); i++){
-				list_push( list.value.list, o.value.list->nodes[i]);
+				list_push( get_list(o), o.value.list->nodes[i]);
 			}
 			return list;
 		}
@@ -190,7 +193,6 @@ int tm_eq(tm_obj a, tm_obj b){
 			}
 		}
 		return 1;
-	}
 	}
 	return 0;
 }
