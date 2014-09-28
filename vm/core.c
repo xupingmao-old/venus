@@ -33,7 +33,7 @@ void tm_free(void* o, size_t size){
 
 void tm_raise(char* fmt, ...)
 {
-	
+	longjmp(tm->buf, 1);
 }
 
 tm_obj obj_new( int type , void * value){

@@ -99,6 +99,31 @@ void modules_init(){
 	tm->modules = map_new(tm);
 }*/
 
+int tm_run(){
+	tm->cur = 0;
+	int res = setjmp(tm->buf);
+	// 无异常
+	if(  res == 0 ){
+
+	// 发生了异常，返回捕捉异常的帧
+	}else{
+		int i;
+		int cur = tm->cur;
+		// 返回上一帧
+		for(i = cur; i >= 0; i-- ){
+			if( tm->frames[i].ex.type != TM_NON ){
+
+			}
+		}
+	}
+	// 真正要执行的代码， 发生异常之后返回setjmp的地方
+	test_map();
+	tm->cur = 0;
+	tm_obj v = obj_new(TM_LST, tm->all);
+	cprint(v);
+	//test(tm);
+}
+
 int tm_init(int argc, char* argv[]){
 	tm = malloc( sizeof(tm_vm) );
 	if( tm == NULL ){
@@ -110,12 +135,7 @@ int tm_init(int argc, char* argv[]){
 	// builtins_init();
 	// builtins_method_init();
 	// modules_init();
-
-	test_map();
-	tm->cur = 0;
-	tm_obj v = obj_new(TM_LST, tm->all);
-	cprint(v);
-	//test(tm);
+	tm_run();
 	gc_free();
 	return 0;
 }

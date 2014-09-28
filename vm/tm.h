@@ -84,6 +84,7 @@ typedef struct tm_frame
 	tm_obj locals[256];
 	tm_obj globals;
 	tm_obj code;
+	tm_obj ex; // exception
 	int cur;
 	int jmp;
 
@@ -97,6 +98,7 @@ typedef struct tm_vm
 	tm_obj error;
 	tm_list* exception_stack;
 	
+	jmp_buf buf; // 异常栈
 	tm_obj *stack;
 	tm_obj *top;
 

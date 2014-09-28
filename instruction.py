@@ -12,16 +12,16 @@ def emit(ins, val = None):
 def emit_load( v ):
 	t = v.type
 	if t == 'string' or t == 'number':
-		load_g( v.val )
+		load_g( v )
 	elif t == 'None':
 		emit(NONE)
 	elif t == 'name':
 		if v.val in cur_scope.g:
-			load_g( v.val )
+			load_g( v )
 		elif v.val in cur_scope.locals:
 			load_l( v.val )
 		else:
-			load_g( v.val )
+			load_g( v )
 	else:
 		print('LOAD_LOCAL ' + str(v.val))
 
@@ -34,14 +34,16 @@ def load_l( v ):
 		cur_scope.locals.append( v )
 	emit( LOAD_LOCAL, cur_scope.locals.index(v) )
 def load_g( v ):
-	if v not in constants:
-		constants.append(v)
-	emit( LOAD_GLOBAL, constants.index(v))
+	if v.val not in constants_keys:
+		constants_keys.append(v.val)
+		constants.append( v )
+	emit( LOAD_GLOBAL, constants_keys.index(v.val))
 
 def store_g( v ):
-	if v not in constants:
-		constants.append(v)
-	emit( STORE_GLOBAL, constants.index(v))
+	if v.val not in constants_keys:
+		constants_keys.append(v.val)
+		constants.append( v )
+	emit( STORE_GLOBAL, constants_keys.index(v.val))
 
 def store_l( v ):
 	if v not in cur_scope.locals:
@@ -51,11 +53,11 @@ def store_l( v ):
 def emit_store( v ):
 	# the scope is global
 	if len( scopes ) == 1:
-		store_g( v.val )
+		store_g( v )
 	elif v.val in cur_scope.g:
-		store_g( v.val )
+		store_g( v )
 	else:
-		store_l( v.val )
+		store_l( v )
 
 class Scope:
 
@@ -70,6 +72,8 @@ class Scope:
 cur_scope = Scope()
 scopes = [cur_scope]
 constants = []
+constants_keys = []
+
 
 def new_scope():
 	cur_scope = Scope()
@@ -83,7 +87,8 @@ def def_global( v ):
 	cur_scope.def_global(v)
 
 def print_constants():
-	print( constants )
+	for i in range( len( constants )) :
+		print("%s : (%s, %s)" % ( constants_keys[i], constants[i].type, constants[i].val))
 
 #constants
 NONE = 'None'
