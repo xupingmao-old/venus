@@ -1,5 +1,8 @@
 from ftplib import FTP
-from configparser import *
+try:
+    from configparser import *
+except:
+    from ConfigParser import *
 import time
 
 def load_conf():
