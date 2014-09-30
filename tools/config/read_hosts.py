@@ -1,10 +1,17 @@
 #coding:utf-8
 # 读取系统hosts设置
 
+def load(path):
+    try:
+        txt = open(path, encoding = 'utf-8').read()
+    except:
+        txt = open(path).read()
+    return txt
+
 class HostConf:
     def __init__(self, path):
         self.path = path
-        content = open(path, encoding = "utf-8" ).read()
+        content = load(path)
         content = content.replace('\r', '')
         content = content.replace('\t', ' ')
         self.content = content
@@ -27,9 +34,12 @@ class HostConf:
         # self.frozen = frozen
         # self.active = active
         self.parse()
-    def show(self):
-        print(self.frozen)
-        print(self.active)
+    def show(self, type='active'):
+        if type == 'active':
+            print(self.active)
+        else:
+            print(self.frozen)
+            print(self.active)
     def parse(self):
         tokens = []
         s = ''
@@ -93,7 +103,7 @@ def frozen_cainiaowork( lines ):
 
 def read_content():
     fname = open('location.ini').read()
-    return open(fname, encoding='utf-8').read()
+    return load(fname)
 def main():
     txt = read_content()
     txt = txt.replace('\r', '')
@@ -120,7 +130,7 @@ your choice?
     input('press enter to quit')
 
 conf = HostConf(open('location.ini').read())
-print(conf.tokens)
-print(conf.active)
+#print(conf.tokens)
+conf.show('active')
 if __name__ == '__main__':
     main()
