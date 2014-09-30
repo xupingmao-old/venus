@@ -33,6 +33,20 @@ void tm_free(void* o, size_t size){
 
 void tm_raise(char* fmt, ...)
 {
+	va_list a; va_start(a,fmt);
+	int i;
+	int len = strlen(fmt);
+	char*s = fmt;
+	for(i = 0; i < len; i++){
+		if( s[i] == '@' ){
+			tm_obj v = va_arg(a, tm_obj);
+			cprint(v);
+		}else{
+			putchar(s[i]);
+		}
+	}
+	va_end(a);
+	puts("");
 	longjmp(tm->buf, 1);
 }
 

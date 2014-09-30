@@ -137,33 +137,43 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 	return tm->none;
 }
 
+tm_obj tm_sub( tm_obj a, tm_obj b){
+	if( a.type != b.type){
+		tm_raise("tm_sub: can not add @ and @", a, b);
+	}
+	if( a.type == TM_NUM){
+		return tm_number(a.value.num - b.value.num);
+	}
+	tm_raise("tm_sub: can not sub @ and @", a, b);
+}
+
 tm_obj tm_add(  tm_obj a, tm_obj b){
 	if( a.type != b.type ){
 		tm_raise("tm_add: different types");
 	}
 	switch( a.type ){
-	case TM_NUM:
-		a.value.dv += b.value.dv;
-		return a;
-	case TM_STR:
-	{
-		char* sa = get_str(a);
-		char* sb = get_str(b);
-		int la = get_str_len(a);
-		int lb = get_str_len(b);
-		int len = la + lb;
-		tm_obj des = string_new(NULL, len);
-		char*s = get_str(des);
-		memcpy(s,      sa, la);
-		memcpy(s + la, sb, lb);
-		return des;
-	}
-	case TM_LST:
-	{
-		tm_list* list = list_join(get_list(a), get_list(b) );
-		a.value.list = list;
-		return gc_track(a);
-	}
+		case TM_NUM:
+			a.value.dv += b.value.dv;
+			return a;
+		case TM_STR:
+		{
+			char* sa = get_str(a);
+			char* sb = get_str(b);
+			int la = get_str_len(a);
+			int lb = get_str_len(b);
+			int len = la + lb;
+			tm_obj des = string_new(NULL, len);
+			char*s = get_str(des);
+			memcpy(s,      sa, la);
+			memcpy(s + la, sb, lb);
+			return des;
+		}
+		case TM_LST:
+		{
+			tm_list* list = list_join(get_list(a), get_list(b) );
+			a.value.list = list;
+			return gc_track(a);
+		}
 	}
 	tm_raise("tm_add: type can not add");
 	return tm->none;
@@ -173,26 +183,27 @@ tm_obj tm_add(  tm_obj a, tm_obj b){
 int tm_eq(tm_obj a, tm_obj b){
 	if( a.type != b.type ) return 0;
 	switch( a.type ){
-	case TM_NUM:
-		return a.value.dv == b.value.dv;
-	case TM_STR:
-	{
-		char* sa = get_str(a);
-		char* sb = get_str(b);
-		return sa == sb || strcmp(sa, sb) == 0;
-	}
-	case TM_LST:
-	{
-		int i;
-		int len = get_list(a)->len;
-		tm_obj* nodes1 = get_list(a)->nodes;
-		tm_obj* nodes2 = get_list(b)->nodes;
-		for(i = 0; i < len; i++){
-			if( !tm_eq(nodes1[i], nodes2[i]) ){
-				return 0;
-			}
+		case TM_NUM:
+			return a.value.dv == b.value.dv;
+		case TM_STR:
+		{
+			char* sa = get_str(a);
+			char* sb = get_str(b);
+			return sa == sb || strcmp(sa, sb) == 0;
 		}
-		return 1;
+		case TM_LST:
+		{
+			int i;
+			int len = get_list(a)->len;
+			tm_obj* nodes1 = get_list(a)->nodes;
+			tm_obj* nodes2 = get_list(b)->nodes;
+			for(i = 0; i < len; i++){
+				if( !tm_eq(nodes1[i], nodes2[i]) ){
+					return 0;
+				}
+			}
+			return 1;
+		}
 	}
 	return 0;
 }

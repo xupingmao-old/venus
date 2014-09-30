@@ -40,6 +40,7 @@ typedef union tm_value
 {
 	int marked;
 	double dv;
+	double num;
 	int iv;
 	long lv;
 	struct tm_string* str;
@@ -137,15 +138,8 @@ typedef struct tm_vm
  */
 tm_vm* tm;
 
-#include "object.h"
-#include "macros.h"
 #include "constants.h"
-#include "core.h"
-#include "args.h"
-#include "builtins.h"
-#include "gc.h"
-#include "ops.h"
-#include "instruction.h"
+#include "object.h"
 
 inline
 tm_obj tm_number(double v){
@@ -155,13 +149,18 @@ tm_obj tm_number(double v){
 	return o;
 }
 
+#include "macros.h"
+#include "core.h"
+#include "builtins.h"
+#include "gc.h"
+#include "ops.h"
+#include "instruction.h"
+#include "args.h"
 
 #include "string.c"
 #include "list.c"
-/*#include "dict.c"*/
 #include "func.c"
 #include "core.c"
-#include "args.c"
 #include "builtins.c"
 #include "ops.c"
 #include "gc.c"

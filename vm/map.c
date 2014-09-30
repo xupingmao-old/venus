@@ -11,11 +11,10 @@ HashMap实现，采用链路分离法
 /*
     接口暴露原则，越少越好
 */
-int map_index( tm_obj obj, int size);
-void map_check_size( tm_map* map);
-void map_iter_init(tm_map* map);
 
 #include "tm.h"
+
+void map_iter_init(tm_map* map);
 
 // 新的映射容器, 默认size=7 , 最好跟计算机常用大小不一致,
 tm_map* _map_new(){
@@ -38,30 +37,6 @@ tm_obj map_new(){
 	o.type = TM_MAP;
 	get_map( o ) = _map_new();
 	return gc_track( o);
-}
-
-void map_set(tm_map* map, tm_obj key, tm_obj val){
-	map_check_size( map);
-	int hash = map_index( key, map->cap);
-	map_node** nodes = map->nodes;
-	map_node* node = nodes[hash];
-	map_node** pre = nodes + hash;
-	// 如果刚好键值相等，赋值
-	while( node != NULL ){
-		if( tm_equals(node->key, key) ){
-			node->val = val;
-			return;
-		}
-		pre = &(node->next);
-		node = node->next;
-	}
-	// 新增一个节点
-	map->len++;
-	node = tm_alloc(sizeof(map_node));
-	node->key = key;
-	node->val = val;
-	node->next = NULL;
-	*pre = node;
 }
 
 // 重置hashmap, 不需要新的内存
@@ -119,18 +94,6 @@ void map_check_size(tm_map* map){
 	tm_free(nodes, osize * sizeof(map_node*));
 }
 
-int map_iget(tm_map* map,tm_obj key,tm_obj *des){
-	int hash = map_index( key, map->cap);
-	map_node* node = map->nodes[hash];
-	while( node != NULL ){
-		if(tm_equals(node->key, key)){
-			*des = node->val;
-			return 1;
-		}
-		node = node->next;
-	}
-	return 0;
-}
 
 void map_iter_init(tm_map* map ){
 	map->cur = 0;
@@ -233,4 +196,42 @@ void map_print(tm_map* map){
 			putchar('\n');
 		}
 	}
+}
+
+void map_set(tm_map* map, tm_obj key, tm_obj val){
+	map_check_size( map);
+	int hash = map_index( key, map->cap);
+	map_node** nodes = map->nodes;
+	map_node* node = nodes[hash];
+	map_node** pre = nodes + hash;
+	// 如果刚好键值相等，赋值
+	while( node != NULL ){
+		if( tm_equals(node->key, key) ){
+			node->val = val;
+			return;
+		}
+		pre = &(node->next);
+		node = node->next;
+	}
+	// 新增一个节点
+	map->len++;
+	node = tm_alloc(sizeof(map_node));
+	node->key = key;
+	node->val = val;
+	node->next = NULL;
+	*pre = node;
+}
+
+
+int map_iget(tm_map* map,tm_obj key,tm_obj *des){
+	int hash = map_index( key, map->cap);
+	map_node* node = map->nodes[hash];
+	while( node != NULL ){
+		if(tm_equals(node->key, key)){
+			*des = node->val;
+			return 1;
+		}
+		node = node->next;
+	}
+	return 0;
 }
