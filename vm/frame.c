@@ -19,6 +19,7 @@ void push_constant(tm_obj mod, tm_obj v){
 }
 
 #define next_char( s ) *s++
+#define next_byte( s ) *s++
 #define next_short( s ) ((int) (*s++) << 8) + (int) (*s++)
 #define read_number( v, s) v = *(double*)s; s+=sizeof(double);
 #define PUSH( x ) *(top++) = x
@@ -71,6 +72,18 @@ tm_obj tm_eval( tm_frame* frame){
             k = constants[ i ];
             x = POP();
             tm_set( g, k, x );
+        })
+        CASE(CALL, {
+            i = next_byte( s );
+            tm_obj p= list_new(i);
+            tm_list* _p = get_list(p);
+            tm_obj* j;
+            for(j = top - i; j < top; j++){
+                list_append(_p, *j);
+            }
+            top-=i;
+            x = POP(); // function
+            tm_call(x, p);
         })
     }
 }

@@ -22,6 +22,9 @@ class Constants:
 		return self.values.index(v.val)
 	def get( self, idx ):
 		return self.values[idx]
+	def __str__(self):
+		for i in self.values:
+			print(i)
 class Scope:
 	def __init__(self):
 		self.locals = []
@@ -91,26 +94,6 @@ def open_scope():
 
 def close_scope():
 	names.close()
-def load_l( v ):
-	if v not in cur_scope.locals:
-		cur_scope.locals.append( v )
-	emit( LOAD_LOCAL, cur_scope.locals.index(v) )
-def load_g( v ):
-	if v.val not in constants_keys:
-		constants_keys.append(v.val)
-		constants.append( v )
-	emit( LOAD_GLOBAL, constants_keys.index(v.val))
-
-def store_g( v ):
-	if v.val not in constants_keys:
-		constants_keys.append(v.val)
-		constants.append( v )
-	emit( STORE_GLOBAL, constants_keys.index(v.val))
-
-def store_l( v ):
-	if v not in cur_scope.locals:
-		cur_scope.locals.append( v )
-	emit( STORE_LOCAL, cur_scope.locals.index(v) )
 
 def emit_store( v ):
 	names.store(v)
@@ -120,7 +103,8 @@ def def_global( v ):
 	names._def(v)
 
 def print_constants():
-	print( constants )
+	for i in constants.values:
+		print(i)
 	# for i in range( len( constants )) :
 	# 	print("%s : (%s, %s)" % ( constants_keys[i], constants[i].type, constants[i].val))
 

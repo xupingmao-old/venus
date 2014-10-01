@@ -7,11 +7,12 @@ tm_obj _tm_call(tm_vm* tm, tm_obj func, tm_obj params){
 
 tm_obj tm_call( tm_obj func, tm_obj params){
 	tm_func* f = func.value.func;
-	if( f->native_func != NULL ){
-		return f->native_func(params);
-	}
+	// check if function is a method ?
 	if( f->self.type != TM_NON){
 		list_insert( get_list(params), 0, f->self);
+	}
+	if( f->native_func != NULL ){
+		return f->native_func(params);
 	}
 	return tm->none;
 }
