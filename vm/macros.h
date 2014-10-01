@@ -3,6 +3,8 @@
 #define macros_h
 #include "tm.h"
 
+#define strequals(a, b) a == b || strcmp(a,b) == 0
+
 #define get_val(obj) obj.value
 #define get_num(obj) get_val(obj).dv
 #define get_double(obj) get_val(obj).dv
@@ -13,6 +15,7 @@
 #define get_stream(obj) (obj.value.stream)->fp
 #define get_str_len(obj) obj.value.str->len
 #define str_len get_str_len
+#define get_func(obj) (obj.value.func)
 
 #define get_list(obj) get_val(obj).list
 #define get_dict(obj) get_val(obj).dict

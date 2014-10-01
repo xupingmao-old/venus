@@ -105,9 +105,6 @@ void tm_set( tm_obj self, tm_obj k, tm_obj v){
 		list_set( self.value.list, n, v);
 	}
 	break;
-/*	case TM_DCT:
-		dict_set(tm, self.value.dict, k, v);
-		break;*/
 	case TM_MAP: map_set(self.value.map, k, v);break;
 	}
 }
@@ -131,6 +128,10 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 				return string_get(self.value.str, n);
 			}
 		}
+		case TM_FNC:
+			if( k.type == TM_STR && strequals(get_str(k), "code")){
+				return get_func( self )->code;
+			}
 	}
 	error:
 	tm_raise("tm_get: keyError " );
@@ -207,5 +208,3 @@ int tm_eq(tm_obj a, tm_obj b){
 	}
 	return 0;
 }
-
-#define tm_equals tm_eq

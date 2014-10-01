@@ -96,6 +96,17 @@ void list_insert(tm_list* list, int n, tm_obj obj){
 	}
 }
 
+int list_index( tm_list* list, tm_obj v){
+	int i;int len = list->len;
+	tm_obj* nodes = list->nodes;
+	for(i = 0; i < len;i++){
+		if( tm_equals(nodes[i], v)){
+			return i;
+		}
+	}
+	return -1;
+}
+
 tm_obj list_pop(tm_list* list)
 {
 	tm_obj obj = list_get(list, -1 );

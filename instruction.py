@@ -1,34 +1,96 @@
-
+if 'tinytm' not in globals():
+    from boot import *
 
 # instructions 
 
+# constants as list
+class Constants:
+	def __init__(self):
+		self.values = []
+	def add( self, v):
+		if v.type == 'number':
+			v.val = float(v.val)
+		if v.val not in self.values:
+			self.values.append( v.val)
+	def load( self, v):
+		if v.val not in self.values:
+			self.add(v)
+		idx = self.values.index( v.val )
+		emit(LOAD_CONSTANT, idx)
+	def index(self, v):
+		self.add(v)
+		return self.values.index(v.val)
+	def get( self, idx ):
+		return self.values[idx]
+class Scope:
+	def __init__(self):
+		self.locals = []
+		self.g = []
+	def def_global(self, v):
+		if v not in self.cg:
+			self.g.append(v)
+class Names:
+	def __init__(self):
+		self.scope = Scope()
+		self.scopes = []
+		self.scopes.append( self.scope )
+	def open(self):
+		self.scope = Scope()
+		self.scopes.append( self.scope )
+	def close(self):
+		self.scopes.pop()
+	def add_global(self, v):
+		constants.add(v)
+	def add_local(self, v):
+		if v.val not in self.scope.locals:
+			self.scope.locals.append(v.val)
+	def load(self, v):
+		if len( self.scopes ) == 0:
+			idx = constants.index(v)
+			emit(LOAD_GLOBAL, idx)
+		elif v.val in constants.values:
+			idx = constants.index(v)
+			emit(LOAD_GLOBAL, idx)
+		else:
+			self.add_local(v)
+			idx = self.scope.locals.index(v.val)
+			emit(LOAD_LOCAL, idx)
+	def store(self, v):
+		if v.val in self.scope.locals:
+			idx = self.scope.locals.index(v.val)
+			emit(STORE_LOCAL, idx)
+		else:
+			idx = constants.index(v)
+			emit(STORE_GLOBAL, idx)
 
+constants = Constants()
+names = Names()
 def emit(ins, val = None):
 	if val != None:
-		print(ins + ' ' + str(val))
+		# val = '(' + str(constants.get(val)) + ')'
+		print( codes[ins] + ' ' + str(val) )
 	else:
-		print(ins)
+		print( codes[ins])
 
 def emit_load( v ):
 	t = v.type
 	if t == 'string' or t == 'number':
-		load_g( v )
+		constants.load( v )
 	elif t == 'None':
 		emit(NONE)
 	elif t == 'name':
-		if v.val in cur_scope.g:
-			load_g( v )
-		elif v.val in cur_scope.locals:
-			load_l( v.val )
-		else:
-			load_g( v )
+		names.load( v )
 	else:
 		print('LOAD_LOCAL ' + str(v.val))
 
 def def_local( v ):
-	if v not in cur_scope.locals:
-		cur_scope.locals.append( v )
+	names.add_local(v)
 
+def open_scope():
+	names.open()
+
+def close_scope():
+	names.close()
 def load_l( v ):
 	if v not in cur_scope.locals:
 		cur_scope.locals.append( v )
@@ -51,91 +113,82 @@ def store_l( v ):
 	emit( STORE_LOCAL, cur_scope.locals.index(v) )
 
 def emit_store( v ):
-	# the scope is global
-	if len( scopes ) == 1:
-		store_g( v )
-	elif v.val in cur_scope.g:
-		store_g( v )
-	else:
-		store_l( v )
+	names.store(v)
 
-class Scope:
-
-	def __init__(self):
-		self.locals = []
-		self.g = []
-
-	def def_global(self, v):
-		if v not in self.cg:
-			self.g.append(v)
-
-cur_scope = Scope()
-scopes = [cur_scope]
-constants = []
-constants_keys = []
-
-
-def new_scope():
-	cur_scope = Scope()
-	scopes.append( cur_scope )
-
-def quit_scope():
-	scopes.pop()
-	cur_scope = scopes[-1]
 
 def def_global( v ):
-	cur_scope.def_global(v)
+	names._def(v)
 
 def print_constants():
-	for i in range( len( constants )) :
-		print("%s : (%s, %s)" % ( constants_keys[i], constants[i].type, constants[i].val))
+	print( constants )
+	# for i in range( len( constants )) :
+	# 	print("%s : (%s, %s)" % ( constants_keys[i], constants[i].type, constants[i].val))
 
 #constants
-NONE = 'None'
+NONE = 5
 
 # compute
-ADD = 'ADD'
-SUB = 'SUB'
-MUL = 'MUL'
-DIV = 'DIV'
-MOD = 'MOD'
+ADD =11
+SUB = 12
+MUL = 13
+DIV = 14
+MOD = 15
 
 # compare
-GT = 'GT'
-LT = 'LT'
-GTEQ = 'GTEQ'
-LTEQ = 'LTEQ'
-EQEQ = 'EQEQ'
-NOTEQ = 'NOTEQ'
-IN = 'IN'
-NOTIN = 'NOTIN'
-AND = 'AND'
-OR = 'OR'
+GT = 20
+LT = 21
+GTEQ = 22
+LTEQ = 23
+EQEQ = 24
+NOTEQ = 25
+IN = 26
+NOTIN = 27
+AND = 28
+OR = 29
 
 # memory
-SET = 'SET'
-GET = 'GET'
-STORE_LOCAL = 'STORE_LOCAL'
-STORE_GLOBAL = 'STORE_GLOBAL'
-LOAD_LOCAL = 'LOAD_LOCAL'
-LOAD_GLOBAL = 'LOAD_GLOBAL'
-POP = 'POP'
+SET = 30
+GET = 31
+STORE_LOCAL = 32
+STORE_GLOBAL = 33
+LOAD_LOCAL = 34
+LOAD_GLOBAL = 35
+POP = 36
+LOAD_CONSTANT = 37
 
 # data
-LIST = 'LIST'
-DICT = 'DICT'
+LIST = 40
+DICT = 41
 
 # jump
-JUMP = 'JUMP'
-POP_JUMP_ON_FALSE = "POP_JUMP_ON_FALSE"
-POP_JUMP_ON_TRUE = 'POP_JUMP_ON_TRUE'
-JUMP_ON_FALSE = 'JUMP_ON_FALSE'
-JUMP_ON_TRUE = 'JUMP_ON_TRUE'
-TAG = 'TAG'
+JUMP = 50
+POP_JUMP_ON_FALSE = 51
+POP_JUMP_ON_TRUE = 52
+JUMP_ON_FALSE = 53
+JUMP_ON_TRUE = 54
+TAG = 55
 
 # function
-CALL = 'CALL'
-DEF = 'DEF'
-RETURN = 'RETURN'
-LOAD_PARAMS = 'LOAD_PARAMS'
-EOF = 'EOF'
+CALL = 60
+DEF = 61
+RETURN = 62
+LOAD_PARAMS = 63
+EOF = 64
+
+codes = {
+	LOAD_CONSTANT : "LOAD_CONSTANT",
+	LOAD_LOCAL : "LOAD_LOCAL",
+	STORE_LOCAL : "STORE_LOCAL",
+	LOAD_GLOBAL : "LOAD_GLOBAL",
+	STORE_GLOBAL : "STORE_GLOBAL",
+	POP : "POP",
+	CALL : "CALL",
+	ADD : "ADD",
+	MUL : "MUL",
+	RETURN : "RETURN",
+	DEF : "DEF",
+	GET : "GET",
+	SET : "SET",
+	LOAD_PARAMS : "LOAD_PARAMS",
+	EOF : "EOF"
+}

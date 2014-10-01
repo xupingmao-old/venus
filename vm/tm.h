@@ -71,7 +71,7 @@ typedef struct tm_func
 	int fnc_type;
 	tm_obj self;
 	tm_obj globals;
-	char* code;
+	tm_obj code; // string
 	tm_obj (*native_func)( tm_obj);
 }tm_func;
 
@@ -80,15 +80,13 @@ typedef struct tm_func
 
 typedef struct tm_frame
 {
-	tm_list* params;
-
 	tm_obj locals[256];
 	tm_obj globals;
-	tm_obj code;
-	tm_obj ex; // exception
-	int cur;
-	int jmp;
-
+	tm_obj mod; // module
+	tm_obj code; // byte code
+	tm_obj ex; // exception info
+	int cur; 
+	int jmp; // catch/except position
 }tm_frame;
 
 #include "map.h"
@@ -115,8 +113,6 @@ typedef struct tm_vm
 
 	tm_obj string_methods;
 	tm_obj list_methods;
-
-	tm_list* params;
 
 	tm_obj modules;
 	tm_obj builtins;

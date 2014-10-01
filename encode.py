@@ -90,19 +90,19 @@ def encode_item( tk ):
         n = encode_item(tk.args)
         emit(CALL , n)
     elif t == 'arg':
-        def_local(tk.name.val)
+        def_local(tk.name)
         if tk.val:
             encode_item(tk.val)
             store(tk.name)
         #emit('set_arg '+tk.name)
     elif t == 'def':
         emit(DEF)
-        new_scope()
+        open_scope()
         encode_item(tk.args)
         emit(LOAD_PARAMS)
         encode_item(tk.body)
         emit(EOF)
-        quit_scope()
+        close_scope()
         if in_class:
             emit_load(tk.name)
         else:
