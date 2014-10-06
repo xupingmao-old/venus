@@ -36,7 +36,7 @@ void _tm_print(tm_obj o, int depth){
 		printf("]");
 		break;
 	}
-/*	case TM_MAP:
+	/*case TM_MAP:
 	{
 		int i = 0;
 		tm_obj k,v;
@@ -51,30 +51,12 @@ void _tm_print(tm_obj o, int depth){
 		putchar('}');
 		break;
 	}*/
-/*	case TM_DCT:
-	{
-		int i = 0;
-		tm_list* keys = get_keys(o);
-		tm_list* vals = get_vals(o);
-		printf("{");
-		for(i = 0; i < keys->len; i++){
-			__tm_print(keys->nodes[i], depth);
-			putchar(':');
-			__tm_print(vals->nodes[i], depth);
-			if( i+1 != keys->len){
-				putchar(',');
-			}
-		}
-		printf("}");
-		break;*/
+	case TM_MAP:map_print(get_map(o));break;
 	case TM_FNC:
 		printf("<function %x>", o.value.func);
 		break;
 	case TM_NON:
 		printf("None");break;
-
-	case TM_MAP:
-		map_print(o.value.map);break;
 	}
 }
 

@@ -26,7 +26,7 @@ tm_obj tm_args( int n, ...){
 	va_list a; va_start(a,n);
 	int i;
 	for (i=0; i<n; i++) {
-		list_push(get_list(params),va_arg(a,tm_obj));
+		list_append(get_list(params),va_arg(a,tm_obj));
 	}
 	va_end(a);
 	return params;

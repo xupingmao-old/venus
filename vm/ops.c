@@ -71,7 +71,7 @@ tm_obj tm_copy(tm_vm* tm, tm_obj o){
 			tm_obj list = list_new( list_len(o));
 			int i;
 			for(i = 0; i < list_len(o); i++){
-				list_push( get_list(o), o.value.list->nodes[i]);
+				list_append( get_list(o), o.value.list->nodes[i]);
 			}
 			return list;
 		}

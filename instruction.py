@@ -109,7 +109,9 @@ def print_constants():
 	# 	print("%s : (%s, %s)" % ( constants_keys[i], constants[i].type, constants[i].val))
 
 #constants
-NONE = 5
+# NONE = 5
+NEW_STRING = 0
+NEW_NUMBER = 1
 
 # compute
 ADD =11
@@ -157,7 +159,7 @@ CALL = 60
 DEF = 61
 RETURN = 62
 LOAD_PARAMS = 63
-EOF = 64
+TM_EOF = 64
 
 codes = {
 	LOAD_CONSTANT : "LOAD_CONSTANT",
@@ -174,5 +176,5 @@ codes = {
 	GET : "GET",
 	SET : "SET",
 	LOAD_PARAMS : "LOAD_PARAMS",
-	EOF : "EOF"
+	TM_EOF : "TM_EOF"
 }

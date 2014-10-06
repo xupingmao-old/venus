@@ -69,7 +69,7 @@ void _list_check_cap( tm_list* list){
 	}
 }
 
-void list_push(tm_list* list, tm_obj obj)
+void list_append(tm_list* list, tm_obj obj)
 {
 	_list_check_cap( list);
 	list->nodes[ list->len ] = obj;
@@ -151,7 +151,7 @@ tm_obj blt_list_join(tm_obj params)
 tm_obj blt_push( tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_LST);
 	tm_obj v = get_arg( params , 1, -1);
-	list_push( get_list(self), v);
+	list_append( get_list(self), v);
 	return tm->none;
 }
 

@@ -191,7 +191,8 @@ void map_print(tm_map* map){
 				cprint(node->key);putchar(':');
 				cprint(node->val);
 				node = node->next;
-				printf(" --> ");
+				if( node != NULL)
+					printf(" --> ");
 			}
 			putchar('\n');
 		}

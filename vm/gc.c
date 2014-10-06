@@ -25,11 +25,11 @@ tm_obj gc_do_string(tm_vm* tm, tm_obj k){
 			obj_free(tm, k);
 			return dict->values->nodes[p];
 		}else{
-			list_push( tm, dict->keys, k);
-			list_push( tm, dict->values, tm->none);
+			list_append( tm, dict->keys, k);
+			list_append( tm, dict->values, tm->none);
 		}
 	}
-	list_push(tm, tm->all, k);
+	list_append(tm, tm->all, k);
 	return k;
 }
 */
@@ -50,7 +50,7 @@ tm_obj gc_track( tm_obj v){
 		v.value.map->marked = 1;
 		break;
 	}
-	list_push(tm->all, v);
+	list_append(tm->all, v);
 	return v;
 }
 

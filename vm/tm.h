@@ -81,7 +81,9 @@ typedef struct tm_func
 typedef struct tm_frame
 {
 	tm_obj locals[256];
+	tm_obj *stack;
 	tm_obj globals;
+	tm_obj constants; 
 	tm_obj mod; // module
 	tm_obj code; // byte code
 	tm_obj ex; // exception info
@@ -163,6 +165,7 @@ tm_obj tm_number(double v){
 #include "stream.c"
 #include "map.c"
 #include "test.c"
+#include "frame.c"
 
 #endif
 

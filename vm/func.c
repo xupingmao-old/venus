@@ -1,15 +1,14 @@
 #include "tm.h"
 
 
-tm_obj func_new(unsigned char* code, int len, tm_obj self, tm_obj globals, tm_obj (*native_func)( tm_obj) ){
+tm_obj func_new(tm_obj code,
+ 				tm_obj self, 
+ 				tm_obj globals, 
+ 				tm_obj (*native_func)( tm_obj) ){
 	tm_obj func;
 	func.type = TM_FNC;
 	tm_func* f= tm_alloc(sizeof(tm_func));
-	if( code != NULL ){
-		f->code = string_new( code, len);
-	}else{
-		f->code = tm->none;
-	}
+	f->code = code;
 	if( native_func != NULL ){
 		f->native_func = native_func;
 		f->fnc_type = TM_NATIVE;
