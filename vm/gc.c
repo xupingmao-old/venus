@@ -55,6 +55,8 @@ tm_obj gc_track( tm_obj v){
 }
 
 void gc_mark(tm_obj v){
+	if( v.value.marked )
+		return;
 	switch(v.type){
 		case TM_NUM:return;
 		case TM_STR:{
@@ -62,10 +64,11 @@ void gc_mark(tm_obj v){
 			break;
 		}
 		case TM_LST:{
-			tm_list* list;
-			int n = list->len;
-			int i;for(i = 0; i < n; i++){
-				gc_mark(list->nodes[i]);
+				tm_list* list;
+				int n = list->len;
+				int i;for(i = 0; i < n; i++){
+					gc_mark(list->nodes[i]);
+				}
 			}
 			break;
 		case TM_MAP:{
@@ -75,7 +78,6 @@ void gc_mark(tm_obj v){
 				gc_mark(v);
 			}
 			break;
-		}
 		}
 	}
 }
@@ -111,9 +113,7 @@ void gc_free(){
 	printf("\nallocated_mem: %d\n", tm->allocated_mem);
 	printf("total object num: %d\n", tm->all->len);
 
-	tm_obj b;
-	b.type = TM_LST;
-	b.value.list = tm->all;
+	tm_obj b = obj_new(TM_LST, tm->all);
 	cprint(b);
 #endif
 	tm_list* all = tm->all;

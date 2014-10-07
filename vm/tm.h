@@ -149,6 +149,8 @@ tm_obj tm_number(double v){
 	return o;
 }
 
+#define number_new tm_number
+
 #include "macros.h"
 #include "core.h"
 #include "builtins.h"

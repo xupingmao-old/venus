@@ -157,7 +157,7 @@ tm_obj tm_sub( tm_obj a, tm_obj b){
 
 tm_obj tm_add(  tm_obj a, tm_obj b){
 	if( a.type != b.type ){
-		tm_raise("tm_add: different types");
+		tm_raise("tm_add: different types : @ @", a, b);
 	}
 	switch( a.type ){
 		case TM_NUM:
@@ -183,7 +183,7 @@ tm_obj tm_add(  tm_obj a, tm_obj b){
 			return gc_track(a);
 		}
 	}
-	tm_raise("tm_add: type can not add");
+	tm_raise("tm_add: can not add @ and @", a, b);
 	return tm->none;
 }
 

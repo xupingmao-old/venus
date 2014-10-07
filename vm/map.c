@@ -168,7 +168,7 @@ void map_free(tm_map* map){
 	printf("before map_free %d, ", old);
 #endif
 	for(i = 0; i < cap; i++){
-		map_free_node( map->nodes[i] );
+		map_free_node( map->nodes[i]);
 	}
 	tm_free(map->nodes, sizeof(map_node*) * cap);
 	tm_free(map, sizeof(tm_map));

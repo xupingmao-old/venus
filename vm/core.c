@@ -26,7 +26,7 @@ void* tm_realloc( void* o, size_t osize, size_t nsize)
 }
 
 void tm_free(void* o, size_t size){
-	if( size == 0)
+	if( o == NULL )
 		return;
 #if DEBUG_GC
 	printf("%d -> %d , -%d\n", tm->allocated_mem, tm->allocated_mem - size, size);
@@ -56,9 +56,11 @@ tm_obj obj_new( int type , void * value){
 	tm_obj o;
 	o.type = type;
 	switch( type ){
+		case TM_NUM: o.value.num = *(double*)value;break;
 		case TM_STR: o.value.str = value;break;
 		case TM_LST: o.value.list = value;break;
 		case TM_MAP: o.value.map = value;break;
+		case TM_NON: break;
 	}
 	return o;
 }

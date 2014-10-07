@@ -20,7 +20,7 @@ void _tm_print(tm_obj o, int depth){
 		}
 		break;
 	case TM_NUM:
-		printf("%lf", get_double(o));
+		printf("%g", get_double(o));
 		break;
 	case TM_LST:
 	{

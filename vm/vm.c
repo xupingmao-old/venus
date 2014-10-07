@@ -19,14 +19,12 @@ tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params){
 */
 
 void constants_init(){
-	tm->none.type = TM_NON;
+	tm->none = obj_new(TM_NON, NULL);
 	tm->none_str = string_new("None", 0);
 	tm->empty_str = string_new("", 0);
 	int i;
 	for(i = 0; i < 256; i++){
-		char *s = tm_alloc(2);
-		s[0] = i;
-		s[1] = '\0';
+		char s[2] = {i, '\0'};
 		tm->chars[i] = string_new(s, 1);
 	}
 }
@@ -100,20 +98,21 @@ int tm_run(){
 	if(  setjmp(tm->buf) == 0 ){
 	// 真正要执行的代码,发生异常之后返回setjmp的地方
 		test_map();
-		tm_obj n = tm_number(213.34);
+		tm_obj n = number_new(213.34);
 		_tm_len(n);
 		tm->cur = 0;
 		tm_obj v = obj_new(TM_LST, tm->all);
-		tm_raise("tm->list = @", v);
+		//tm_raise("tm->list = @", v);
 	}else{
 	// 发生了异常，返回捕捉异常的帧
 		int i;
 		int cur = tm->cur;
+		printf("Traceback (most recent call last):\n");
 		// 返回上一帧
 		for(i = cur; i >= 0; i-- ){
 			tm_frame* f = tm->frames + i;
 			if( f->jmp == 0 ){
-				tm_printf("    File @: @", f->mod, f->ex);
+				tm_printf("  File \"@\": @", f->mod, f->ex);
 			}
 		}
 	}
@@ -137,26 +136,23 @@ void frames_free(){
 	for(i = 0; i < FRAMES_COUNT; i++){
 		tm_frame*f = tm->frames + i;
 		tm_free(f->stack, f->stacksize * sizeof(tm_obj));
-		obj_free(f->ex);
+		// f->ex, f->mod will handled by gc
 	}
 }
 
 int tm_init(int argc, char* argv[]){
 	tm = malloc( sizeof(tm_vm) );
 	if( tm == NULL ){
-		puts("vm init fail");
+		fprintf(stderr, "vm init fail");
 		return -1;
 	}
 	gc_init();
 	constants_init();
 	frames_init();
-	// constants_init();
-	// builtins_init();
-	// builtins_method_init();
-	// modules_init();
 	tm_run();
 	frames_free();
 	gc_free();
+	free(tm);
 	return 0;
 }
 
