@@ -80,10 +80,25 @@ tm_obj tm_print(tm_obj params){
 	return tm->none;
 }
 
-void _tm_printf(const char* fmt, va_list ap){
+tm_obj _tm_format(char* fmt, va_list ap){
 	int i;
 	int len = strlen(fmt);
-	const char*s = fmt;
+	tm_obj nstr = string_new("", 0);
+	for(i = 0; i < len; i++){
+		if( fmt[i] == '@' ){
+			tm_obj v = va_arg(ap, tm_obj);
+			nstr = tm_add(nstr, _tm_str(v));
+		}else{
+			nstr = tm_add(nstr, string_new( &fmt[i], 1));
+		}
+	}
+	return nstr;
+}
+
+void _tm_printf(char* fmt, va_list ap){
+	int i;
+	int len = strlen(fmt);
+	char*s = fmt;
 	for(i = 0; i < len; i++){
 		if( s[i] == '@' ){
 			tm_obj v = va_arg(ap, tm_obj);
@@ -94,7 +109,7 @@ void _tm_printf(const char* fmt, va_list ap){
 	}
 }
 
-void tm_printf(const char* fmt, ...){
+void tm_printf(char* fmt, ...){
 	va_list a; 
 	va_start(a,fmt);
 	_tm_printf(fmt, a);

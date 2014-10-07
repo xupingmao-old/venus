@@ -33,10 +33,18 @@ void tm_free(void* o, size_t size){
 
 void tm_raise(char* fmt, ...)
 {
-	va_list a; va_start(a,fmt);
-	_tm_printf(fmt, a);
+	va_list a; 
+	va_start(a,fmt);
+	// 添加\n
+	int len = strlen(fmt);
+	char*s = tm_alloc(len + 2);
+	memcpy(s, fmt, len);
+	s[len] = '\n';
+	s[len+1] = '\0';
+	tm->frames[tm->cur].ex = _tm_format(s, a);
+	// 释放资源
+	tm_free(s, len + 2);
 	va_end(a);
-	puts("");
 	longjmp(tm->buf, 1);
 }
 
@@ -44,12 +52,9 @@ tm_obj obj_new( int type , void * value){
 	tm_obj o;
 	o.type = type;
 	switch( type ){
-		case TM_STR: o.value.str = value;
-		break;
-		case TM_LST: o.value.list = value;
-		break;
-		case TM_MAP: o.value.map = value;
-		break;
+		case TM_STR: o.value.str = value;break;
+		case TM_LST: o.value.list = value;break;
+		case TM_MAP: o.value.map = value;break;
 	}
 	return o;
 }

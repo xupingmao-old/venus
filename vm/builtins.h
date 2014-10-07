@@ -6,7 +6,8 @@
 void cprint(tm_obj v);
 void cprintln(tm_obj v);
 tm_obj tm_print( tm_obj params);
-void _tm_printf(const char* fmt, va_list ap);
-void tm_printf(const char* fmt, ...);
+tm_obj _tm_format(char* fmt, va_list ap);
+void _tm_printf(char* fmt, va_list ap);
+void tm_printf(char* fmt, ...);
 
 #endif

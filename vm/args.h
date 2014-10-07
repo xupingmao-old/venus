@@ -12,7 +12,7 @@ tm_obj get_arg(tm_obj params, int pos, int type){
 		tm_raise("get_arg: index overflow");
 	}
 	tm_obj v = list->nodes[pos];
-	if ( type == -1 ){
+	if ( type < 0 ){
 		return v;
 	}
 	if( v.type != type){

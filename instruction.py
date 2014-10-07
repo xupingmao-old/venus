@@ -103,8 +103,8 @@ def def_global( v ):
 	names._def(v)
 
 def print_constants():
-	for i in constants.values:
-		print(i)
+	for i,k in enumerate(constants.values):
+		print(i,k)
 	# for i in range( len( constants )) :
 	# 	print("%s : (%s, %s)" % ( constants_keys[i], constants[i].type, constants[i].val))
 

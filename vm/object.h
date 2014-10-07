@@ -15,4 +15,7 @@ tm_list* _list_new(int cap);
 void list_append( tm_list* list, tm_obj v);
 void list_set( tm_list* list, int n, tm_obj v);
 
+tm_frame* frame_new(tm_func* func);
+tm_obj tm_eval(tm_frame* frame);
+
 #endif /* OBJECT_H_ */

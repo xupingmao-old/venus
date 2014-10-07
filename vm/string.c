@@ -1,7 +1,7 @@
 
 #include "tm.h"
 
-tm_obj string_new( char *s , int size)
+tm_obj string_new(char *s , int size)
 {
 	tm_string* str = tm_alloc( sizeof( tm_string ));
 	if( size > 0 ){
@@ -41,6 +41,11 @@ tm_obj string_find( tm_obj params){
 		return tm_number(-1);
 	}
 	return tm_number(self_v - p);
+}
+
+tm_obj _string_join(tm_obj self, tm_obj a){
+	int len = get_str_len(self) + get_str_len(a);
+	return tm_add(self, a);
 }
 
 tm_obj blt_string_substring(tm_obj params){

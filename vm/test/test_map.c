@@ -7,12 +7,7 @@ void test_map(){
 	tm_set(map, S("bcd"), N(456));
 	tm_set(map, S("def"), N(34.34));
 	tm_set(map, S("abc"), S("test"));
-	tm_obj k,v;
-	while( map_inext( map.value.map, &k, &v)){
-		cprint(k);
-		printf(":");
-		cprint(v);
-	}
+	map_print(get_map(map));
 	// cprint(map);
 	// printf("\n\n\n");
 	tm_set( map, S("aaa"), S("tetss"));

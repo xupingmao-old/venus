@@ -6,8 +6,12 @@ date : 2014-9-2
 #include "tm.h"
 #include "instruction.h"
 
-tm_frame* frame_new( tm_obj func){
-    return NULL;
+tm_frame* frame_new( tm_func* func){
+    tm->cur++;
+    tm_frame* f = tm->frames + tm->cur;
+    f->code = func->code;
+    //f->mod = func->mod;
+    return f;
 }
 
 // 一个模块的常量

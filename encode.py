@@ -101,7 +101,7 @@ def encode_item( tk ):
         encode_item(tk.args)
         emit(LOAD_PARAMS)
         encode_item(tk.body)
-        emit(EOF)
+        emit(TM_EOF)
         close_scope()
         if in_class:
             emit_load(tk.name)
@@ -194,7 +194,7 @@ def main( ):
     name = 'test1.py'
     if len( argv ) > 1:
         name = argv[1]
-    encode( open(name).read() )
+    encode( load(name) )
     print('\n\n==========constants=============')
     print_constants()
     # input("pause")

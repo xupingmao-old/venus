@@ -3,7 +3,7 @@ import sys
 argv = sys.argv
 
 def load( name ):
-    fp = open(name, "rb")
+    fp = open(name, "r")
     t = fp.read()
     fp.close()
     return t

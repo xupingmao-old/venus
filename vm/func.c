@@ -11,10 +11,11 @@ tm_obj func_new(tm_obj code,
 	f->code = code;
 	if( native_func != NULL ){
 		f->native_func = native_func;
-		f->fnc_type = TM_NATIVE;
+		// 通过判断native_func是否为NULL
+		// f->fnc_type = TM_NATIVE;
 	}else{
 		f->native_func = NULL;
-		f->fnc_type = TM_FNC;
+		// f->fnc_type = TM_FNC;
 	}
 	f->self = self;
 	f->globals = globals;

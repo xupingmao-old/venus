@@ -97,14 +97,16 @@ void modules_init(){
 }*/
 
 int tm_run(){
-	// 无异常
 	if(  setjmp(tm->buf) == 0 ){
+	// 真正要执行的代码,发生异常之后返回setjmp的地方
 		test_map();
+		tm_obj n = tm_number(213.34);
+		_tm_len(n);
 		tm->cur = 0;
 		tm_obj v = obj_new(TM_LST, tm->all);
 		tm_raise("tm->list = @", v);
-	// 发生了异常，返回捕捉异常的帧
 	}else{
+	// 发生了异常，返回捕捉异常的帧
 		int i;
 		int cur = tm->cur;
 		// 返回上一帧
@@ -115,7 +117,6 @@ int tm_run(){
 			}
 		}
 	}
-	// 真正要执行的代码， 发生异常之后返回setjmp的地方
 }
 
 void frames_init(){

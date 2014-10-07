@@ -10,6 +10,8 @@ tm_obj tm_call( tm_obj func, tm_obj params){
 	// check if function is a method ?
 	if( f->self.type != TM_NON){
 		list_insert( get_list(params), 0, f->self);
+		tm_frame* frame = frame_new(f);
+		tm_eval(frame);
 	}
 	if( f->native_func != NULL ){
 		return f->native_func(params);
@@ -37,7 +39,7 @@ tm_obj tm_call( tm_obj func, tm_obj params){
 }
 */
 
-tm_obj tm_str(  tm_obj a){
+tm_obj _tm_str(  tm_obj a){
 	switch( a.type ){
 	case TM_STR:
 		return a;
@@ -79,15 +81,19 @@ tm_obj tm_copy(tm_vm* tm, tm_obj o){
 	return tm->none;
 }
 
-tm_obj tm_len(tm_vm* tm, tm_obj p){
-	tm_obj o = list_get(get_list(p), 0 );
+tm_obj _tm_len(tm_obj o){
 	switch(o.type){
 	case TM_STR:return tm_number( get_str_len(o) );
 	case TM_LST:return tm_number( list_len(o));
 	case TM_MAP:return tm_number( map_len(o));
 	}
-	tm_raise("tm_len: %o has no len()");
+	tm_raise("tm_len: @ has no attr len", o);
 	return tm->none;
+}
+
+tm_obj tm_len(tm_obj p){
+	tm_obj o = get_arg(p, 0, -1);
+	return _tm_len(o);
 }
 
 __inline__
