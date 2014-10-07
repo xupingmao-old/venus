@@ -96,7 +96,7 @@ def encode_item( tk ):
             store(tk.name)
         #emit('set_arg '+tk.name)
     elif t == 'def':
-        emit(DEF)
+        emit(TM_DEF)
         open_scope()
         encode_item(tk.args)
         emit(LOAD_PARAMS)
@@ -194,6 +194,7 @@ def main( ):
     name = 'test1.py'
     if len( argv ) > 1:
         name = argv[1]
+    emit(TM_FILE, name[:-3])
     encode( load(name) )
     print('\n\n==========constants=============')
     print_constants()

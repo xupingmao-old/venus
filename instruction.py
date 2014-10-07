@@ -114,6 +114,7 @@ def print_constants():
 # NONE = 5
 NEW_STRING = 0
 NEW_NUMBER = 1
+TM_FILE = 2
 
 # compute
 ADD =11
@@ -158,7 +159,7 @@ TAG = 55
 
 # function
 CALL = 60
-DEF = 61
+TM_DEF = 61
 RETURN = 62
 LOAD_PARAMS = 63
 TM_EOF = 64
@@ -166,6 +167,7 @@ TM_EOF = 64
 codes = {
 	LOAD_CONSTANT : "LOAD_CONSTANT",
 	LOAD_LOCAL : "LOAD_LOCAL",
+	TM_FILE : "TM_FILE",
 	STORE_LOCAL : "STORE_LOCAL",
 	LOAD_GLOBAL : "LOAD_GLOBAL",
 	STORE_GLOBAL : "STORE_GLOBAL",
@@ -174,7 +176,7 @@ codes = {
 	ADD : "ADD",
 	MUL : "MUL",
 	RETURN : "RETURN",
-	DEF : "DEF",
+	TM_DEF : "TM_DEF",
 	GET : "GET",
 	SET : "SET",
 	LOAD_PARAMS : "LOAD_PARAMS",

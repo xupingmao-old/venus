@@ -161,15 +161,6 @@ def factor_(p):
 			node.val = p.pop()
 		p.add(node)
 
-def _expr( func, val):
-	def f(p):
-		func(p)
-		while p.token.type == val:
-			t = p.token.type
-			p.next()
-			func(p)
-			p.addOp(t)
-	return f
 def _expr2(func, val):
 	def f(p):
 		func(p)
@@ -214,9 +205,9 @@ item2 = _expr2(dot_expr, ['*', '/', '%'])
 item = _expr2(item2, ['+', '-'])
 in_expr = _expr2(item, ['in', 'notin'])
 compare = _expr2(in_expr, ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
-and_expr = _expr(compare, 'and')
-or_expr = _expr(and_expr, 'or')
-comma = _expr(or_expr, ',')
+and_expr = _expr2(compare, ['and'])
+or_expr = _expr2(and_expr, ['or'])
+comma = _expr2(or_expr, [','])
 assign = _expr2(comma, ['=', '+=', '-=', '*=', '/='])
 
 expr = assign
