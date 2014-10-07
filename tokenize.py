@@ -31,7 +31,16 @@ class TData:
     def __init__(self):
         self.y,self.yi,self.nl = 1,0,True
         self.res,self.indent,self.braces = [],[0],0
-    def add(self,t,v): self.res.append(Token(t,v,self.f))
+    def add(self,t,v): 
+        if t == 'in':
+            last = self.res.pop()
+            if last.type == 'not':
+                self.res.append(Token('notin', v, self.f))
+            else:
+                self.res.append(last)
+                self.res.append(Token(t,v,self.f))
+        else:
+            self.res.append(Token(t,v,self.f))
 
 def clean(s):
     s = s.replace('\r\n','\n')

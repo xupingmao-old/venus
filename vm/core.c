@@ -3,6 +3,8 @@
 
 void* tm_alloc( size_t size)
 {
+	if( size == 0)
+		return NULL;
 	void* block = malloc( size );
 #if DEBUG_GC
 	printf("%d -> %d , +%d\n", tm->allocated_mem, tm->allocated_mem + size, size);
@@ -24,6 +26,8 @@ void* tm_realloc( void* o, size_t osize, size_t nsize)
 }
 
 void tm_free(void* o, size_t size){
+	if( size == 0)
+		return;
 #if DEBUG_GC
 	printf("%d -> %d , -%d\n", tm->allocated_mem, tm->allocated_mem - size, size);
 #endif

@@ -6,10 +6,12 @@ if 'tinytm' not in globals():
 # constants as list
 class Constants:
 	def __init__(self):
-		self.values = []
+		self.values = [None]
 	def add( self, v):
 		if v.type == 'number':
 			v.val = float(v.val)
+		elif v.type == 'None':
+			pass
 		if v.val not in self.values:
 			self.values.append( v.val)
 	def load( self, v):
@@ -48,7 +50,7 @@ class Names:
 		if v.val not in self.scope.locals:
 			self.scope.locals.append(v.val)
 	def load(self, v):
-		if len( self.scopes ) == 0:
+		if len( self.scopes ) == 1:
 			idx = constants.index(v)
 			emit(LOAD_GLOBAL, idx)
 		elif v.val in constants.values:
@@ -80,7 +82,7 @@ def emit_load( v ):
 	if t == 'string' or t == 'number':
 		constants.load( v )
 	elif t == 'None':
-		emit(NONE)
+		constants.load(v)
 	elif t == 'name':
 		names.load( v )
 	else:
@@ -176,5 +178,11 @@ codes = {
 	GET : "GET",
 	SET : "SET",
 	LOAD_PARAMS : "LOAD_PARAMS",
-	TM_EOF : "TM_EOF"
+	TM_EOF : "TM_EOF",
+	LIST : "LIST",
+	DICT : "DICT",
+	EQEQ : "EQEQ",
+	POP_JUMP_ON_TRUE : "POP_JUMP_ON_TRUE",
+	POP_JUMP_ON_FALSE : "POP_JUMP_ON_FALSE",
+	IN : "IN"
 }
