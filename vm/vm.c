@@ -16,24 +16,21 @@ tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params){
 	tm_obj f0 = tm_get(tm, m, fname);
 	return tm_call(tm, f0, params);
 }
+*/
 
 void constants_init(){
 	tm->none.type = TM_NON;
-	tm->none_str = S("None");
-	tm->empty_str = S("");
-
-	// init chars;
-	// ��Щ�ַ�ᱻ��������Ϊ�ַ����ԭ��
+	tm->none_str = string_new("None", 0);
+	tm->empty_str = string_new("", 0);
 	int i;
 	for(i = 0; i < 256; i++){
-		char *s = tm_alloc(tm, 2);
+		char *s = tm_alloc(2);
 		s[0] = i;
 		s[1] = '\0';
-		// will be tracked by tm->strings;
-		tm->chars[i] = string_new_(tm, s, 1);
+		tm->chars[i] = string_new(s, 1);
 	}
 }
-
+/*
 void builtins_method_init(){
 	tm->string_methods = map_new();
 	tm->list_methods = map_new();
@@ -100,28 +97,47 @@ void modules_init(){
 }*/
 
 int tm_run(){
-	tm->cur = 0;
-	int res = setjmp(tm->buf);
-
 	// 无异常
-	if(  res == 0 ){
+	if(  setjmp(tm->buf) == 0 ){
 		test_map();
 		tm->cur = 0;
 		tm_obj v = obj_new(TM_LST, tm->all);
 		tm_raise("tm->list = @", v);
 	// 发生了异常，返回捕捉异常的帧
 	}else{
-/*		int i;
+		int i;
 		int cur = tm->cur;
 		// 返回上一帧
 		for(i = cur; i >= 0; i-- ){
-			if( tm->frames[i].ex.type != TM_NON ){
-
+			tm_frame* f = tm->frames + i;
+			if( f->jmp == 0 ){
+				tm_printf("    File @: @", f->mod, f->ex);
 			}
-		}*/
-		puts("exception");
+		}
 	}
 	// 真正要执行的代码， 发生异常之后返回setjmp的地方
+}
+
+void frames_init(){
+	int i;
+	for(i = 0; i < FRAMES_COUNT; i++){
+		tm_frame* f = tm->frames + i;
+		f->stacksize = 10;
+		f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
+		f->ex = tm->none;
+		f->mod = tm->none;
+		f->jmp = 0;
+	}
+	tm->cur = 0;
+}
+
+void frames_free(){
+	int i;
+	for(i = 0; i < FRAMES_COUNT; i++){
+		tm_frame*f = tm->frames + i;
+		tm_free(f->stack, f->stacksize * sizeof(tm_obj));
+		obj_free(f->ex);
+	}
 }
 
 int tm_init(int argc, char* argv[]){
@@ -131,11 +147,14 @@ int tm_init(int argc, char* argv[]){
 		return -1;
 	}
 	gc_init();
+	constants_init();
+	frames_init();
 	// constants_init();
 	// builtins_init();
 	// builtins_method_init();
 	// modules_init();
 	tm_run();
+	frames_free();
 	gc_free();
 	return 0;
 }

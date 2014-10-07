@@ -141,7 +141,7 @@ int map_index( tm_obj obj , int size){
 				case 1: return (val[0] ) & (size-1);
 				default: return (val[0] + val[1]) & ( size -1 );
 			}
-		}
+		}break;
 		case TM_NUM:
 			return (int)get_num(obj) % size;
 		/*case TM_LST:

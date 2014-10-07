@@ -82,16 +82,18 @@ typedef struct tm_frame
 {
 	tm_obj locals[256];
 	tm_obj *stack;
+	int stacksize;
 	tm_obj globals;
 	tm_obj constants; 
 	tm_obj mod; // module
 	tm_obj code; // byte code
 	tm_obj ex; // exception info
-	int cur; 
 	int jmp; // catch/except position
 }tm_frame;
 
 #include "map.h"
+
+#define FRAMES_COUNT 256
 
 typedef struct tm_vm
 {
@@ -104,7 +106,7 @@ typedef struct tm_vm
 	tm_obj *top;
 
 	int cur; // current frame
-	tm_frame frames[256];
+	tm_frame frames[FRAMES_COUNT];
 
 	tm_obj chars[256];
 
