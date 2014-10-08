@@ -17,26 +17,12 @@ class HostConf:
         self.content = content
         lines = content.split('\n')
         self.lines = lines
-        # frozen = {}
-        # active = {}
-        # for line in lines:
-        #     line = line.lstrip()
-        #     if len(line) == 0:continue
-        #     elif line.startswith('#'):
-        #         line = line[1:]
-        #         vv = line.split(' ')
-        #         k, v = vv[0], vv[1]
-        #         frozen[k] = v
-        #     else:
-        #         vv = line.split(' ')
-        #         k, v = vv[0], vv[1]
-        #         active[k] = v
-        # self.frozen = frozen
-        # self.active = active
         self.parse()
     def show(self, type='active'):
         if type == 'active':
-            print(self.active)
+            print("active host configure:")
+            for i,k in enumerate(self.active):
+                print(i,k,self.active[k])
         else:
             print(self.frozen)
             print(self.active)
