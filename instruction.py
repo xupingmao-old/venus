@@ -71,6 +71,10 @@ class Names:
 constants = Constants()
 names = Names()
 def emit(ins, val = None):
+	if ins == TM_FILE:
+		constants.add(val)
+		c = code8(ins)
+		print(c)
 	if val != None:
 		# val = '(' + str(constants.get(val)) + ')'
 		print( codes[ins] + ' ' + str(val) )
@@ -102,7 +106,7 @@ def emit_store( v ):
 
 
 def def_global( v ):
-	names._def(v)
+	constants.add(v)
 
 def print_constants():
 	for i,k in enumerate(constants.values):

@@ -94,10 +94,16 @@ void modules_init(){
 	tm->modules = map_new(tm);
 }*/
 
+void reg_builtin(char* name, tm_obj v){
+	tm_obj key = string_new(name, strlen(name));
+	tm_set( tm->builtins, key, v);
+}
+
 int tm_run(){
 	if(  setjmp(tm->buf) == 0 ){
 	// 真正要执行的代码,发生异常之后返回setjmp的地方
-		test_map();
+		//test_map();
+		cprintln(tm->builtins);
 		tm_obj n = number_new(213.34);
 		_tm_len(n);
 		tm->cur = 0;
@@ -115,6 +121,7 @@ int tm_run(){
 				tm_printf("  File \"@\": @", f->mod, f->ex);
 			}
 		}
+		tm_printf("Exception: @", tm->frames[tm->cur].ex);
 	}
 }
 
@@ -127,6 +134,7 @@ void frames_init(){
 		f->ex = tm->none;
 		f->mod = tm->none;
 		f->jmp = 0;
+		f->maxlocals = 0;
 	}
 	tm->cur = 0;
 }
@@ -148,7 +156,17 @@ int tm_init(int argc, char* argv[]){
 	}
 	gc_init();
 	constants_init();
+	tm->builtins = map_new();
 	frames_init();
+
+	tm_obj p = list_new(argc);
+	// init argv;
+	int i;for(i = 0; i < argc; i++){
+		tm_obj arg = string_new(argv[i], strlen(argv[i]));
+		list_append( get_list(p), arg);
+	}
+	reg_builtin("argv", p);
+
 	tm_run();
 	frames_free();
 	gc_free();

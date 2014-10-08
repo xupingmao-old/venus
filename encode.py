@@ -194,7 +194,7 @@ def main( ):
     name = 'test1.py'
     if len( argv ) > 1:
         name = argv[1]
-    emit(TM_FILE, name[:-3])
+    emit(TM_FILE, Token("string", name))
     encode( load(name) )
     print('\n\n==========constants=============')
     print_constants()

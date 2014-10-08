@@ -36,22 +36,23 @@ void _tm_print(tm_obj o, int depth){
 		printf("]");
 		break;
 	}
-	/*case TM_MAP:
+	case TM_MAP:
 	{
 		int i = 0;
 		tm_obj k,v;
 		tm_map* map = get_map( o );
+		int len = map->len;
 		putchar('{');
-		while( map_inext(map, &k, &v)){
+		for(i = 0; map_inext(map, &k, &v); i++){
 			_tm_print(k, depth);
 			putchar(':');
 			_tm_print(v, depth);
-			putchar(',');
+			if( i != len -1 ) putchar(',');
 		}
 		putchar('}');
 		break;
-	}*/
-	case TM_MAP:map_print(get_map(o));break;
+	}
+	// case TM_MAP:map_print(get_map(o));break;
 	case TM_FNC:
 		printf("<function %x>", o.value.func);
 		break;

@@ -91,7 +91,8 @@ tm_obj tm_eval( tm_frame* frame){
             }
             top-=i;
             x = TM_POP(); // function
-            tm_call(x, p);
+            v = tm_call(x, p);
+            TM_PUSH(v);
         }break;
     }
 }

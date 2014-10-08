@@ -87,7 +87,7 @@ tm_obj _tm_len(tm_obj o){
 	case TM_LST:return tm_number( list_len(o));
 	case TM_MAP:return tm_number( map_len(o));
 	}
-	tm_raise("tm_len: @ has no attr len", o);
+	tm_raise("tm_len: @ has no attribute len", o);
 	return tm->none;
 }
 
@@ -96,10 +96,10 @@ tm_obj tm_len(tm_obj p){
 	return _tm_len(o);
 }
 
-__inline__
+inline
 int tm_get_int(tm_obj v){
 	if( v.type != TM_NUM){
-		tm_raise( "tm_get_int: not a number ==> @", v );
+		tm_raise( "tm_get_int:@ is not a number", v );
 	}
 	return (int)v.value.dv;
 }

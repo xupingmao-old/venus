@@ -83,6 +83,7 @@ typedef struct tm_frame
 	tm_obj locals[256];
 	tm_obj *stack;
 	int stacksize;
+	int maxlocals;
 	tm_obj globals;
 	tm_obj constants; 
 	tm_obj mod; // module

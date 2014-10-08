@@ -83,8 +83,19 @@ void gc_mark(tm_obj v){
 }
 
 void gc_full(){
-	// mark all object 0
 	int n,i;
+	// mark vm core
+	gc_mark(tm->builtins);
+	gc_mark(tm->modules);
+	for(i = tm->cur; i >= 0; i--){
+		tm_frame* f = tm->frames + i;
+		int maxlocals = f->maxlocals;
+		int j;for(j = 0; j < maxlocals; j++){
+			gc_mark(f->locals[j]);
+		}
+	}
+
+	// mark all object 0
 	n = tm->all->len;
 	tm_obj* nodes = tm->all->nodes;
 	for(i = 0; i < n; i++){
