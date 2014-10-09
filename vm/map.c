@@ -144,10 +144,6 @@ int map_index( tm_obj obj , int size){
 		}break;
 		case TM_NUM:
 			return (int)get_num(obj) % size;
-		/*case TM_LST:
-			return ptr_addr( get_list(obj) ) % size;
-		case TM_MAP:
-			return ptr_addr( get_map(obj) ) % size;*/
 	}
 	return 0;
 }

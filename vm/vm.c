@@ -99,10 +99,22 @@ void reg_builtin(char* name, tm_obj v){
 	tm_set( tm->builtins, key, v);
 }
 
-int tm_run(){
+int tm_run(int argc, char* argv[]){
 	if(  setjmp(tm->buf) == 0 ){
 	// 真正要执行的代码,发生异常之后返回setjmp的地方
 		//test_map();
+		if( argc == 2){
+			char* fname = argv[1];
+			tm_obj code = _load(fname);
+			printf("load file %s\n", fname);
+			// cprintln(code);
+			tm_obj mod = map_new();
+			tm_set(mod, string_new("__name__",0), string_new("__main__", 0) );
+			tm_set(mod, string_new("__file__", 0), string_new(fname, strlen(fname)));
+			tm_set(mod, string_new("__code__", 0), code);
+			tm_eval( mod );
+			cprintln(mod);
+		}
 		cprintln(tm->builtins);
 		tm_obj n = number_new(213.34);
 		_tm_len(n);
@@ -166,8 +178,7 @@ int tm_init(int argc, char* argv[]){
 		list_append( get_list(p), arg);
 	}
 	reg_builtin("argv", p);
-
-	tm_run();
+	tm_run(argc, argv);
 	frames_free();
 	gc_free();
 	free(tm);

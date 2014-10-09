@@ -192,10 +192,12 @@ def encode(content):
 def main( ):
     import sys
     name = 'test1.py'
-    if len( argv ) > 1:
+    if len( argv ) == 2:
         name = argv[1]
-    emit(TM_FILE, Token("string", name))
+    elif len(argv) == 3 and argv[1] == '-save':
+        name = argv[2]
     encode( load(name) )
+    save_code("bin")
     print('\n\n==========constants=============')
     print_constants()
     # input("pause")

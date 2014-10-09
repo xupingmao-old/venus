@@ -50,7 +50,7 @@ tm_obj stream_close(tm_obj params){
 	return tm->none;
 }
 
-int _get_file_rest_len(tm_vm* tm, FILE* fp){
+int _get_file_rest_len( FILE* fp){
 	if( fp == NULL ){
 		tm_raise("stream_read: can not open stream");
 	}
@@ -70,12 +70,12 @@ tm_obj stream_read( tm_vm* tm, tm_obj params){
 	int rest_len = 0;
 	FILE* fp = get_file(fp_);
 	if( len == 1){
-		rest_len = _get_file_rest_len( tm, fp );
+		rest_len = _get_file_rest_len( fp );
 		fseek(fp, 0, SEEK_END);
 	}else if( len == 2){
 		tm_obj size = get_arg( params, 1, TM_NUM);
 		int v = (int) get_num( size );
-		rest_len = _get_file_rest_len( tm, fp );
+		rest_len = _get_file_rest_len( fp );
 		if( rest_len > v ){
 			rest_len = v;
 		}
@@ -86,5 +86,22 @@ tm_obj stream_read( tm_vm* tm, tm_obj params){
 	char* s = get_str(des);
 	fread(s, rest_len, 1, fp );
 	return des;
+}
+
+tm_obj _load(char* fname){
+	FILE* fp = fopen(fname, "r");
+	if( fp == NULL ){
+		tm_raise("load: can not open file @", string_new(fname, strlen(fname)));
+		return tm->none;
+	}
+	long len = _get_file_rest_len(fp);
+	if(len > MAX_FILE_SIZE ){
+		tm_raise("load: file too big to load, size = @", number_new(len));
+		return tm->none;
+	}
+	tm_obj text = string_new(NULL, len);
+	char* s = get_str(text);
+	fread(s, len, 1, fp);
+	return text;
 }
 

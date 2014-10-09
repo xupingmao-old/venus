@@ -11,7 +11,7 @@ tm_obj tm_call( tm_obj func, tm_obj params){
 	if( f->self.type != TM_NON){
 		list_insert( get_list(params), 0, f->self);
 		tm_frame* frame = frame_new(f);
-		tm_eval(frame);
+		//tm_eval(frame);
 	}
 	if( f->native_func != NULL ){
 		return f->native_func(params);
