@@ -8,6 +8,11 @@ def load( name ):
     fp.close()
     return t
 
+def save( name, content):
+    fp = open(name, 'w')
+    fp.write(content)
+    fp.close()
+
 def short( a, b):
     return (a << 8) + b
 _code = ''
