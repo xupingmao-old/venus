@@ -36,6 +36,16 @@ tm_obj* get_constants(tm_obj mod){
     return get_list(v)->nodes;
 }
 
+
+void print_ins(int ins, tm_obj v){
+    if( ins < 0) return;
+    switch(ins){
+        case NEW_STRING: tm_printf("NEW_STRING \"@\"\n", v);break;
+        case NEW_NUMBER: tm_printf("NEW_NUMBER @\n", v);break;
+    }
+}
+
+
 #define next_char( s ) *s++
 #define next_byte( s ) *s++
 #define next_short( s ) ((int) (*s++) << 8) + (int) (*s++)
@@ -62,25 +72,28 @@ tm_obj tm_eval( tm_obj mod ){
 
     tm_obj x, k, v;
     int i;
-    switch( next_char(s) ){
+
+    int ins = -1;
+    start:
+    #if PRINT_INS
+        print_ins(ins, v);
+    #endif
+
+    ins = next_char(s);
+
+    switch( ins ){
         case NEW_NUMBER: {
             double d;
             read_number( d, s);
-            #if PRINT_INS
-                printf("NEW_NUMBER %g\n", d);
-            #endif
             v = tm_number(d);
             push_constant( mod , v);
-        }break;
+        }goto start;
         case NEW_STRING: {
             int len = next_short( s );
             v = string_new( s, len);
-            #if PRINT_INS
-                tm_printf("NEW_STRING @\n", v);
-            #endif
             s+=len;
             push_constant( mod, v);
-        }break;
+        }goto start;
     	case LOAD_CONSTANT: {
     	    i = next_short( s );
     	    TM_PUSH( constants[ i ] );

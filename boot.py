@@ -33,8 +33,11 @@ def code8(ins):
 def code16(ins):
     return chr((ins>>8) & 0xff) + chr(ins & 0xff)
 
+def codeF(value):
+    return struct.pack('d', value)
+
 def code(type, val):
     if istype(val, "string"):
         return chr(type) + code16(len(val))+ val
     elif istype(val, "number"):
-        return chr(type) + struct.pack("d", val)
+        return chr(type) + codeF(val)

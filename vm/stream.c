@@ -91,7 +91,7 @@ tm_obj stream_read( tm_vm* tm, tm_obj params){
 tm_obj _load(char* fname){
 	FILE* fp = fopen(fname, "r");
 	if( fp == NULL ){
-		tm_raise("load: can not open file @", string_new(fname, strlen(fname)));
+		tm_raise("load: can not open file \"@\"", string_new(fname, strlen(fname)));
 		return tm->none;
 	}
 	long len = _get_file_rest_len(fp);
