@@ -1,12 +1,12 @@
 if 'tinytm' not in globals():
     from boot import *
 
-from tokenize import *
+from tokenize import Token
 #constants
 # NONE = 5
-NEW_STRING = 0
-NEW_NUMBER = 1
-TM_FILE = 2
+NEW_STRING = 1
+NEW_NUMBER = 2
+TM_FILE = 3
 
 # compute
 ADD =11
@@ -55,6 +55,7 @@ TM_DEF = 61
 RETURN = 62
 LOAD_PARAMS = 63
 TM_EOF = 64
+TM_EOP = 65 #end of program
 
 codes = {
 	NEW_STRING: "NEW_STRING",
@@ -75,6 +76,7 @@ codes = {
 	SET : "SET",
 	LOAD_PARAMS : "LOAD_PARAMS",
 	TM_EOF : "TM_EOF",
+	TM_EOP : "TM_EOP",
 	LIST : "LIST",
 	DICT : "DICT",
 	EQEQ : "EQEQ",
@@ -153,7 +155,8 @@ constants = Constants()
 names = Names()
 bin = "" # binary code
 # opcode : op
-mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF, TM_EOF, RETURN, LOAD_PARAMS]
+mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF, 
+	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS]
 # opcode : op byte
 mode2 = [LOAD_LOCAL, CALL]
 # opcode : op short
@@ -197,6 +200,7 @@ def save_code(name):
 			emit(NEW_STRING, i)
 		elif istype(i, "number"):
 			emit(NEW_NUMBER, i)
+	emit(TM_EOP)
 	save(name, bin + code)
 
 
