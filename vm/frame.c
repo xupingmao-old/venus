@@ -15,12 +15,13 @@ tm_frame* frame_new( tm_func* func){
 }
 
 // 一个模块的常量
-void push_constant(tm_obj mod, tm_obj v){
+tm_obj* push_constant(tm_obj mod, tm_obj v){
     tm_obj constants = tm_get( mod, string_new("__constants__", 0));
     int i = list_index( get_list(constants), v);
     if( i == -1 ){
         list_append(get_list(constants), v);
     }
+    return get_list(constants)->nodes;
 }
 
 tm_obj* get_constants(tm_obj mod){
@@ -42,6 +43,9 @@ void print_ins(int ins, tm_obj v){
     switch(ins){
         case NEW_STRING: tm_printf("NEW_STRING \"@\"\n", v);break;
         case NEW_NUMBER: tm_printf("NEW_NUMBER @\n", v);break;
+        case LOAD_CONSTANT: tm_printf("LOAD_CONSTANT @\n", v);break;
+        case LOAD_GLOBAL: tm_printf("LOAD_GLOBAL @\n", v);break;
+        case STORE_GLOBAL: tm_printf("STORE_GLOBAL @\n", v);break;
     }
 }
 
@@ -50,7 +54,7 @@ void print_ins(int ins, tm_obj v){
 #define next_byte( s ) *s++
 #define next_short( s ) ((int) (*s++) << 8) + (int) (*s++)
 #define read_number( v, s) v = *(double*)s; s+=sizeof(double);
-#define TM_PUSH( x ) *(top++) = x
+#define TM_PUSH( x ) *(++top) = x
 #define TM_POP() *(top--)
 
 #define CASE( code, body ) case code :  body ; break;
@@ -67,8 +71,10 @@ tm_obj tm_eval( tm_obj mod ){
     tm_obj* constants = get_constants(mod);
 
     tm_frame* f = tm->frames + tm->cur;
+
+    f->file = tm_get(mod, string_new("__file__", 0));
     tm_obj* locals = f->locals;
-    tm_obj* top = f->stack;
+    register tm_obj* top = f->stack;
 
     tm_obj x, k, v;
     int i;
@@ -86,18 +92,21 @@ tm_obj tm_eval( tm_obj mod ){
             double d;
             read_number( d, s);
             v = tm_number(d);
-            push_constant( mod , v);
+            constants = push_constant( mod , v);
         }goto start;
         case NEW_STRING: {
             int len = next_short( s );
             v = string_new( s, len);
             s+=len;
-            push_constant( mod, v);
+            constants = push_constant( mod, v);
         }goto start;
     	case LOAD_CONSTANT: {
     	    i = next_short( s );
     	    TM_PUSH( constants[ i ] );
-        }break;
+            #if PRINT_INS 
+                v = constants[i]; 
+            #endif
+        }goto start;
         case LOAD_LOCAL: {
             i = next_char(s);
             TM_PUSH( locals[i] );
@@ -105,8 +114,11 @@ tm_obj tm_eval( tm_obj mod ){
         case LOAD_GLOBAL: {
             i = next_short(s);
             k = constants[ i ];
-            TM_PUSH( tm_get(g, k) );
-        }break;
+            TM_PUSH( tm_get(mod, k) );
+            #if PRINT_INS
+                v = k;
+            #endif
+        }goto start;
         case STORE_LOCAL: {
             i = next_char( s );
             locals[i] = TM_POP();
@@ -116,7 +128,10 @@ tm_obj tm_eval( tm_obj mod ){
             k = constants[ i ];
             x = TM_POP();
             tm_set( g, k, x );
-        }break;
+            #if PRINT_INS
+                v = k;
+            #endif
+        }goto start;
         case CALL: {
             i = next_byte( s );
             tm_obj p= list_new(i);
@@ -131,4 +146,5 @@ tm_obj tm_eval( tm_obj mod ){
             TM_PUSH(v);
         }break;
     }
+    cprintln(mod);
 }

@@ -57,6 +57,8 @@ LOAD_PARAMS = 63
 TM_EOF = 64
 
 codes = {
+	NEW_STRING: "NEW_STRING",
+	NEW_NUMBER: "NEW_NUMBER",
 	LOAD_CONSTANT : "LOAD_CONSTANT",
 	LOAD_LOCAL : "LOAD_LOCAL",
 	TM_FILE : "TM_FILE",
@@ -155,7 +157,7 @@ mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF, TM_EOF, RETURN, LOAD_PA
 # opcode : op byte
 mode2 = [LOAD_LOCAL, CALL]
 # opcode : op short
-mode3 = [LOAD_GLOBAL, LOAD_CONSTANT, TM_FILE]
+mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE]
 
 def emit(ins, val = None):
 	global bin
@@ -169,7 +171,6 @@ def emit(ins, val = None):
 		bin += code(ins, val)
 	elif ins == NEW_NUMBER:
 		bin += code(ins, val)
-	return
 	if val != None:
 		# val = '(' + str(constants.get(val)) + ')'
 		print( codes[ins] + ' ' + str(val) )

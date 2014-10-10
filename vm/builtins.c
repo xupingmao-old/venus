@@ -85,17 +85,36 @@ tm_obj _tm_format(char* fmt, va_list ap){
 	int i;
 	int len = strlen(fmt);
 	tm_obj nstr = string_new("", 0);
+	int  templ = 0;
+	char* start = fmt;
 	for(i = 0; i < len; i++){
 		if( fmt[i] == '@' ){
+			if( templ > 0){
+				tm_obj txt = string_new(start, templ);
+				nstr = tm_add(nstr, txt);
+				templ = 0;
+			}
 			tm_obj v = va_arg(ap, tm_obj);
 			nstr = tm_add(nstr, _tm_str(v));
+			start = fmt + i + 1;
 		}else{
-			nstr = tm_add(nstr, string_new( &fmt[i], 1));
+			templ++;
 		}
+	}
+	if( templ > 0){
+		tm_obj txt = string_new(start, templ);
+		nstr = tm_add(nstr, txt);
 	}
 	return nstr;
 }
 
+tm_obj tm_format(char* fmt, ...){
+	va_list a; 
+	va_start(a,fmt);
+	tm_obj  v = _tm_format(fmt, a);
+	va_end(a);
+	return v;
+}
 void _tm_printf(char* fmt, va_list ap){
 	int i;
 	int len = strlen(fmt);

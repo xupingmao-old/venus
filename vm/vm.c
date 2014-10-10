@@ -20,11 +20,9 @@ tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params){
 
 void constants_init(){
 	tm->none = obj_new(TM_NON, NULL);
-	tm->none_str = string_new("None", 0);
-	tm->empty_str = string_new("", 0);
 	int i;
 	for(i = 0; i < 256; i++){
-		char s[2] = {i, '\0'};
+		unsigned char s[2] = {i, '\0'};
 		tm->chars[i] = string_new(s, 1);
 	}
 }
@@ -99,10 +97,49 @@ void reg_builtin(char* name, tm_obj v){
 	tm_set( tm->builtins, key, v);
 }
 
+
+void frames_init(){
+	int i;
+	for(i = 0; i < FRAMES_COUNT; i++){
+		tm_frame* f = tm->frames + i;
+		f->stacksize = 10;
+		f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
+		f->ex = tm->none;
+		f->file = tm->none;
+		f->jmp = 0;
+		f->maxlocals = 0;
+	}
+	tm->cur = 0;
+}
+
+void frames_free(){
+	int i;
+	for(i = 0; i < FRAMES_COUNT; i++){
+		tm_frame*f = tm->frames + i;
+		tm_free(f->stack, f->stacksize * sizeof(tm_obj));
+		// f->ex, f->file will handled by gc
+	}
+}
+
+
 int tm_run(int argc, char* argv[]){
 	if(  setjmp(tm->buf) == 0 ){
 	// 真正要执行的代码,发生异常之后返回setjmp的地方
 		//test_map();
+		gc_init();
+		constants_init();
+		tm->builtins = map_new();
+		frames_init();
+
+		tm_obj p = list_new(argc);
+		// init argv;
+		int i;for(i = 0; i < argc; i++){
+			tm_obj arg = string_new(argv[i], strlen(argv[i]));
+			list_append( get_list(p), arg);
+		}
+
+		reg_builtin("argv", p);
+
 		if( argc == 2){
 			char* fname = argv[1];
 			tm_obj code = _load(fname);
@@ -130,33 +167,10 @@ int tm_run(int argc, char* argv[]){
 		for(i = cur; i >= 0; i-- ){
 			tm_frame* f = tm->frames + i;
 			if( f->jmp == 0 ){
-				tm_printf("  File \"@\": @", f->mod, f->ex);
+				tm_printf("  File \"@\": @", f->file, f->ex);
 			}
 		}
 		tm_printf("Exception: @", tm->frames[tm->cur].ex);
-	}
-}
-
-void frames_init(){
-	int i;
-	for(i = 0; i < FRAMES_COUNT; i++){
-		tm_frame* f = tm->frames + i;
-		f->stacksize = 10;
-		f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
-		f->ex = tm->none;
-		f->mod = tm->none;
-		f->jmp = 0;
-		f->maxlocals = 0;
-	}
-	tm->cur = 0;
-}
-
-void frames_free(){
-	int i;
-	for(i = 0; i < FRAMES_COUNT; i++){
-		tm_frame*f = tm->frames + i;
-		tm_free(f->stack, f->stacksize * sizeof(tm_obj));
-		// f->ex, f->mod will handled by gc
 	}
 }
 
@@ -166,18 +180,6 @@ int tm_init(int argc, char* argv[]){
 		fprintf(stderr, "vm init fail");
 		return -1;
 	}
-	gc_init();
-	constants_init();
-	tm->builtins = map_new();
-	frames_init();
-
-	tm_obj p = list_new(argc);
-	// init argv;
-	int i;for(i = 0; i < argc; i++){
-		tm_obj arg = string_new(argv[i], strlen(argv[i]));
-		list_append( get_list(p), arg);
-	}
-	reg_builtin("argv", p);
 	tm_run(argc, argv);
 	frames_free();
 	gc_free();

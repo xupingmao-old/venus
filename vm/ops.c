@@ -56,7 +56,7 @@ tm_obj _tm_str(  tm_obj a){
 	case TM_FNC:
 		return string_new("<function>", 0);
 	}
-	return tm->none_str;
+	return string_new("",0);
 }
 
 tm_obj tm_copy(tm_vm* tm, tm_obj o){
@@ -109,11 +109,11 @@ void tm_set( tm_obj self, tm_obj k, tm_obj v){
 	case TM_LST:
 	{
 		int n = tm_get_int( k);
-		list_set( self.value.list, n, v);
+		list_set( get_list(self), n, v);
+	}return;
+	case TM_MAP: map_set( get_map(self), k, v);return;
 	}
-	break;
-	case TM_MAP: map_set(self.value.map, k, v);break;
-	}
+	tm_raise(" tm_set: @[@] = @", self, k, v );
 }
 
 tm_obj tm_get(tm_obj self, tm_obj k){
@@ -141,7 +141,7 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 			}
 	}
 	error:
-	tm_raise("tm_get: keyError " );
+	tm_raise("tm_get: keyError @", k );
 	return tm->none;
 }
 
@@ -169,6 +169,12 @@ tm_obj tm_add(  tm_obj a, tm_obj b){
 			char* sb = get_str(b);
 			int la = get_str_len(a);
 			int lb = get_str_len(b);
+			if( la == 0){
+				return b;
+			}
+			if( lb == 0){
+				return a;
+			}
 			int len = la + lb;
 			tm_obj des = string_new(NULL, len);
 			char*s = get_str(des);

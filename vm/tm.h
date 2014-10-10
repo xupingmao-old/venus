@@ -86,7 +86,7 @@ typedef struct tm_frame
 	int maxlocals;
 	tm_obj globals;
 	tm_obj constants; 
-	tm_obj mod; // module
+	tm_obj file; // file name
 	tm_obj code; // byte code
 	tm_obj ex; // exception info
 	int jmp; // catch/except position
@@ -112,10 +112,6 @@ typedef struct tm_vm
 	tm_obj chars[256];
 
 	tm_obj none;
-	tm_obj none_str;
-	tm_obj empty_str;
-	tm_obj end;
-
 	tm_obj string_methods;
 	tm_obj list_methods;
 
