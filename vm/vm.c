@@ -146,9 +146,11 @@ int tm_run(int argc, char* argv[]){
 			tm_obj code = _load(fname);
 			// printf("load file %s\n", fname);
 			// cprintln(code);
+			tm_obj mod_name = string_new(fname, strlen(fname));
+			tm->frames[tm->cur].file = string_new(fname, mod_name);
 			tm_obj mod = map_new();
 			tm_set(mod, string_new("__name__",0), string_new("__main__", 0) );
-			tm_set(mod, string_new("__file__", 0), string_new(fname, strlen(fname)));
+			tm_set(mod, string_new("__file__", 0), mod_name);
 			tm_set(mod, string_new("__code__", 0), code);
 			tm_eval( mod );
 			// cprintln(mod);
