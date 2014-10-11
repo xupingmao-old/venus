@@ -139,24 +139,25 @@ int tm_run(int argc, char* argv[]){
 		}
 
 		reg_builtin("argv", p);
+		reg_builtin("print", func_new(tm->none, tm->none, tm->none, tm_print));
 
 		if( argc == 2){
 			char* fname = argv[1];
 			tm_obj code = _load(fname);
-			printf("load file %s\n", fname);
+			// printf("load file %s\n", fname);
 			// cprintln(code);
 			tm_obj mod = map_new();
 			tm_set(mod, string_new("__name__",0), string_new("__main__", 0) );
 			tm_set(mod, string_new("__file__", 0), string_new(fname, strlen(fname)));
 			tm_set(mod, string_new("__code__", 0), code);
 			tm_eval( mod );
-			cprintln(mod);
+			// cprintln(mod);
 		}
-		cprintln(tm->builtins);
-		tm_obj n = number_new(213.34);
-		_tm_len(n);
-		tm->cur = 0;
-		tm_obj v = obj_new(TM_LST, tm->all);
+		// cprintln(tm->builtins);
+		// tm_obj n = number_new(213.34);
+		// _tm_len(n);
+		// tm->cur = 0;
+		// tm_obj v = obj_new(TM_LST, tm->all);
 		//tm_raise("tm->list = @", v);
 	}else{
 	// 发生了异常，返回捕捉异常的帧

@@ -192,6 +192,7 @@ def emit_load( v ):
 		print('LOAD_LOCAL ' + str(v.val))
 
 def save_code(name):
+	emit(TM_EOP)
 	global bin
 	code = bin
 	bin = ""
@@ -200,7 +201,6 @@ def save_code(name):
 			emit(NEW_STRING, i)
 		elif istype(i, "number"):
 			emit(NEW_NUMBER, i)
-	emit(TM_EOP)
 	save(name, bin + code)
 
 

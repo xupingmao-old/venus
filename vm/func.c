@@ -1,32 +1,31 @@
 #include "tm.h"
 
 
-tm_obj func_new(tm_obj code,
+tm_obj func_new(tm_obj mod,
+				tm_obj code,
  				tm_obj self, 
- 				tm_obj globals, 
  				tm_obj (*native_func)( tm_obj) ){
 	tm_obj func;
 	func.type = TM_FNC;
 	tm_func* f= tm_alloc(sizeof(tm_func));
+	f->mod = mod;
 	f->code = code;
-	if( native_func != NULL ){
+	f->native_func = native_func;
+/*	if( native_func != NULL ){
 		f->native_func = native_func;
 		// 通过判断native_func是否为NULL
 		// f->fnc_type = TM_NATIVE;
 	}else{
 		f->native_func = NULL;
 		// f->fnc_type = TM_FNC;
-	}
+	}*/
 	f->self = self;
-	f->globals = globals;
 	func.value.func = f;
 	return gc_track(func);
 }
 
 void func_free( tm_func* func){
-	obj_free( func->self);
-	obj_free( func->globals);
-	obj_free( func->code);
+	// the references will be tracked by gc collecter
 #if DEBUG_GC
 	printf("free function , free %d B\n", sizeof(tm_func));
 #endif

@@ -70,7 +70,7 @@ typedef struct tm_func
 	int marked;
 	int fnc_type;
 	tm_obj self;
-	tm_obj globals;
+	tm_obj mod; // module, includes global, constants, etc.
 	tm_obj code; // string
 	tm_obj (*native_func)( tm_obj);
 }tm_func;
@@ -82,6 +82,8 @@ typedef struct tm_frame
 {
 	tm_obj locals[256];
 	tm_obj *stack;
+	tm_obj *last_pc;
+	char* last_code;
 	int stacksize;
 	int maxlocals;
 	tm_obj globals;
