@@ -167,7 +167,7 @@ mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF,
         LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,
 	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS]
 # opcode : op byte
-mode2 = [LOAD_LOCAL, CALL]
+mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST]
 # opcode : op short
 mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE]
 

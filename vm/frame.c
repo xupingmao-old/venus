@@ -61,27 +61,18 @@ void print_ins(int ins, tm_obj v){
 
 #define CASE( code, body ) case code :  body ; break;
 
-#define PRINT_INS 1
+#define PRINT_INS 0
 
-tm_obj get_func_code(char* s){
+tm_obj build_func(tm_obj mod, char* s){
   int len = 0;
   char* code = s;
+  tm_obj _code;
   while(1){
     switch(next_char(s)){
-    case ADD:
-    case SUB:
-    case MUL:
-    case DIV:
-    case MOD:
+    case ADD:case SUB:case MUL:case DIV:case MOD:
     case LOAD_PARAMS:
-    case GT:
-    case LT:
-    case GTEQ:
-    case LTEQ:
-    case EQEQ:
-    case NOTEQ:
-    case GET:
-    case SET:
+    case GT:case LT:case GTEQ:case LTEQ:case EQEQ:case NOTEQ:
+    case GET:case SET:
       len++;
       break;
     case STORE_LOCAL:
@@ -89,6 +80,10 @@ tm_obj get_func_code(char* s){
       next_char(s);
       len+=2;
       break;
+    case LIST:
+        next_char(s);
+        len+=2;
+        break;
     case LOAD_CONSTANT:
     case LOAD_GLOBAL:
     case STORE_GLOBAL:
@@ -101,7 +96,8 @@ tm_obj get_func_code(char* s){
     }
   }
  ret:
-  return string_new(code, len);
+ _code = string_new(code, len);
+ return func_new(mod, _code, tm->none, NULL);
 }
 
 
@@ -111,6 +107,28 @@ tm_obj get_func_code(char* s){
 
 #define save_frame    f->last_pc = top;		\
   f->last_code = s;
+
+#if PRINT_INS
+#define TM_OP( OP_CODE, OP_STR, OP_FUNC ) case OP_CODE: x = TM_POP();\
+  v = TM_TOP();\
+  puts(OP_STR);  \
+  TM_TOP() = OP_FUNC(v, x);\
+  goto start;
+#else
+#define TM_OP( OP_CODE, OP_STR, OP_FUNC ) case OP_CODE: x = TM_POP();\
+  v = TM_TOP();\
+  TM_TOP() = OP_FUNC(v, x);\
+  goto start;
+#endif
+
+// if i == 1, just top, so the start is top;
+#define LOAD_LIST(params, i)  params = list_new(i); \
+    tm_list* _p = get_list(params); \
+    tm_obj* j; \
+    for(j = top - i + 1; j <= top; j++){  \
+      list_append(_p, *j); \
+    }  \
+    top-=i;
 
 tm_obj tm_eval( tm_obj mod ){
   tm_obj __code__ = string_new("__code__", 0);
@@ -163,6 +181,9 @@ tm_obj tm_eval( tm_obj mod ){
   }
   case LOAD_LOCAL: {
     i = next_char(s);
+    #if PRINT_INS
+        printf("LOAD_LOCAL %d\n", i);
+    #endif
     TM_PUSH( locals[i] );
     goto start;
   }
@@ -176,14 +197,17 @@ tm_obj tm_eval( tm_obj mod ){
     }
     TM_PUSH( v );
 #if PRINT_INS
-    tm_printf("LOAD_GLOBAL @\n", v);
+    tm_printf("LOAD_GLOBAL @ = @\n",k, v);
 #endif
     goto start;
   }
-  case STORE_LOCAL:{
+  case STORE_LOCAL:
     i = next_char( s );
     locals[i] = TM_POP();
-  }break;
+    #if PRINT_INS
+        printf("STORE_LOCAL %d\n", i);
+    #endif
+    goto start;
   case STORE_GLOBAL:{
     i = next_short( s );
     k = constants[ i ];
@@ -204,41 +228,33 @@ tm_obj tm_eval( tm_obj mod ){
     }
     goto start;
   }
+  case LIST:{
+    i = next_byte(s);
+    #if PRINT_INS
+        printf("LIST %d\n", i);
+    #endif
+    LOAD_LIST( params, i );
+    TM_PUSH( params );
+    goto start;
+  }
   case CALL: {
     i = next_byte( s );
 #if PRINT_INS
     printf("CALL %d\n", i);
 #endif
-    params = list_new(i);
-    tm_list* _p = get_list(params);
-    tm_obj* j;
-    // if i == 1, just top is OK
-    for(j = top - i + 1; j <= top; j++){
-      list_append(_p, *j);
-    }
-    top-=i;
+    LOAD_LIST(params, i);
     func = TM_POP();
     goto call_func;
     func_ret:
     TM_PUSH(ret);
     goto start;
   }break;
-  case ADD:{
-#if PRINT_INS
-    puts("ADD");
-#endif
-    x = TM_POP();
-    v = TM_TOP();
-    TM_TOP() = tm_add(x,v);
-    goto start;
-  }
-  case GET:{
-    x = TM_POP();
-    k = TM_POP();
-    v = tm_get(x, k);
-    TM_PUSH(v);
-    goto start;
-  }
+  TM_OP( ADD, "ADD", tm_add);
+  TM_OP( SUB, "SUB", tm_sub);
+  TM_OP( MUL, "MUL", tm_mul);
+  TM_OP( DIV, "DIV", tm_div);
+  TM_OP( MOD, "MOD", tm_mod);
+  TM_OP( GET, "GET", tm_get);
   case POP:{
     TM_POP();
 #if PRINT_INS
@@ -247,12 +263,12 @@ tm_obj tm_eval( tm_obj mod ){
     goto start;
   }
   case TM_DEF:{
-    tm_obj code = get_func_code(s);
+    func = build_func(mod, s);
+    tm_obj code = get_func(func)->code;
     s+= get_str_len(code);
 #if PRINT_INS
     printf("TM_DEF %d\n",i);
 #endif
-    func = func_new(mod, code,tm->none, NULL);
     TM_PUSH(func);
     goto start;
   }
@@ -291,7 +307,21 @@ tm_obj tm_eval( tm_obj mod ){
     goto func_ret;
   }
   // user function
-
   // save current state
   save_frame;
   // new frame
+  tm->cur++;
+  f = tm->frames + tm->cur;
+  top = f->stack;
+  locals = f->locals;
+  s = get_str(get_func(func)->code);
+  goto func_ret;
+
+  end:
+
+  tm->cur = 0;
+  #if PRINT_INS
+  puts("END");
+  #endif
+  return ret;
+}

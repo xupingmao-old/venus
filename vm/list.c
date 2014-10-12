@@ -125,8 +125,19 @@ int list_next(tm_list* list, tm_obj* des){
 }
 
 
-tm_list* list_join(tm_list* list1, tm_list*list2){
-	return NULL;
+/*
+	join two list into one;
+*/
+
+tm_obj list_join(tm_list* list1, tm_list*list2){
+	int newl = list1->len + list2->len;
+	tm_obj newlist = list_new( newl );
+	tm_list* list = get_list(newlist);
+	list->len = newl;
+	int list1_nodes_size = list1->len * OBJ_SIZE;
+	memcpy( list->nodes, list1->nodes, list1_nodes_size);
+	memcpy( list->nodes + list1->len, list2->nodes, list2->len * OBJ_SIZE);
+	return newlist;
 }
 
 // belows are builtin methods
@@ -138,13 +149,7 @@ tm_obj blt_list_join(tm_obj params)
 	tm_obj l2 = get_arg(params, 1, TM_LST);
 	tm_list*  list1 = get_list(l1);
 	tm_list*  list2 = get_list(l2);
-	int len = list1->len + list2->len;
-	int list1_nodes_size = list1->len * OBJ_SIZE;
-	tm_obj des = list_new( len );
-	tm_list* list = get_list(des);
-	memcpy( list->nodes, list1->nodes, list1_nodes_size);
-	memcpy( list->nodes + list1_nodes_size, list2->nodes, list2->len * OBJ_SIZE);
-	return des;
+	return list_join( list1, list2 );
 }
 
 

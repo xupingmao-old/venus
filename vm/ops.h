@@ -12,6 +12,9 @@
 
 tm_obj tm_str(tm_obj v);
 tm_obj tm_add(tm_obj a, tm_obj b);
+tm_obj tm_sub(tm_obj a, tm_obj b);
+tm_obj tm_mul(tm_obj a, tm_obj b);
+tm_obj tm_div(tm_obj a, tm_obj b);
 
 int tm_eq(tm_obj a, tm_obj b);
 #define tm_equals tm_eq

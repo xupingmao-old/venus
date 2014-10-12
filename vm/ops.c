@@ -146,47 +146,43 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 }
 
 tm_obj tm_sub( tm_obj a, tm_obj b){
-	if( a.type != b.type){
-		tm_raise("tm_sub: can not add @ and @", a, b);
-	}
-	if( a.type == TM_NUM){
-		return tm_number(a.value.num - b.value.num);
+	if( a.type == b.type ){
+		if( a.type == TM_NUM){
+			return tm_number(a.value.num - b.value.num);
+		}
 	}
 	tm_raise("tm_sub: can not sub @ and @", a, b);
 }
 
 tm_obj tm_add(  tm_obj a, tm_obj b){
-	if( a.type != b.type ){
-		tm_raise("tm_add: different types : @ @", a, b);
-	}
-	switch( a.type ){
-		case TM_NUM:
-			a.value.dv += b.value.dv;
-			return a;
-		case TM_STR:
-		{
-			char* sa = get_str(a);
-			char* sb = get_str(b);
-			int la = get_str_len(a);
-			int lb = get_str_len(b);
-			if( la == 0){
-				return b;
-			}
-			if( lb == 0){
+	if( a.type == b.type ){
+		switch( a.type ){
+			case TM_NUM:
+				a.value.dv += b.value.dv;
 				return a;
+			case TM_STR:
+			{
+				char* sa = get_str(a);
+				char* sb = get_str(b);
+				int la = get_str_len(a);
+				int lb = get_str_len(b);
+				if( la == 0){
+					return b;
+				}
+				if( lb == 0){
+					return a;
+				}
+				int len = la + lb;
+				tm_obj des = string_new(NULL, len);
+				char*s = get_str(des);
+				memcpy(s,      sa, la);
+				memcpy(s + la, sb, lb);
+				return des;
 			}
-			int len = la + lb;
-			tm_obj des = string_new(NULL, len);
-			char*s = get_str(des);
-			memcpy(s,      sa, la);
-			memcpy(s + la, sb, lb);
-			return des;
-		}
-		case TM_LST:
-		{
-			tm_list* list = list_join(get_list(a), get_list(b) );
-			a.value.list = list;
-			return gc_track(a);
+			case TM_LST:
+			{
+				return list_join(get_list(a), get_list(b) );
+			}
 		}
 	}
 	tm_raise("tm_add: can not add @ and @", a, b);
@@ -220,4 +216,29 @@ int tm_eq(tm_obj a, tm_obj b){
 		}
 	}
 	return 0;
+}
+
+
+tm_obj tm_mul( tm_obj a, tm_obj b){
+	if( a.type == b.type && a.type = TM_NUM){
+		return number_new( get_num(a) * get_num(b) );
+	}
+	tm_raise("tm_mul: can not mul  @ and @", a,b );
+	return tm->none;
+}
+
+tm_obj tm_div( tm_obj a, tm_obj b){
+	if( a.type == b.type && a.type = TM_NUM){
+		return number_new( get_num(a) / get_num(b) );
+	}
+	tm_raise("tm_div: can not div  @ and @", a,b );
+	return tm->none;
+}
+
+tm_obj tm_mod( tm_obj a, tm_obj b){
+	if( a.type == b.type && a.type = TM_NUM){
+		return number_new((long)get_num(a) %  (long)get_num(b) );
+	}
+	tm_raise("tm_mod: can not mod  @ and @", a,b );
+	return tm->none;
 }
