@@ -70,6 +70,14 @@ codes = {
 	CALL : "CALL",
 	ADD : "ADD",
 	MUL : "MUL",
+	SUB : "SUB",
+	DIV : "DIV",
+	GT : "GT",
+	LT : "LT",
+	GTEQ: "GTEQ",
+	LTEQ: "LTEQ",
+	EQEQ: "EQEQ",
+	NOTEQ: "NOTEQ",
 	RETURN : "RETURN",
 	TM_DEF : "TM_DEF",
 	GET : "GET",
@@ -156,6 +164,7 @@ names = Names()
 bin = "" # binary code
 # opcode : op
 mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF, 
+        LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,
 	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS]
 # opcode : op byte
 mode2 = [LOAD_LOCAL, CALL]
