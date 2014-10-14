@@ -105,3 +105,22 @@ tm_obj _load(char* fname){
 	return text;
 }
 
+
+tm_obj tm_load( tm_obj p){
+	tm_obj fname = get_arg( p, 0, TM_STR);
+	return _load( get_str(fname) );
+}
+
+tm_obj tm_save( tm_obj p){
+	tm_obj fname = get_arg(p, 0, TM_STR);
+	tm_obj content = get_arg(p, 1, TM_STR);
+	char* name = get_str( fname );
+	FILE* fp = fopen(name, "w");
+	if( fp == NULL ){
+		tm_raise("tm_save : can not save to file @" , fname );
+	}
+	char* txt = get_str( content );
+	int len = get_str_len( content );
+	fwrite(txt, len, 1, fp);
+	return tm->none;
+}

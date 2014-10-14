@@ -20,5 +20,7 @@ tm_obj tm_eval(tm_obj mod);
 
 // stream
 tm_obj _load(char* fname);
+tm_obj tm_load( tm_obj p);
+tm_obj tm_save( tm_obj p);
 
 #endif /* OBJECT_H_ */

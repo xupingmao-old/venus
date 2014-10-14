@@ -97,6 +97,22 @@ void reg_builtin(char* name, tm_obj v){
 	tm_set( tm->builtins, key, v);
 }
 
+void reg_builtins(){
+    struct __builtin {
+        char* name;
+        tm_obj (*func) ( tm_obj );
+    };
+    static struct __builtin builtins[] = {
+        {"load", tm_load},
+        {"save", tm_save},
+        {"print", tm_print},
+        {"str", tm_str},
+        {0, 0}
+    };
+    int i;for(i = 0; builtins[i].name != 0; i++){
+        reg_builtin(builtins[i].name, func_new(tm->none, tm->none, tm->none, builtins[i].func));
+    };
+}
 
 void frames_init(){
 	int i;
@@ -137,9 +153,9 @@ int tm_run(int argc, char* argv[]){
 			tm_obj arg = string_new(argv[i], strlen(argv[i]));
 			list_append( get_list(p), arg);
 		}
-
+        
+        reg_builtins();
 		reg_builtin("argv", p);
-		reg_builtin("print", func_new(tm->none, tm->none, tm->none, tm_print));
 
 		if( argc == 2){
 			char* fname = argv[1];

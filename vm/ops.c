@@ -59,6 +59,11 @@ tm_obj _tm_str(  tm_obj a){
 	return string_new("",0);
 }
 
+tm_obj tm_str( tm_obj p){
+	tm_obj a = get_arg( p, 0, -1);
+	return _tm_str(a);
+}
+
 tm_obj tm_copy(tm_vm* tm, tm_obj o){
 	switch( o.type ){
 	case TM_NUM:

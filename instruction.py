@@ -90,7 +90,12 @@ codes = {
 	EQEQ : "EQEQ",
 	POP_JUMP_ON_TRUE : "POP_JUMP_ON_TRUE",
 	POP_JUMP_ON_FALSE : "POP_JUMP_ON_FALSE",
-	IN : "IN"
+	JUMP_ON_TRUE : "JUMP_ON_TRUE",
+	JUMP_ON_FALSE: "JUMP_ON_FALSE",
+	IN : "IN",
+	OR : "OR",
+	TAG : "TAG",
+	JUMP : "JUMP"
 }
 # instructions 
 
@@ -164,12 +169,12 @@ names = Names()
 bin = "" # binary code
 # opcode : op
 mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF, 
-        LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,
+        LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,OR,
 	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS]
 # opcode : op byte
 mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST]
 # opcode : op short
-mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE]
+mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE, TAG, JUMP_ON_TRUE, JUMP_ON_FALSE]
 
 def emit(ins, val = None):
 	global bin
