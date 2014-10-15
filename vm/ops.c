@@ -225,7 +225,7 @@ int tm_eq(tm_obj a, tm_obj b){
 
 
 tm_obj tm_mul( tm_obj a, tm_obj b){
-	if( a.type == b.type && a.type = TM_NUM){
+	if( a.type == b.type && a.type == TM_NUM){
 		return number_new( get_num(a) * get_num(b) );
 	}
 	tm_raise("tm_mul: can not mul  @ and @", a,b );
@@ -233,7 +233,7 @@ tm_obj tm_mul( tm_obj a, tm_obj b){
 }
 
 tm_obj tm_div( tm_obj a, tm_obj b){
-	if( a.type == b.type && a.type = TM_NUM){
+	if( a.type == b.type && a.type == TM_NUM){
 		return number_new( get_num(a) / get_num(b) );
 	}
 	tm_raise("tm_div: can not div  @ and @", a,b );
@@ -241,7 +241,7 @@ tm_obj tm_div( tm_obj a, tm_obj b){
 }
 
 tm_obj tm_mod( tm_obj a, tm_obj b){
-	if( a.type == b.type && a.type = TM_NUM){
+	if( a.type == b.type && a.type == TM_NUM){
 		return number_new((long)get_num(a) %  (long)get_num(b) );
 	}
 	tm_raise("tm_mod: can not mod  @ and @", a,b );
