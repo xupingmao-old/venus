@@ -107,6 +107,8 @@ void reg_builtins(){
         {"save", tm_save},
         {"print", tm_print},
         {"str", tm_str},
+        {"int", tm_int},
+        {"float", tm_float},
         {0, 0}
     };
     int i;for(i = 0; builtins[i].name != 0; i++){

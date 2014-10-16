@@ -157,3 +157,25 @@ tm_obj tm_input(tm_obj p){
 	fgets(buf, 2048, stdin);
 	return string_new(buf, strlen(buf));
 }
+
+tm_obj tm_int(tm_obj p){
+	tm_obj v = get_arg(p, 0, -1);
+	if( v.type == TM_NUM ){
+		return number_new( (int) get_num(v) );
+	}else if( v.type == TM_STR ){
+		return number_new( (int)atof(get_str(v)) );
+	}
+	tm_raise("tm_int: @ can not parse to int ", v);
+	return tm->none;
+}
+
+tm_obj tm_float( tm_obj p){
+	tm_obj v = get_arg(p, 0, -1);
+	if( v.type == TM_NUM ){
+		return v;
+	}else if( v.type == TM_STR ){
+		return number_new( atof(get_str(v)));
+	}
+	tm_raise("tm_float: @ can not parse to float", v);
+	return tm->none;
+}

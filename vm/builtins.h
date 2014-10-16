@@ -10,5 +10,7 @@ tm_obj _tm_format(char* fmt, va_list ap);
 tm_obj tm_format(char*fmt, ...);
 void _tm_printf(char* fmt, va_list ap);
 void tm_printf(char* fmt, ...);
+tm_obj tm_int( tm_obj p);
+tm_obj tm_float(tm_obj p);
 
 #endif
