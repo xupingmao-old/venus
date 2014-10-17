@@ -22,6 +22,11 @@ def istype(val,  type):
         return isinstance(val, list)
     elif type == 'dict':
         return isinstance(val, dict)
+def typeof(val):
+    if isinstance(val, str):return 'string'
+    elif isinstance(val, int) or isinstance(val, float):return 'string'
+    elif isinstance(val, list) or isinstance(val, tuple):return 'list'
+    elif isinstance(val, dict) :return 'dict'
 
 def short( a, b):
     return (a << 8) + b

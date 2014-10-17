@@ -1,9 +1,7 @@
 
 /**
-
 HashMap实现，采用链路分离法
-
-
+@Author xupingmao <578749341@qq.com>
 **/
 
 
