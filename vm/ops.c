@@ -120,20 +120,26 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 			}
 		}
 		case TM_LST: {
-			int n = tm_get_int(k);
-			return list_get( self.value.list, n);
+			if( k.type == TM_NUM ){
+				return list_get( self.value.list, get_num(k));
+			}else{
+				tm_obj fnc = tm_get(list_class, k);
+				return method_new( fnc, self);
+			}
 		}
 		case TM_DCT:
 			if( dict_iget(self.value.dict, k, &v)){
 				return v;
-			} goto error;
+			}else {
+				tm_obj fnc = tm_get(dict_class, k);
+				return method_new( fnc, self);
+			}
 			break;
 		case TM_FNC:
 			if( k.type == TM_STR && strequals(get_str(k), "code")){
 				return get_func( self )->code;
 			}
 	}
-	error:
 	tm_raise("tm_get: keyError @", k );
 	return tm->none;
 }

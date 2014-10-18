@@ -154,6 +154,7 @@ tm_vm* tm;
 
 tm_obj str_class;
 tm_obj list_class;
+tm_obj dict_class;
 
 #include "constants.h"
 #include "object.h"

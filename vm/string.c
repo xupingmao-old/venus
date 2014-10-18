@@ -88,7 +88,23 @@ tm_obj str_upper(tm_obj params){
 			news[i] = s[i];
 		}
 	}
-	news[len] = '\0';
+	return nstr;
+}
+
+tm_obj str_lower( tm_obj params){
+	tm_obj self = get_arg(params, 0, TM_STR);
+	int i;
+	char*s = get_str(self);
+	int len = str_len(self);
+	tm_obj nstr = str_new(NULL, len);
+	char*news = get_str(nstr);
+	for(i = 0; i < len; i++){
+		if ( s[i] >= 'A' && s[i] <= 'Z'){
+			news[i] = s[i] + 'a' - 'A';
+		}else{
+			news[i] = s[i];
+		}
+	}
 	return nstr;
 }
 

@@ -24,6 +24,11 @@ tm_obj func_new(tm_module *mod,
   return gc_track(func);
 }
 
+tm_obj method_new(tm_obj _fnc, tm_obj self){
+  tm_func* fnc = get_func(_fnc);
+  return func_new( fnc->mod, fnc->code, self, fnc->native_func);
+}
+
 void func_free( tm_func* func){
   // the references will be tracked by gc collecter
 #if DEBUG_GC

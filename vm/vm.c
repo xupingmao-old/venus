@@ -121,11 +121,35 @@ void reg_builtins(){
    		{"replace", str_replace},
    		{"find", str_find},
    		{"substring", str_substring},
+   		{"upper", str_upper},
+   		{"lower", str_lower},
    		{0,0}
    	};
    	for(i = 0; str_class_fnc_list[i].name != 0 ; i++){
    		tm_set( str_class, str_new(str_class_fnc_list[i].name, -1), 
    			func_new(NULL, tm->none, tm->none, str_class_fnc_list[i].func));
+   	}
+
+   	/* build list class */
+   	list_class = dict_new();
+   	static struct __builtin list_class_fnc_list[] = {
+   		{"append", blist_append},
+   		{0,0}
+   	};
+   	for(i = 0; list_class_fnc_list[i].name != 0 ; i++){
+   		tm_set( list_class, str_new(list_class_fnc_list[i].name, -1), 
+   			func_new(NULL, tm->none, tm->none, list_class_fnc_list[i].func));
+   	}
+
+   	/* build dict class */
+   	dict_class = dict_new();
+   	static struct __builtin dict_class_fnc_list[] = {
+   		{"append", blist_append},
+   		{0,0}
+   	};
+   	for(i = 0; dict_class_fnc_list[i].name != 0 ; i++){
+   		tm_set( dict_class, str_new(dict_class_fnc_list[i].name, -1), 
+   			func_new(NULL, tm->none, tm->none, dict_class_fnc_list[i].func));
    	}
 }
 

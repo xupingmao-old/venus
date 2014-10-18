@@ -153,7 +153,7 @@ tm_obj blt_list_join(tm_obj params)
 }
 
 
-tm_obj blt_push( tm_obj params){
+tm_obj blist_append( tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_LST);
 	tm_obj v = get_arg( params , 1, -1);
 	list_append( get_list(self), v);
