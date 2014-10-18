@@ -4,7 +4,7 @@
 #define tm_h
 
 #define DEBUG_GC 0
-#define PRINT_INS 1
+#define PRINT_INS 0
 
 #include <stdio.h>
 #include <string.h>

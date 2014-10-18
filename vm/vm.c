@@ -120,6 +120,7 @@ void reg_builtins(){
    	static struct __builtin str_class_fnc_list[] = {
    		{"replace", str_replace},
    		{"find", str_find},
+   		{"substring", str_substring},
    		{0,0}
    	};
    	for(i = 0; str_class_fnc_list[i].name != 0 ; i++){

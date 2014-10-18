@@ -40,7 +40,8 @@ int _str_find( tm_str* s1, tm_str* s2, int start){
 	char* ss2 = s2->value;
 	char* p = strstr( ss1 + start, ss2);
 	if( p == NULL ) return -1;
-	return p - ss1;
+	// printf("%d[%s -> %s]\n",start,ss1 + start, p );
+	return p - ss1 + start;
 }
 
 
@@ -51,16 +52,16 @@ tm_obj str_find( tm_obj params){
 }
 
 tm_obj _str_substring( tm_str* str, int start, int end){
-	start = start > 0 ? start : start + str->len;
-	end = end > 0 ? end : end + str->len;
+	start = start >= 0 ? start : start + str->len;
+	end = end >= 0 ? end : end + str->len;
 	int max_end = str->len - 1;
-	max_end = max_end < end ? max_end : end;
-	int len = max_end - start + 1;
+	end = max_end < end ? max_end : end;
+	int len = end - start + 1;
 	if( len <= 0)
 		return str_new("", 0);
 	tm_obj new_str = str_new( NULL, len);
 	char* s = get_str(new_str);
-	int i;for(i = start; i <= max_end; i++){
+	int i;for(i = start; i <= end; i++){
 		*(s++) = str->value[i];
 	}
 	return new_str;
@@ -97,16 +98,18 @@ tm_obj str_replace(tm_obj params){
 	tm_obj src = get_arg( params, 1, TM_STR);
 	tm_obj des = get_arg( params, 2, TM_STR);
 
-	char* src_s = get_str(src);
-	char* des_s = get_str(des);
-
 	tm_obj nstr = str_new("", 0);
 	int pos = _str_find( self.value.str, src.value.str, 0);
 	int lastpos = 0;
 	while (pos != -1){
-		nstr = tm_add( _str_substring(self.value.str, lastpos, pos), des);
-		lastpos = pos + get_str_len(src) + 1;
-		pos = _str_find( self.value.str, src.value.str, pos);
+		nstr = tm_add(nstr, _str_substring(self.value.str, lastpos, pos - 1));
+		nstr = tm_add(nstr, des);
+		// Sleep(1000);
+		lastpos = pos + get_str_len(src);
+		pos = _str_find( self.value.str, src.value.str, lastpos);
+		// printf("lastpos = %d\n", lastpos);
 	}
+	nstr = tm_add( nstr, _str_substring(self.value.str, lastpos, -1 ));
+	// cprintln(nstr);
 	return nstr;
 }
