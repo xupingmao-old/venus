@@ -36,14 +36,14 @@ void _tm_print(tm_obj o, int depth){
 		printf("]");
 		break;
 	}
-	case TM_MAP:
+	case TM_DCT:
 	{
 		int i = 0;
 		tm_obj k,v;
-		tm_map* map = get_map( o );
-		int len = map->len;
+		tm_dict* dict = get_dict( o );
+		int len = dict->len;
 		putchar('{');
-		for(i = 0; map_inext(map, &k, &v); i++){
+		for(i = 0; dict_inext(dict, &k, &v); i++){
 			_tm_print(k, depth);
 			putchar(':');
 			_tm_print(v, depth);
@@ -52,7 +52,7 @@ void _tm_print(tm_obj o, int depth){
 		putchar('}');
 		break;
 	}
-	// case TM_MAP:map_print(get_map(o));break;
+	// case TM_DCT:dict_print(get_dict(o));break;
 	case TM_FNC:
 		printf("<function %x>", o.value.func);
 		break;
@@ -84,13 +84,13 @@ tm_obj tm_print(tm_obj params){
 tm_obj _tm_format(char* fmt, va_list ap){
 	int i;
 	int len = strlen(fmt);
-	tm_obj nstr = string_new("", 0);
+	tm_obj nstr = str_new("", 0);
 	int  templ = 0;
 	char* start = fmt;
 	for(i = 0; i < len; i++){
 		if( fmt[i] == '@' ){
 			if( templ > 0){
-				tm_obj txt = string_new(start, templ);
+				tm_obj txt = str_new(start, templ);
 				nstr = tm_add(nstr, txt);
 				templ = 0;
 			}
@@ -102,7 +102,7 @@ tm_obj _tm_format(char* fmt, va_list ap){
 		}
 	}
 	if( templ > 0){
-		tm_obj txt = string_new(start, templ);
+		tm_obj txt = str_new(start, templ);
 		nstr = tm_add(nstr, txt);
 	}
 	return nstr;
@@ -155,7 +155,7 @@ tm_obj tm_input(tm_obj p){
 	}
 	char buf[2048];
 	fgets(buf, 2048, stdin);
-	return string_new(buf, strlen(buf));
+	return str_new(buf, strlen(buf));
 }
 
 tm_obj tm_int(tm_obj p){

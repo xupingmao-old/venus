@@ -1,33 +1,15 @@
 #include "tm.h"
 
-tm_obj _tm_call(tm_vm* tm, tm_obj func, tm_obj params){
-	return tm->none;
-}
-
-
-tm_obj tm_call( tm_obj func, tm_obj params){
-	tm_func* f = func.value.func;
-	// check if function is a method ?
-	if( f->self.type != TM_NON){
-		list_insert( get_list(params), 0, f->self);
-		tm_frame* frame = frame_new(f);
-		//tm_eval(frame);
-	}
-	if( f->native_func != NULL ){
-		return f->native_func(params);
-	}
-	return tm->none;
-}
 
 /*tm_obj type_method(tm_vm* tm, tm_obj self, tm_obj k){
 	if( k.type != TM_STR){
-		tm_raise("type_method: require string");
+		tm_raise("type_method: require str");
 	}
 	tm_obj fnc;
 	tm_obj methods;
 	switch( self.type ){
 	case TM_STR:{
-		fnc = tm_get( tm->string_methods, k);break;
+		fnc = tm_get( tm->str_methods, k);break;
 	case TM_LST:
 		fnc = tm_get(tm, tm->list_methods, k);break;
 	default:
@@ -47,19 +29,19 @@ tm_obj _tm_str(  tm_obj a){
 	{
 		char s[20];
 		sprintf(s, "%g", get_num(a));
-		return string_new(s, strlen(s));
+		return str_new(s, strlen(s));
 	}
 	case TM_LST:
-		return string_new("<list>", 0);
-	case TM_MAP:
-		return string_new("<dict>", 0);
+		return str_new("<list>", 0);
+	case TM_DCT:
+		return str_new("<dict>", 0);
 	case TM_FNC:
-		return string_new("<function>", 0);
+		return str_new("<function>", 0);
 	}
-	return string_new("",0);
+	return str_new("",0);
 }
 
-tm_obj tm_str( tm_obj p){
+tm_obj btm_str( tm_obj p){
 	tm_obj a = get_arg( p, 0, -1);
 	return _tm_str(a);
 }
@@ -71,7 +53,7 @@ tm_obj tm_copy(tm_vm* tm, tm_obj o){
 	case TM_STR:
 		{
 			int len = str_len(o);
-			return string_new(get_str(o), len);
+			return str_new(get_str(o), len);
 		}
 	case TM_LST:
 		{
@@ -90,7 +72,7 @@ tm_obj _tm_len(tm_obj o){
 	switch(o.type){
 	case TM_STR:return tm_number( get_str_len(o) );
 	case TM_LST:return tm_number( list_len(o));
-	case TM_MAP:return tm_number( map_len(o));
+	case TM_DCT:return tm_number( dict_len(o));
 	}
 	tm_raise("tm_len: @ has no attribute len", o);
 	return tm->none;
@@ -116,7 +98,7 @@ void tm_set( tm_obj self, tm_obj k, tm_obj v){
 		int n = tm_get_int( k);
 		list_set( get_list(self), n, v);
 	}return;
-	case TM_MAP: map_set( get_map(self), k, v);return;
+	case TM_DCT: dict_set( get_dict(self), k, v);return;
 	}
 	tm_raise(" tm_set: @[@] = @", self, k, v );
 }
@@ -124,22 +106,28 @@ void tm_set( tm_obj self, tm_obj k, tm_obj v){
 tm_obj tm_get(tm_obj self, tm_obj k){
 	tm_obj v;
 	switch( self.type){
+		case TM_STR:{
+			if( k.type == TM_NUM ){
+				int n = get_num(k);			
+				if( n >= get_str_len(self))
+					tm_raise("tm_get: index overflow");
+				char v = get_str(self)[n];
+				return tm->chars[v];
+			}else{
+				tm_obj fnc = tm_get(str_class, k);
+				get_func(fnc)->self = self;
+				return fnc;
+			}
+		}
 		case TM_LST: {
 			int n = tm_get_int(k);
 			return list_get( self.value.list, n);
 		}
-		case TM_MAP:
-			if( map_iget(self.value.map, k, &v)){
+		case TM_DCT:
+			if( dict_iget(self.value.dict, k, &v)){
 				return v;
 			} goto error;
 			break;
-		case TM_STR: {
-			int kt = k.type;
-			if( k.type == TM_STR ){
-				int n = tm_get_int(k);
-				return string_get(self.value.str, n);
-			}
-		}
 		case TM_FNC:
 			if( k.type == TM_STR && strequals(get_str(k), "code")){
 				return get_func( self )->code;
@@ -178,7 +166,7 @@ tm_obj tm_add(  tm_obj a, tm_obj b){
 					return a;
 				}
 				int len = la + lb;
-				tm_obj des = string_new(NULL, len);
+				tm_obj des = str_new(NULL, len);
 				char*s = get_str(des);
 				memcpy(s,      sa, la);
 				memcpy(s + la, sb, lb);
@@ -204,7 +192,8 @@ int tm_eq(tm_obj a, tm_obj b){
 		{
 			char* sa = get_str(a);
 			char* sb = get_str(b);
-			return sa == sb || strcmp(sa, sb) == 0;
+			return sa == sb || ( get_str_len(a) == get_str_len(b) && 
+				strncmp(sa, sb, get_str_len(a)) == 0 );
 		}
 		case TM_LST:
 		{
@@ -246,4 +235,28 @@ tm_obj tm_mod( tm_obj a, tm_obj b){
 	}
 	tm_raise("tm_mod: can not mod  @ and @", a,b );
 	return tm->none;
+}
+
+
+tm_obj tm_has( tm_obj a, tm_obj b ){
+	switch( a.type ){
+		case TM_LST:{
+			return number_new( list_index( get_list(a), b) != -1 );
+		}
+		case TM_DCT:{
+			tm_obj v;
+			return number_new( dict_iget(get_dict(a), b, &v) );
+		}
+	}
+	return number_new(0);
+}
+
+int tm_bool( tm_obj v){
+	switch( v.type ){
+		case TM_NUM:return get_num(v) != 0;
+		case TM_STR:return get_str_len(v) > 0;
+		case TM_LST:return get_list_len(v) > 0;
+		case TM_DCT:return get_dict_len(v) > 0;
+	}
+	return 0;
 }

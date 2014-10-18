@@ -2,8 +2,8 @@ from tokenize import *
 
 
 class AstNode:
-	def __init__(self):
-		self.type = None
+	def __init__(self, type=None):
+		self.type = type
 	def list(self, left, right):
 		self.val = [left, right]
 
@@ -105,13 +105,18 @@ class ParserCtx:
 	def showTokens(self):
 		for i in self.r:
 			i.show()
+	def print_error(self):
+		print(self.error())
 	def error(self):
 		return ' at ' + str(self.token.pos) + ' type = ' + self.token.type
 
 def parse(v):
-	r = tokenize(v)
-	p = ParserCtx(r)
-	return do_prog(p)
+	try:
+		r = tokenize(v)
+		p = ParserCtx(r)
+		return do_prog(p)
+	except:
+		p.print_error()
 
 # recursive desent
 
@@ -160,6 +165,29 @@ def factor_(p):
 			p.expect(')')
 			node.val = p.pop()
 		p.add(node)
+	elif t == '{':
+		p.next()
+		node = AstNode()
+		node.type = 'dict'
+		if p.token.type == '}':
+			p.next()
+			node.val = None
+		else:
+			items = {}
+			while p.token.type != '}':
+				factor(p)
+				p.expect(':')
+				factor(p)
+				v = p.pop()
+				k = p.pop()
+				items[k] = v
+				if p.token.type == '}':
+					break
+				p.expect(',')
+			p.expect('}')
+			node.items = items
+
+
 
 def _expr2(func, val):
 	def f(p):
@@ -171,6 +199,23 @@ def _expr2(func, val):
 			p.addOp(t)
 	return f
 
+class MyExpr:
+	def __init__(self, clazz, range, pd):
+		self.clazz = clazz
+		self.range = range
+		self.pd = pd
+
+	def run(self):
+		pd = self.pd
+		range = self.range
+		func = self.clazz.run
+		func()
+		while pd.token.type in range:
+			t = pd.token.type
+			expr(p)
+			pd.next()
+			func()
+			pd.addOp(t)
 
 def _expr4(func):
 	def f(p):
@@ -457,8 +502,15 @@ def do_stm1(p, type):
 	p.add(node)
 
 def do_prog(p):
-	#p.showTokens()
 	p.next()
 	while p.token.type != 'eof':
 		do_block(p)
 	return p.tree
+
+def do_prog1(p):
+	#p.showTokens()
+	try:
+		return compile_prog(p)
+	except Exception as e:
+		print(e)
+		p.error()

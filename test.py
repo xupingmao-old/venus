@@ -1,6 +1,6 @@
 from tokenize import *
 from parse import *
-
+from boot import *
 x = 10
 l = [1,2]
 x = l[0]
@@ -13,12 +13,12 @@ x = [10]
 
 x = 10
 
-r = tokenize(open('tokenize.py').read())
-
 #for i in r:
 #	print i.type, i.val
 
 def show(tree):
+	if not istype(tree, 'list'):
+		return
 	#print(self.tree)
 	def f(n, v, pre = ""):
 		rs = ''
@@ -74,7 +74,7 @@ def main():
 		f = argv[1]
 	else:
 		f = 'parse.py'
-	tree = parse( open(f).read() )
+	tree = parse( load(f) )
 	show(tree)
 
 main()

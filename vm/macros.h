@@ -18,8 +18,11 @@
 #define get_func(obj) (obj.value.func)
 
 #define get_list(obj) get_val(obj).list
+#define get_list_len(obj) get_list(obj)->len
 #define get_dict(obj) get_val(obj).dict
+#define get_dict_len(obj) get_dict(obj)->len
 #define get_map(obj) get_val(obj).map
+#define get_map_len(obj) get_map(obj)->len
 
 #define get_nodes(obj)  get_list(obj)->nodes
 #define get_keys(obj)   get_dict(obj)->keys
@@ -27,16 +30,19 @@
 
 
 #define list_len(obj)  get_list(obj)->len
-#define dict_len(obj)  get_keys(obj)->len
+#define dict_len(obj)  get_dict_len(obj)
 #define map_len( obj)  get_map(obj)->len
-
-#define _tm_raise( s ) tm->error = string_new(tm, s); tm_raise(tm);
-
 
 #define ptr_addr( ptr ) (long) (ptr) / sizeof(char*)
 
-#define S(s) string_new(s,0)
+#define S(s) str_new(s,0)
 #define N(n) tm_number(n)
+
+
+/* for instruction read */
+#define next_char( s ) *s++
+#define next_byte( s ) *s++
+#define next_short( s ) ((*s++) << 8) + (*s++)
 
 #endif
 

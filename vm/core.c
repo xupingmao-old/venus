@@ -59,7 +59,7 @@ tm_obj obj_new( int type , void * value){
 		case TM_NUM: o.value.num = *(double*)value;break;
 		case TM_STR: o.value.str = value;break;
 		case TM_LST: o.value.list = value;break;
-		case TM_MAP: o.value.map = value;break;
+		case TM_DCT: o.value.dict = value;break;
 		case TM_NON: break;
 	}
 	return o;
@@ -67,10 +67,10 @@ tm_obj obj_new( int type , void * value){
 
 void obj_free( tm_obj o){
 	switch( o.type ){
-	case TM_STR: string_free( o.value.str);break;
+	case TM_STR: str_free( o.value.str);break;
 	case TM_LST: list_free( o.value.list);break;
-	case TM_MAP: map_free(o.value.map);break;
-	/*case TM_DCT: dict_free(  tm, o.value.dict);break;*/
+	case TM_DCT: dict_free(o.value.dict);break;
 	case TM_FNC: func_free( o.value.func);break;
+	case TM_MOD: module_free( o.value.mod );break;
 	}
 }

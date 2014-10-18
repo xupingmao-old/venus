@@ -1,7 +1,7 @@
 #include "tm.h"
 
 
-tm_obj func_new(tm_obj mod,
+tm_obj func_new(tm_module *mod,
 		tm_obj code,
 		tm_obj self, 
 		tm_obj (*native_func)( tm_obj) ){
@@ -30,6 +30,37 @@ void func_free( tm_func* func){
   printf("free function , free %d B\n", sizeof(tm_func));
 #endif
   tm_free(func, sizeof(tm_func));
+}
+
+tm_obj module_new( tm_obj file , tm_obj name, tm_obj code){
+  tm_module *mod = tm_alloc( sizeof(tm_module));
+  mod->file = file;
+  mod->name = name;
+  mod->code = code;
+  mod->tags = NULL;
+  mod->tagsize = 0;
+  mod->checked = 0;
+  mod->constants = tm->none;
+  mod->globals = dict_new();
+  tm_obj obj;
+  obj.type = TM_MOD;
+  obj.value.mod = mod;
+  return gc_track( obj );
+}
+
+void module_free( tm_module* mod ){
+/*  obj_free( mod->file );
+  obj_free( mod->name );
+  obj_free( mod->code );
+  obj_free( mod->constants );
+  obj_free( mod->globals );*/
+#if DEBUG_GC
+  printf("free module , free %d B\n", sizeof(tm_module) );
+#endif
+  if( mod->tags != NULL ){
+    tm_free(mod->tags, mod->tagsize * sizeof(char*) );
+  }
+  tm_free( mod, sizeof( tm_module ));
 }
 
 

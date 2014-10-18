@@ -11,8 +11,8 @@ void gc_init( ){
 	tm->black = _list_new(init_size);
 	tm->white = _list_new(init_size);
 	tm->all = _list_new(init_size);
-	// tm->strings = map_new_();
-	// tm->strings = _map_new();
+	// tm->strings = dict_new_();
+	// tm->strings = _dict_new();
 }
 
 /*inline
@@ -43,11 +43,11 @@ tm_obj gc_track( tm_obj v){
 	case TM_LST:
 		v.value.list->marked = 1;
 		break;
-/*	case TM_DCT:
+	case TM_DCT:
 		v.value.dict->marked = 1;
-		break;*/
-	case TM_MAP:
-		v.value.map->marked = 1;
+		break;
+	case TM_MOD:
+		v.value.mod->marked = 1;
 		break;
 	}
 	list_append(tm->all, v);
@@ -71,9 +71,9 @@ void gc_mark(tm_obj v){
 				}
 			}
 			break;
-		case TM_MAP:{
+		case TM_DCT:{
 			tm_obj k,v;
-			while( map_inext(v.value.map,&k, &v)){
+			while( dict_inext(v.value.dict,&k, &v)){
 				gc_mark(k);
 				gc_mark(v);
 			}
@@ -137,7 +137,7 @@ void gc_free(){
 	list_free( tm->all);
 	list_free( tm->black );
 	list_free( tm->white);
-	// map_free( tm->strings);
+	// dict_free( tm->strings);
 
 #if DEBUG_GC
 	printf("\nafter gc , allocated_mem: %d\n", tm->allocated_mem);

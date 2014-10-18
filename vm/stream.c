@@ -82,16 +82,16 @@ tm_obj stream_read( tm_vm* tm, tm_obj params){
 	}else {
 		tm_raise("stream_read: too many arguments");
 	}
-	tm_obj des = string_new(NULL, rest_len);
+	tm_obj des = str_new(NULL, rest_len);
 	char* s = get_str(des);
 	fread(s, rest_len, 1, fp );
 	return des;
 }
 
 tm_obj _load(char* fname){
-	FILE* fp = fopen(fname, "r");
+	FILE* fp = fopen(fname, "rb");
 	if( fp == NULL ){
-		tm_raise("load: can not open file \"@\"", string_new(fname, strlen(fname)));
+		tm_raise("load: can not open file \"@\"", str_new(fname, strlen(fname)));
 		return tm->none;
 	}
 	long len = _get_file_rest_len(fp);
@@ -99,7 +99,7 @@ tm_obj _load(char* fname){
 		tm_raise("load: file too big to load, size = @", number_new(len));
 		return tm->none;
 	}
-	tm_obj text = string_new(NULL, len);
+	tm_obj text = str_new(NULL, len);
 	char* s = get_str(text);
 	fread(s, len, 1, fp);
 	return text;

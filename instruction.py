@@ -93,7 +93,6 @@ codes = {
 	JUMP_ON_TRUE : "JUMP_ON_TRUE",
 	JUMP_ON_FALSE: "JUMP_ON_FALSE",
 	IN : "IN",
-	OR : "OR",
 	TAG : "TAG",
 	JUMP : "JUMP"
 }
@@ -167,16 +166,25 @@ class Names:
 constants = Constants()
 names = Names()
 bin = "" # binary code
+out = []
 # opcode : op
 mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF, 
-        LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,OR,
+        LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,
 	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS]
 # opcode : op byte
-mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST]
+mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST, DICT]
 # opcode : op short
-mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE, TAG, JUMP_ON_TRUE, JUMP_ON_FALSE]
+mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE, TAG, JUMP_ON_TRUE, JUMP_ON_FALSE,
+POP_JUMP_ON_TRUE, POP_JUMP_ON_FALSE, JUMP]
+
+def code_pos():
+	return len(out) - 1
+
+def batch_jmp( pos ):
+	out[pos][1] = code_pos() - pos
 
 def emit(ins, val = None):
+	# out.append([ins,val])
 	global bin
 	if ins in mode1:
 		bin += code8(ins)
@@ -188,7 +196,9 @@ def emit(ins, val = None):
 		bin += code(ins, val)
 	elif ins == NEW_NUMBER:
 		bin += code(ins, val)
-	if val != None:
+	if ins == NEW_STRING:
+		print( codes[ins] + '['+str(len(val))+']'+str(val))
+	elif val != None:
 		# val = '(' + str(constants.get(val)) + ')'
 		print( codes[ins] + ' ' + str(val) )
 	else:
@@ -205,6 +215,15 @@ def emit_load( v ):
 	else:
 		print('LOAD_LOCAL ' + str(v.val))
 
+def emit_load_g(v):
+	constants.load(v)
+
+def emit_load_str(v):
+	constants.load(v)
+
+def emit_load_None():
+	emit(LOAD_CONSTANT, 0)
+
 def save_code(name):
 	emit(TM_EOP)
 	global bin
@@ -214,7 +233,7 @@ def save_code(name):
 		if istype(i, "string"):
 			emit(NEW_STRING, i)
 		elif istype(i, "number"):
-			emit(NEW_NUMBER, i)
+			emit( NEW_NUMBER, i)
 	save(name, bin + code)
 
 

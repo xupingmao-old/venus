@@ -3,13 +3,13 @@ import struct
 argv = sys.argv
 
 def load( name ):
-    fp = open(name, "r")
+    fp = open(name, "rb")
     t = fp.read()
     fp.close()
     return t
 
 def save( name, content):
-    fp = open(name, 'w')
+    fp = open(name, 'wb')
     fp.write(content)
     fp.close()
 

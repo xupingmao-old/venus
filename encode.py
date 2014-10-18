@@ -5,13 +5,15 @@ if 'tinytm' not in globals():
 from parse import *
 from instruction import *
 
-
 def store(t):
     if t.type == 'name':
         emit_store( t )
     elif t.type == 'get':
-        encode_item(t.b)
         encode_item(t.a)
+        if t.b.type == 'name':
+            emit_load_str(t.b)
+        else:
+            encode_item(t.b)
         emit(SET)
     elif t.type == ',':
         store(t.b)
@@ -41,7 +43,6 @@ op_map = {
     '<=': LTEQ,
     '==': EQEQ,
     '!=': NOTEQ,
-    'get': GET,
     'in' : IN,
     'notin' : NOTIN
 }
@@ -67,6 +68,15 @@ def print_tok_pos( tk ):
         print_tok_pos(tk.a)
     elif hasattr(tk, 'val'):
         print_tok_pos(tk.val)
+
+def build_set(self, key, val):
+    node = AstNode('=')
+    node.b = val
+    setNode = AstNode('get')
+    setNode.a = key
+    setNode.b = val
+    node.a = setNode
+    return node
 
 def encode_item( tk ):
     global in_class
@@ -103,15 +113,20 @@ def encode_item( tk ):
         encode_item(tk.body)
         emit(TM_EOF)
         close_scope()
-        if in_class:
-            emit_load(tk.name)
-        else:
+        if not in_class:
             emit_store(tk.name)
     elif t == 'class':
         in_class = True
-        encode_item(tk.body)
-        emit(DICT, len(tk.body))
+        buildclass = []
+        emit(DICT, 0)
         store(tk.name)
+        for func in tk.body:
+            if func.type != 'def':
+                raise "at " + func.pos + " do not support non-func expression in class"
+            encode_item(func)
+            emit_load(tk.name)
+            emit_load_str(func.name)
+            emit(SET)
         in_class = False
     elif t == 'return':
         if tk.val:encode_item(tk.val)
@@ -150,6 +165,13 @@ def encode_item( tk ):
         n += encode_item(tk.b)
         emit(CALL, n)
         emit(POP)
+    elif t == "get":
+        encode_item(tk.a)
+        if tk.b.type == 'name':
+            emit_load_str( tk.b)
+        else:
+            encode_item(tk.b)
+        emit( GET )
     elif t in op_list:
         encode_item(tk.a)
         encode_item(tk.b)
@@ -164,16 +186,14 @@ def encode_item( tk ):
         encode_item(tk.a)
         emit(JUMP_ON_FALSE, end)
         encode_item(tk.b)
-        emit(AND)
         tag( end )
     elif t == 'or':
         end = newtag()
         encode_item(tk.a)
         emit( JUMP_ON_TRUE, end)
         encode_item( tk.b )
-        emit(OR)
         tag( end )
-    elif t in  ( "and", "or", "for","while" ):
+    elif t in  ( "for","while" ):
         encode_item(tk.a)
         encode_item(tk.b)
         emit(tk.type)

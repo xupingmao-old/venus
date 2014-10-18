@@ -4,6 +4,7 @@
 #define tm_h
 
 #define DEBUG_GC 0
+#define PRINT_INS 1
 
 #include <stdio.h>
 #include <string.h>
@@ -11,12 +12,12 @@
 #include <setjmp.h>
 #include <stdarg.h>
 
-typedef struct tm_string{
+typedef struct tm_str{
 	int marked;
 	int len;
 	int inHeap; // 0: value is static , 1: value is in heap;
 	char *value;
-}tm_string;
+}tm_str;
 
 typedef struct tm_list
 {
@@ -28,13 +29,13 @@ typedef struct tm_list
 	struct tm_obj* nodes;
 }tm_list;
 
-typedef struct tm_dict
+/*typedef struct tm_dict
 {
 	int marked;
 	tm_list* keys;
 	tm_list* values;
 }tm_dict;
-
+*/
 
 typedef union tm_value
 {
@@ -43,12 +44,13 @@ typedef union tm_value
 	double num;
 	int iv;
 	long lv;
-	struct tm_string* str;
+	struct tm_str* str;
 	struct tm_list* list;
 /*	struct tm_dict* dict;*/
 	struct tm_stream* stream;
 	struct tm_func* func;
-	struct tm_map* map;
+	struct tm_dict* dict;
+	struct tm_module* mod;
 }tm_value;
 
 
@@ -57,6 +59,19 @@ typedef struct tm_obj
 	int type; // marked, type, others
 	tm_value value;
 }tm_obj;
+
+typedef struct tm_module
+{
+	int marked;
+	char** tags;
+	int tagsize;
+	int checked;
+	tm_obj globals;
+	tm_obj constants;
+	tm_obj code;
+	tm_obj file;
+	tm_obj name;
+}tm_module;
 
 typedef struct tm_stream
 {
@@ -70,7 +85,7 @@ typedef struct tm_func
 	int marked;
 	int fnc_type;
 	tm_obj self;
-	tm_obj mod; // module, includes global, constants, etc.
+	tm_module* mod; // module, includes global, constants, etc.
 	tm_obj code; // string
 	tm_obj (*native_func)( tm_obj);
 }tm_func;
@@ -94,7 +109,7 @@ typedef struct tm_frame
 	int jmp; // catch/except position
 }tm_frame;
 
-#include "map.h"
+#include "dict.h"
 
 #define FRAMES_COUNT 256
 
@@ -125,7 +140,7 @@ typedef struct tm_vm
 	tm_list* all;
 	tm_list* black;
 	tm_list* white;
-	tm_map* strings;
+	tm_dict* strings;
 
 	int allocated_mem;
 	int used_mem;
@@ -133,9 +148,12 @@ typedef struct tm_vm
 }tm_vm;
 
 /**
- * 系统就一个全局变量tm， 也就是虚拟机的structure
+ * global virtual machine
  */
 tm_vm* tm;
+
+tm_obj str_class;
+tm_obj list_class;
 
 #include "constants.h"
 #include "object.h"
@@ -166,8 +184,9 @@ tm_obj tm_number(double v){
 #include "ops.c"
 #include "gc.c"
 #include "stream.c"
-#include "map.c"
+#include "dict.c"
 #include "test.c"
+#include "secure.c"
 #include "frame.c"
 
 #endif

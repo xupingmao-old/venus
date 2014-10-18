@@ -1,9 +1,9 @@
 
 #include "tm.h"
 
-tm_obj string_new(char *s , int size)
+tm_obj str_new(char *s , int size)
 {
-	tm_string* str = tm_alloc( sizeof( tm_string ));
+	tm_str* str = tm_alloc( sizeof( tm_str ));
 	if( size > 0 ){
 		str->inHeap = 1;
 		str->value = tm_alloc( size + 1);
@@ -14,8 +14,13 @@ tm_obj string_new(char *s , int size)
 		str->value[size] = '\0'; 
 	}else{
 		str->inHeap = 0;
-		str->len = strlen(s);
-		str->value = s;
+		if( size == 0 && str->value != ""){
+			str->value = "";
+			str->len = 0;
+		}else{
+			str->len = strlen(s);
+			str->value = s;
+		}
 	}
 	tm_obj v;
 	v.type = TM_STR;
@@ -23,64 +28,57 @@ tm_obj string_new(char *s , int size)
 	return gc_track(v);
 }
 
-void string_free( tm_string *str){
+void str_free( tm_str *str){
 	if( str->inHeap ){
 		tm_free( str->value, str->len + 1);
 	}
-	tm_free(str, sizeof(tm_string));
+	tm_free(str, sizeof(tm_str));
+}
+
+int _str_find( tm_str* s1, tm_str* s2, int start){
+	char* ss1 = s1->value;
+	char* ss2 = s2->value;
+	char* p = strstr( ss1 + start, ss2);
+	if( p == NULL ) return -1;
+	return p - ss1;
 }
 
 
-tm_obj string_find( tm_obj params){
+tm_obj str_find( tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_STR);
 	tm_obj str  = get_arg( params, 1, TM_STR);
-	char* self_v = get_str(self);
-	char* str_v  = get_str(self);
-	char* p = strstr(self_v, str_v);
-	if( p == NULL ){
-		return tm_number(-1);
-	}
-	return tm_number(self_v - p);
+	return number_new( _str_find(self.value.str, str.value.str, 0));
 }
 
+tm_obj _str_substring( tm_str* str, int start, int end){
+	start = start > 0 ? start : start + str->len;
+	end = end > 0 ? end : end + str->len;
+	int max_end = str->len - 1;
+	max_end = max_end < end ? max_end : end;
+	int len = max_end - start + 1;
+	if( len <= 0)
+		return str_new("", 0);
+	tm_obj new_str = str_new( NULL, len);
+	char* s = get_str(new_str);
+	int i;for(i = start; i <= max_end; i++){
+		*(s++) = str->value[i];
+	}
+	return new_str;
+}
 
-tm_obj blt_string_substring(tm_obj params){
+tm_obj str_substring(tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_STR);
 	tm_obj start = get_arg(params, 1, TM_NUM);
 	tm_obj end = get_arg( params, 2, TM_NUM);
-
-	int start_i = get_num(start);
-	int end_i = get_num(end);
-
-	int len = end_i - start_i + 1;
-	if( len < 0 )
-		tm_raise("substring: index overflow");
-
-	tm_obj nstr = string_new(NULL, len);
-	int src_len = get_str_len(self);
-	char*src = get_str(self);
-	char*s = get_str(nstr);
-
-	int i, j;for(i = start_i, j = 0; i < src_len && i <= end_i;i++, j++){
-		s[j] = src[i];
-	}
-	s[j] = '\0';
-	return nstr;
+	return _str_substring(self.value.str, get_num(start), get_num(end) );
 }
 
-tm_obj string_get(tm_string* str, int n){
-	if( n < 0 || n >= str->len){
-		tm_raise("string_get: index overflow");
-	}
-	return tm->chars[str->value[n]];
-}
-
-tm_obj string_upper(tm_obj params){
+tm_obj str_upper(tm_obj params){
 	tm_obj self = get_arg(params, 0, TM_STR);
 	int i;
 	char*s = get_str(self);
 	int len = str_len(self);
-	tm_obj nstr = string_new(NULL, len);
+	tm_obj nstr = str_new(NULL, len);
 	char*news = get_str(nstr);
 	for(i = 0; i < len; i++){
 		if ( s[i] >= 'a' && s[i] <= 'z'){
@@ -93,44 +91,22 @@ tm_obj string_upper(tm_obj params){
 	return nstr;
 }
 
-/*
-tm_obj string_replace(tm_vm* tm, tm_obj params){
-	tm_obj self = get_arg( tm, params, 0, TM_STR);
-	tm_obj src = get_arg( tm, params, 1, TM_STR);
-	tm_obj des = get_arg( tm, params, 2, TM_STR);
+
+tm_obj str_replace(tm_obj params){
+	tm_obj self = get_arg(  params, 0, TM_STR);
+	tm_obj src = get_arg( params, 1, TM_STR);
+	tm_obj des = get_arg( params, 2, TM_STR);
 
 	char* src_s = get_str(src);
 	char* des_s = get_str(des);
 
-	int sl = str_len(src);
-	int dl = str_len(des);
-
-	char* self_s = get_str(self);
-
-	int len = str_len( self );
-	char* nstr = tm_alloc(len + 1);
-
-	int i;
-	char*s = nstr;
-	int cap = len;
-	int nlen = 0;
-	for(i = 0; i < len; i++){
-		if( nlen >= len){
-			cap = cap * 3 / 2 + dl;
-			free(nstr);
-			nstr = tm_alloc(cap + 1);
-			s = nstr + nlen;
-		}
-		if( strncmp( s, src_s, sl) == 0){
-			memcpy(s, des_s, dl);
-			s+= dl;
-			nlen+=dl;
-		}else{
-			s++;
-			nlen++;
-		}
+	tm_obj nstr = str_new("", 0);
+	int pos = _str_find( self.value.str, src.value.str, 0);
+	int lastpos = 0;
+	while (pos != -1){
+		nstr = tm_add( _str_substring(self.value.str, lastpos, pos), des);
+		lastpos = pos + get_str_len(src) + 1;
+		pos = _str_find( self.value.str, src.value.str, pos);
 	}
-	*s = '\0';
-	return string_new_(nstr, nlen);
+	return nstr;
 }
-*/
