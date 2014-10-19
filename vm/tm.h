@@ -29,13 +29,6 @@ typedef struct tm_list
 	struct tm_obj* nodes;
 }tm_list;
 
-/*typedef struct tm_dict
-{
-	int marked;
-	tm_list* keys;
-	tm_list* values;
-}tm_dict;
-*/
 
 typedef union tm_value
 {
@@ -46,7 +39,6 @@ typedef union tm_value
 	long lv;
 	struct tm_str* str;
 	struct tm_list* list;
-/*	struct tm_dict* dict;*/
 	struct tm_stream* stream;
 	struct tm_func* func;
 	struct tm_dict* dict;
@@ -156,6 +148,10 @@ tm_vm* tm;
 tm_obj str_class;
 tm_obj list_class;
 tm_obj dict_class;
+
+tm_obj obj_true;
+tm_obj obj_false;
+tm_obj obj_none;
 
 #include "constants.h"
 #include "object.h"

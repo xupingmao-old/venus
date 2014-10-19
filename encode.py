@@ -193,10 +193,28 @@ def encode_item( tk ):
         emit( JUMP_ON_TRUE, end)
         encode_item( tk.b )
         tag( end )
-    elif t in  ( "for","while" ):
-        encode_item(tk.a)
+    elif t == "for":
+        start_tag, end_tag = newtag(), newtag()
+        # set for stack
+        start_tag_list.append( start_tag )
+        end_tag_list.append( end_tag )
+        ### load index and iterator
+        load_number(0)
+        encode_item( tk.a.b )
+        tag(start_tag)
+        jump(end_tag, TM_FOR)
+        # store the next value to a, if in func , store to locals
+        if inlocal():
+            def_local(tk.a.a)
+        store( tk.a.a )
         encode_item(tk.b)
-        emit(tk.type)
+        jump(start_tag)
+        tag(end_tag)
+        # clear for stack
+        start_tag_list.pop()
+        end_tag_list.pop()
+        emit(POP)
+        emit(POP)
     elif t in ('number', 'name', "string", 'None'):
         emit_load( tk )
     else:

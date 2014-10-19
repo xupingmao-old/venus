@@ -49,6 +49,7 @@ JUMP_ON_FALSE = 53
 JUMP_ON_TRUE = 54
 TAG = 55
 TAGSIZE = 56
+TM_FOR = 57
 
 # function
 CALL = 60
@@ -56,7 +57,8 @@ TM_DEF = 61
 RETURN = 62
 LOAD_PARAMS = 63
 TM_EOF = 64
-TM_EOP = 65 #end of program
+#end of program
+TM_EOP = 65 
 
 codes = {
 	NEW_STRING: "NEW_STRING",
@@ -94,9 +96,11 @@ codes = {
 	JUMP_ON_TRUE : "JUMP_ON_TRUE",
 	JUMP_ON_FALSE: "JUMP_ON_FALSE",
 	IN : "IN",
+	NOTIN: "NOTIN",
 	TAG : "TAG",
 	JUMP : "JUMP",
-	TAGSIZE : "TAGSIZE"
+	TAGSIZE : "TAGSIZE",
+	TM_FOR : "TM_FOR"
 }
 # instructions 
 
@@ -146,6 +150,8 @@ class Names:
 	def add_local(self, v):
 		if v.val not in self.scope.locals:
 			self.scope.locals.append(v.val)
+	def get_local(self, lc):
+		return self.scope.locals.index(lc.val)
 	def load(self, v):
 		if len( self.scopes ) == 1:
 			idx = constants.index(v)
@@ -170,17 +176,40 @@ bin = "" # binary code
 out = []
 # opcode : op
 mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF, 
-        LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,
+        LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,IN, NOTIN,
 	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS]
 # opcode : op byte
 mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST, DICT]
 # opcode : op short
 mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE, TAG, TAGSIZE,
 JUMP_ON_TRUE, JUMP_ON_FALSE,
-POP_JUMP_ON_TRUE, POP_JUMP_ON_FALSE, JUMP]
+POP_JUMP_ON_TRUE, POP_JUMP_ON_FALSE, JUMP, TM_FOR]
 
 def code_pos():
 	return len(out) - 1
+
+def load_number(v):
+	tk = Token("number", v)
+	constants.load(tk)
+#	lc = Token("name", "#" + str(len(names.scope.locals)))
+#	names.add_local(lc)
+#	names.store( lc )
+
+def local_new( v):
+	if istype(v, 'number'):
+		lc = '#'+str(names.scope.locals)
+		lc = Token( 'number', lc)
+		names.add_local( lc )
+		constants.load( Token("number", v))
+		names.store( lc )
+		return lc
+
+def emit_iter( lc, jmp):
+	global bin
+	code8( TM_FOR )
+	code8( names.get_local(lc) )
+	code16( jmp )
+	print("TM_FOR " + str(names.get_local(lc)) + " " + str(jmp))
 
 def batch_jmp( pos ):
 	out[pos][1] = code_pos() - pos
@@ -239,6 +268,8 @@ def save_code(name, tagsize):
 	emit( TAGSIZE, tagsize)
 	save(name, bin + code)
 
+def inlocal():
+	return len(names.scopes) > 1
 
 def def_local( v ):
 	names.add_local(v)

@@ -26,8 +26,10 @@ tm_obj* push_constant(tm_module *mod, tm_obj v){
   return get_list(cs)->nodes;
 }
 
-tm_obj tm_call( tm_obj mod, tm_obj fnc, tm_obj p){
-
+tm_obj _tm_call( char* mod, char* fnc_name, tm_obj p){
+	tm_obj mod = tm_get(tm->modules, string_new(mod, -1));
+	tm_obj fnc = tm_get(mod, string_new(fnc_name, -1));
+	return tm_eval( get_mod(mod), fnc->pc, p);
 }
 
 tm_obj* get_constants(tm_module *mod){
@@ -105,15 +107,15 @@ tm_obj tm_def(tm_module* mod, char* s){
   locals = f->locals;
 
 
-tm_obj tm_eval( tm_module* mod, int pc, tm_obj params){
+tm_obj tm_eval( tm_module* mod, char* scode, tm_obj params){
   tm_obj globals = mod->globals;
   tm_obj code = mod->code;
-  unsigned char* s = get_str(code);
+  unsigned char* s = scode;
   // constants will be built in modules.
   // get constants from function object.
   tm_frame* f = tm->frames + tm->cur;
   f->file = mod->file;
-  tm_obj* locals = f->locals;
+  register tm_obj* locals = f->locals;
   register tm_obj* top = f->stack;
 
   tm_obj* constants = get_constants(mod);
@@ -121,7 +123,7 @@ tm_obj tm_eval( tm_module* mod, int pc, tm_obj params){
   tm_obj func;
   tm_obj ret = tm->none;
   
-  int i, ins;
+  int i, ins, jmp;
 
   if( ! mod->checked ){
     code_check( mod, s, 0);
@@ -275,6 +277,18 @@ tm_obj tm_eval( tm_module* mod, int pc, tm_obj params){
       locals[i] = get_list(params)->nodes[i];
     }
     goto start;
+  }
+
+  case TM_FOR:{
+    jmp = next_short(s);
+	k = *top;
+    x = *(top-1);
+    if( tm_iter( x, k, &v) ){
+      TM_PUSH( v );
+	  get_num(*top) += 1;
+      goto start;
+    }
+    goto mod->tags[ jmp ];
   }
 
   case TM_DEF:{

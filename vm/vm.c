@@ -34,6 +34,13 @@ void reg_builtin(char* name, tm_obj v){
 }
 
 void reg_builtins(){
+	/* constants */
+
+	obj_true = number_new(1);
+	obj_false = number_new(0);
+	obj_none.type = TM_NON;
+	
+
     struct __builtin {
         char* name;
         tm_obj (*func) ( tm_obj );

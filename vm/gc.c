@@ -54,17 +54,18 @@ tm_obj gc_track( tm_obj v){
 	return v;
 }
 
-void gc_mark(tm_obj v){
-	if( v.value.marked )
+void gc_mark(tm_obj o){
+	if( o.value.marked )
 		return;
-	switch(v.type){
+	switch(o.type){
 		case TM_NUM:return;
 		case TM_STR:{
-			v.value.str->marked = 1;
+			o.value.str->marked = 1;
 			break;
 		}
 		case TM_LST:{
-				tm_list* list;
+				get_list(o)->marked = 1;
+				tm_list* list = get_list(o);
 				int n = list->len;
 				int i;for(i = 0; i < n; i++){
 					gc_mark(list->nodes[i]);
@@ -72,13 +73,26 @@ void gc_mark(tm_obj v){
 			}
 			break;
 		case TM_DCT:{
+			get_dict(o)->marked = 1;
 			tm_obj k,v;
-			while( dict_inext(v.value.dict,&k, &v)){
+			while( dict_inext(get_dict(o),&k, &v)){
 				gc_mark(k);
 				gc_mark(v);
 			}
 			break;
 		}
+		case TM_FNC:
+			get_func(o)->marked = 1;
+			gc_mark(get_func(o)->code);
+			gc_mark(get_func(o)->name);
+			break;
+		case TM_MOD:
+			gc_mark(get_mod(o)->code);
+			gc_mark(get_mod(o)->name);
+			gc_mark(get_mod(o)->file);
+			gc_mark(get_mod(o)->constants);
+			gc_mark(get_mod(o)->globals);
+			break;
 	}
 }
 

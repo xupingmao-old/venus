@@ -91,6 +91,20 @@ tm_obj str_upper(tm_obj params){
 	return nstr;
 }
 
+tm_obj str_isupper(tm_obj params){
+	tm_obj self = get_arg( params, 0, TM_STR);
+	int i;
+	for(i = 0; i < get_str_len(self); i++){
+		char c = get_str(self)[i];
+		if( c >= 'A' && c <= 'Z' ){
+
+		}else{
+			return obj_false;
+		}
+	}
+	return obj_true;
+}
+
 tm_obj str_lower( tm_obj params){
 	tm_obj self = get_arg(params, 0, TM_STR);
 	int i;
