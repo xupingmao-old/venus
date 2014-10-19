@@ -54,7 +54,11 @@ void _tm_print(tm_obj o, int depth){
 	}
 	// case TM_DCT:dict_print(get_dict(o));break;
 	case TM_FNC:
-		printf("<function %x>", o.value.func);
+		if( get_func(o)->self.type != TM_NON){
+			printf("<method %x>", get_func(o));
+		}else{
+			printf("<function %x>", o.value.func);
+		}
 		break;
 	case TM_NON:
 		printf("None");break;

@@ -10,6 +10,7 @@ tm_obj func_new(tm_module *mod,
   tm_func* f= tm_alloc(sizeof(tm_func));
   f->mod = mod;
   f->code = code;
+  f->pc = NULL;
   f->native_func = native_func;
   /*	if( native_func != NULL ){
 	f->native_func = native_func;
@@ -27,6 +28,19 @@ tm_obj func_new(tm_module *mod,
 tm_obj method_new(tm_obj _fnc, tm_obj self){
   tm_func* fnc = get_func(_fnc);
   return func_new( fnc->mod, fnc->code, self, fnc->native_func);
+}
+
+tm_obj class_new( tm_obj clazz ){
+  tm_dict* cl = get_dict(clazz);
+  tm_obj k,v;
+  cl->cur = 0;
+  tm_obj instance = dict_new();
+  while( dict_inext( cl, &k, &v)){
+    if( v.type == TM_FNC){
+      tm_set( instance, k, method_new(v, instance));
+    }
+  }
+  return instance;
 }
 
 void func_free( tm_func* func){

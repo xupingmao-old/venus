@@ -48,6 +48,7 @@ POP_JUMP_ON_TRUE = 52
 JUMP_ON_FALSE = 53
 JUMP_ON_TRUE = 54
 TAG = 55
+TAGSIZE = 56
 
 # function
 CALL = 60
@@ -94,7 +95,8 @@ codes = {
 	JUMP_ON_FALSE: "JUMP_ON_FALSE",
 	IN : "IN",
 	TAG : "TAG",
-	JUMP : "JUMP"
+	JUMP : "JUMP",
+	TAGSIZE : "TAGSIZE"
 }
 # instructions 
 
@@ -148,11 +150,10 @@ class Names:
 		if len( self.scopes ) == 1:
 			idx = constants.index(v)
 			emit(LOAD_GLOBAL, idx)
-		elif v.val in constants.values:
+		elif v.val not in self.scope.locals:
 			idx = constants.index(v)
 			emit(LOAD_GLOBAL, idx)
 		else:
-			self.add_local(v)
 			idx = self.scope.locals.index(v.val)
 			emit(LOAD_LOCAL, idx)
 	def store(self, v):
@@ -174,7 +175,8 @@ mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF,
 # opcode : op byte
 mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST, DICT]
 # opcode : op short
-mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE, TAG, JUMP_ON_TRUE, JUMP_ON_FALSE,
+mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE, TAG, TAGSIZE,
+JUMP_ON_TRUE, JUMP_ON_FALSE,
 POP_JUMP_ON_TRUE, POP_JUMP_ON_FALSE, JUMP]
 
 def code_pos():
@@ -224,7 +226,7 @@ def emit_load_str(v):
 def emit_load_None():
 	emit(LOAD_CONSTANT, 0)
 
-def save_code(name):
+def save_code(name, tagsize):
 	emit(TM_EOP)
 	global bin
 	code = bin
@@ -234,6 +236,7 @@ def save_code(name):
 			emit(NEW_STRING, i)
 		elif istype(i, "number"):
 			emit( NEW_NUMBER, i)
+	emit( TAGSIZE, tagsize)
 	save(name, bin + code)
 
 

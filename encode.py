@@ -23,7 +23,7 @@ tag_count = 0
 def newtag():
     global tag_count
     tag_count+=1
-    return tag_count
+    return tag_count-1
 
 def jump( p, ins = JUMP):
     emit( ins, p)
@@ -217,7 +217,7 @@ def main( ):
     elif len(argv) == 3 and argv[1] == '-save':
         name = argv[2]
     encode( load(name) )
-    save_code("bin")
+    save_code("bin", tag_count)
     print('\n\n==========constants=============')
     print_constants()
     # input("pause")

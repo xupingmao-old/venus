@@ -4,7 +4,7 @@
 #define tm_h
 
 #define DEBUG_GC 0
-#define PRINT_INS 0
+#define PRINT_INS 1
 
 #include <stdio.h>
 #include <string.h>
@@ -84,6 +84,7 @@ typedef struct tm_func
 {
 	int marked;
 	int fnc_type;
+	char* pc;
 	tm_obj self;
 	tm_module* mod; // module, includes global, constants, etc.
 	tm_obj code; // string

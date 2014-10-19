@@ -26,6 +26,10 @@ tm_obj* push_constant(tm_module *mod, tm_obj v){
   return get_list(cs)->nodes;
 }
 
+tm_obj tm_call( tm_obj mod, tm_obj fnc, tm_obj p){
+
+}
+
 tm_obj* get_constants(tm_module *mod){
   tm_obj constants = mod->constants;
   tm_obj v;
@@ -47,8 +51,10 @@ tm_obj* get_constants(tm_module *mod){
 
 tm_obj tm_def(tm_module* mod, char* s){
   int len = code_check( mod, s, 1);
-  tm_obj _code = str_new(s , len);
- return func_new(mod, _code, tm->none, NULL);
+  tm_obj code = str_new(s , len);
+  tm_obj fnc = func_new(mod, code, tm->none, NULL);
+  get_func(fnc)->pc = s;
+  return fnc;
 }
 
 #if PRINT_INS
@@ -86,7 +92,8 @@ tm_obj tm_def(tm_module* mod, char* s){
 #define restore_frame()   tm->cur --;\
   f = tm->frames + tm->cur; \
   top = f->last_pc;         \
-  s = f->last_code;   
+  s = f->last_code;         \
+  locals = f->locals;
 
 #define save_frame()    f->last_pc = top;   \
   f->last_code = s;
@@ -98,7 +105,7 @@ tm_obj tm_def(tm_module* mod, char* s){
   locals = f->locals;
 
 
-tm_obj tm_eval( tm_module* mod ){
+tm_obj tm_eval( tm_module* mod, int pc, tm_obj params){
   tm_obj globals = mod->globals;
   tm_obj code = mod->code;
   unsigned char* s = get_str(code);
@@ -111,13 +118,18 @@ tm_obj tm_eval( tm_module* mod ){
 
   tm_obj* constants = get_constants(mod);
   tm_obj x, k, v;
-  tm_obj params, func;
-  tm_func* _func;
+  tm_obj func;
   tm_obj ret = tm->none;
-  int i;
+  
+  int i, ins;
+
+  if( ! mod->checked ){
+    code_check( mod, s, 0);
+  }
 
  start:
-  switch( next_byte(s) ) {
+  ins = next_byte(s);
+  switch( ins ) {
 
   case NEW_NUMBER: {
     double d;
@@ -291,7 +303,15 @@ tm_obj tm_eval( tm_module* mod ){
     printf("TAG %d\n", i);
 #endif
     // TODO store_tag(mod, i, s);
-    goto func_ret;
+    goto start;
+  }
+
+  case TAGSIZE:{
+    i = next_short(s);
+#if PRINT_INS
+    printf("TAGSIZE %d\n", i);
+#endif
+    goto start;
   }
 
   case POP_JUMP_ON_TRUE:{
@@ -320,7 +340,9 @@ tm_obj tm_eval( tm_module* mod ){
 #if PRINT_INS
     puts("TM_EOF");
 #endif
-    goto start;
+    restore_frame();
+    ret = tm->none;
+    goto func_ret;
   }
 
   case TM_EOP:{
@@ -331,21 +353,23 @@ tm_obj tm_eval( tm_module* mod ){
   }
 
   default:
-#if PRINT_INS
-  puts("BAD INSTRUCTION");
-#endif
+    tm_raise("BAD INSTRUCTION, @\n", number_new(ins));
   goto end;
 }
   // cprintln(mod);
 
  call_func:
 
-  _func = get_func(func);
-  if( _func->self.type != TM_NON){
-    list_insert(get_list(params),0, _func->self);
+  /* instance a class */
+  if( func.type == TM_DCT ){
+    ret = class_new( func );
+    goto func_ret;
   }
-  if( _func->native_func != NULL ){
-    ret = _func->native_func(params);
+  if( get_func(func)->self.type != TM_NON){
+    list_insert(get_list(params),0, get_func(func)->self);
+  }
+  if( get_func(func)->native_func != NULL ){
+    ret = get_func(func)->native_func(params);
     goto func_ret;
   }
   // user function
@@ -353,8 +377,8 @@ tm_obj tm_eval( tm_module* mod ){
   save_frame();
   // new frame
   new_frame();
-  s = get_str(get_func(func)->code);
-  goto func_ret;
+  s = get_func(func)->pc;
+  goto start;
 
   end:
 

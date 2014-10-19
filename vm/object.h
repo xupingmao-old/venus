@@ -15,7 +15,7 @@ tm_list* _list_new(int cap);
 void list_append( tm_list* list, tm_obj v);
 void list_set( tm_list* list, int n, tm_obj v);
 
-tm_obj tm_eval(tm_module* mod);
+tm_obj tm_eval(tm_module* mod, int pc, tm_obj params);
 
 // stream
 tm_obj _load(char* fname);

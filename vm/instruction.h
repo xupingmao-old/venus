@@ -44,5 +44,6 @@
 #define IN 26
 #define JUMP 50
 #define DICT 41
+#define TAGSIZE 56
 
 #endif

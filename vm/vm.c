@@ -26,71 +26,7 @@ void constants_init(){
 		tm->chars[i] = str_new(s, 1);
 	}
 }
-/*
-void builtins_method_init(){
-	tm->str_methods = dict_new();
-	tm->list_methods = dict_new();
-	struct nfl{
-		char* name;
-		tm_obj (*native_func) (tm_vm*, tm_obj);
-	} native_str_methods[] = {
-			{ "substr", str_substr },
-			{ "find" , str_find },
-			{ "replace" , str_replace },
-			{ "upper", str_upper },
-			{0, 0}
-	},
-	native_list_methods[] = {
-			{"push", _list_push},
-			{"pop", _list_pop},
-			{"insert", _list_insert},
-			{0, 0}
-	};
-	int i = 0;
-	for( i = 0; native_str_methods[i].name ; i++){
-		tm_obj name = str_new(tm, native_str_methods[i].name);
-		tm_obj func = native_method_new(tm, native_str_methods[i].native_func);
-		tm_set( tm->str_methods, name, func);
-	}
 
-	for( i = 0; native_list_methods[i].name; i++){
-		tm_obj name = str_new(tm, native_list_methods[i].name);
-		tm_obj method = native_method_new(tm, native_list_methods[i].native_func);
-		tm_set( tm->list_methods, name, method);
-	}
-
-	list_push(tm, tm->root, tm->str_methods);
-	list_push(tm, tm->root, tm->list_methods);
-	tm_obj o;
-	o.type = TM_LST;
-	get_list(o) = tm->root;
-	_tm_print( o);
-}
-
-void builtins_init(){
-	tm->builtins = dict_new(tm);
-	struct nfl{
-		char* name;
-		tm_obj (*native_func) (tm_vm*, tm_obj);
-	} native_func_list[] = {
-			{ "print", tm_print },
-			{ "sleep" , tm_sleep },
-			{ "open" , stream_open },
-			{ "input", tm_input },
-			{0, 0}
-	};
-	int i = 0;
-	for( i = 0; native_func_list[i].name ; i++){
-		tm_obj name = str_new(tm, native_func_list[i].name);
-		tm_obj func = native_func_new(tm, native_func_list[i].native_func);
-		tm_set( tm->builtins, name, func);
-	}
-//	tm_print(tm, tm_arg1(tm, tm->builtins));
-}
-
-void modules_init(){
-	tm->modules = dict_new(tm);
-}*/
 
 void reg_builtin(char* name, tm_obj v){
 	tm_obj key = str_new(name, strlen(name));
@@ -209,7 +145,7 @@ int tm_run(int argc, char* argv[]){
 			tm_obj mod_name = str_new(fname, strlen(fname));
 			tm->frames[tm->cur].file = mod_name;
 			tm_obj mod = module_new(mod_name, str_new("__main__", -1) , code );
-			tm_eval( mod.value.mod );
+			tm_eval( mod.value.mod , 0, tm->none);
 			// cprintln(mod);
 		}else {
 			print_usage();
