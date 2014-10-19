@@ -183,3 +183,18 @@ tm_obj tm_float( tm_obj p){
 	tm_raise("tm_float: @ can not parse to float", v);
 	return tm->none;
 }
+
+tm_obj tm_range( tm_obj p){
+	tm_obj N = get_arg(p, 0, TM_NUM );
+	int n = (int) get_num( N );
+	if( n < 0 ){
+		tm_raise("tm_range: range size must be bigger than zero");
+	}
+
+	tm_obj list = list_new(n);
+	int i = 0;
+	for(i = 0; i < n; i++){
+		list_append( get_list(list), number_new(i));
+	}
+	return list;
+}

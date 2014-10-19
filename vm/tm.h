@@ -4,13 +4,15 @@
 #define tm_h
 
 #define DEBUG_GC 0
-#define PRINT_INS 1
+#define PRINT_INS 0
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <setjmp.h>
 #include <stdarg.h>
+
+typedef char instruction;
 
 typedef struct tm_str{
 	int marked;
@@ -76,9 +78,9 @@ typedef struct tm_func
 {
 	int marked;
 	int fnc_type;
-	char* pc;
+	instruction* pc;
 	tm_obj self;
-	tm_module* mod; // module, includes global, constants, etc.
+	tm_obj mod; // module, includes global, constants, etc.
 	tm_obj code; // string
 	tm_obj (*native_func)( tm_obj);
 }tm_func;

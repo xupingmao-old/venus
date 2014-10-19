@@ -4,7 +4,7 @@ class Token:
     def show(self):
         print(self.type +' => ' + str(self.val))
     def __str__(self):
-        return str(self.val)
+        return str([self.type, self.val])
 
 def u_error(ctx,s,i):
     y,x = i
@@ -78,7 +78,7 @@ def do_tokenize(s):
 
 def do_nl(s,i,l):
     if not T.braces:
-        T.add('nl',None)
+        T.add('nl','nl')
     i,T.nl = i+1,True
     T.y,T.yi = T.y+1,i
     return i

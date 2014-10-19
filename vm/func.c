@@ -1,7 +1,7 @@
 #include "tm.h"
 
 
-tm_obj func_new(tm_module *mod,
+tm_obj func_new(tm_obj mod,
 		tm_obj code,
 		tm_obj self, 
 		tm_obj (*native_func)( tm_obj) ){

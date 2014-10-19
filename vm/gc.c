@@ -14,25 +14,6 @@ void gc_init( ){
 	// tm->strings = dict_new_();
 	// tm->strings = _dict_new();
 }
-
-/*inline
-tm_obj gc_do_string(tm_vm* tm, tm_obj k){
-	int len = str_len(k);
-	tm_dict* dict = tm->strings;
-	if( len <= GC_CONSTANS_LEN ){
-		int p = dict_find(tm, dict, k);
-		if( p != -1 ){
-			obj_free(tm, k);
-			return dict->values->nodes[p];
-		}else{
-			list_append( tm, dict->keys, k);
-			list_append( tm, dict->values, tm->none);
-		}
-	}
-	list_append(tm, tm->all, k);
-	return k;
-}
-*/
 tm_obj gc_track( tm_obj v){
 	switch( v.type ){
 	case TM_NUM:
@@ -75,6 +56,7 @@ void gc_mark(tm_obj o){
 		case TM_DCT:{
 			get_dict(o)->marked = 1;
 			tm_obj k,v;
+			dict_iter_init(get_dict(o));
 			while( dict_inext(get_dict(o),&k, &v)){
 				gc_mark(k);
 				gc_mark(v);
@@ -84,7 +66,8 @@ void gc_mark(tm_obj o){
 		case TM_FNC:
 			get_func(o)->marked = 1;
 			gc_mark(get_func(o)->code);
-			gc_mark(get_func(o)->name);
+			gc_mark(get_func(o)->mod);
+			gc_mark(get_func(o)->self);
 			break;
 		case TM_MOD:
 			gc_mark(get_mod(o)->code);

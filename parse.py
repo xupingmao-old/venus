@@ -1,5 +1,6 @@
 from tokenize import *
-
+if "tmvm" not in globals():
+	from boot import *
 
 class AstNode:
 	def __init__(self, type=None):
@@ -18,7 +19,7 @@ class ParserCtx:
 		self.eof = Token("eof")
 	def match(self, v):
 		x = self.next()
-		assert x.val == v
+		makesure (x.val == v)
 	def next(self):
 		if self.i < self.l:
 			self.token = self.r[self.i]
@@ -39,14 +40,14 @@ class ParserCtx:
 		# print("curtoken="+ str(self.r[self.i-1].val))
 		# print("p.token="+str(self.token.val))
 		# print("expect="+v)
-		assert self.token.type == v, 'error at ' + str(self.token.pos)
+		makesure(self.token.type == v, 'error at ' + str(self.token.pos) + " expect " +str(v) +" but see "+str(self.token.val))
 		self.next()
 	def nextName(self):
 		self.next()
-		assert self.token.type == 'name'
+		makesure (self.token.type == 'name')
 	def nextSymbol(self):
 		self.next()
-		assert self.token.type == 'symbol'
+		makesure (self.token.type == 'symbol')
 	def add(self, v):
 		self.tree.append(v)
 	def addOp(self,v):
@@ -116,7 +117,7 @@ def parse(v):
 		p = ParserCtx(r)
 		return do_prog(p)
 	except:
-		p.print_error()
+		print(" at line " + str( p.token.pos ) + " unknown error")
 
 # recursive desent
 
@@ -124,8 +125,10 @@ def factor(p):
 	if p.token.type in ['+', '-', 'not']:
 		t = p.token.type
 		p.next()
-		if t == '+':t='pos'
-		elif t == '-':t='neg'
+		if t == '+':
+			t='pos'
+		elif t == '-':
+			t='neg'
 		factor(p)
 		node = AstNode()
 		node.type = t
@@ -167,11 +170,11 @@ def factor_(p):
 		p.add(node)
 	elif t == '{':
 		p.next()
-		node = AstNode()
-		node.type = 'dict'
+		node = AstNode('dict')
 		if p.token.type == '}':
 			p.next()
-			node.val = None
+			node.items = None
+			p.add(node)
 		else:
 			items = {}
 			while p.token.type != '}':
@@ -186,41 +189,68 @@ def factor_(p):
 				p.expect(',')
 			p.expect('}')
 			node.items = items
+			p.add(node)
 
 
 
-def _expr2(func, val):
-	def f(p):
-		func(p)
-		while p.token.type in val:
-			t = p.token.type
-			p.next()
-			func(p)
-			p.addOp(t)
-	return f
+# def _expr2(func, val):
+# 	def f(p):
+# 		func(p)
+# 		while p.token.type in val:
+# 			t = p.token.type
+# 			p.next()
+# 			func(p)
+# 			p.addOp(t)
+# 	return f
 
 class MyExpr:
-	def __init__(self, clazz, range, pd):
-		self.clazz = clazz
+	def __init__(self, fnc, range):
+		self.fnc = fnc
 		self.range = range
-		self.pd = pd
 
-	def run(self):
-		pd = self.pd
+	def run(self, p):
 		range = self.range
-		func = self.clazz.run
-		func()
-		while pd.token.type in range:
-			t = pd.token.type
+		self.fnc(p)
+		while p.token.type in range:
+			t = p.token.type
+			# print(p.token.pos)
+			p.next()
 			expr(p)
-			pd.next()
-			func()
-			pd.addOp(t)
+			self.fnc(p)
+			p.addOp(t)
 
-def _expr4(func):
-	def f(p):
-		func(p)
-		while p.token.type in ['.', '[', '(']:
+# def f(self, p):
+# 	self.fnc(p)
+# 	while p.token.type in self.range:
+# 		p.next()
+# 		if t == '[':
+# 			expr(p)
+# 			p.expect(']')
+# 			p.addOp('get')
+# 		elif t == '(':
+# 			node = AstNode()
+# 			node.type = '$'
+# 			node.name = p.pop()
+# 			if p.token.type == ')':
+# 				p.next()
+# 				node.args = None
+# 				p.add( node )
+# 			else:
+# 				expr(p)
+# 				p.expect(')')
+# 				node.args = p.pop()
+# 				p.add( node )
+# 		else:
+# 			self.fnc(p)
+# 			p.addOp( 'get' )
+
+class Temp:
+	def __init__(self,fnc, range):
+		self.fnc = fnc
+		self.range = range
+	def run(self, p):
+		self.fnc(p)
+		while p.token.type in self.range:
 			t = p.token.type
 			p.next()
 			if t == '[':
@@ -241,21 +271,30 @@ def _expr4(func):
 					node.args = p.pop()
 					p.add( node )
 			else:
-				func(p)
+				self.fnc(p)
 				p.addOp( 'get' )
-	return f
 
-dot_expr = _expr4(factor)
-item2 = _expr2(dot_expr, ['*', '/', '%'])
-item = _expr2(item2, ['+', '-'])
-in_expr = _expr2(item, ['in', 'notin'])
-compare = _expr2(in_expr, ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
-and_expr = _expr2(compare, ['and'])
-or_expr = _expr2(and_expr, ['or'])
-comma = _expr2(or_expr, [','])
-assign = _expr2(comma, ['=', '+=', '-=', '*=', '/='])
+dot_expr = Temp(factor, ['.', '[', '('])
+item2 = MyExpr(dot_expr.run, ['*', '/', '%'])
+item = MyExpr(item2.run, ['+', '-'])
+in_expr = MyExpr(item.run, ['in', 'notin'] )
+compare = MyExpr(in_expr.run,  ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
+and_expr = MyExpr(compare.run, ['and'])
+or_expr = MyExpr(and_expr.run, ['or'])
+comma = MyExpr(or_expr.run, [','])
+assign = MyExpr(comma.run, ['=', '+=', '-=', '*=', '/=', '%='])
 
-expr = assign
+# dot_expr = _expr4(factor)
+# item2 = _expr2(dot_expr, ['*', '/', '%'])
+# item = _expr2(item2, ['+', '-'])
+# in_expr = _expr2(item, ['in', 'notin'])
+# compare = _expr2(in_expr, ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
+# and_expr = _expr2(compare, ['and'])
+# or_expr = _expr2(and_expr, ['or'])
+# comma = _expr2(or_expr, [','])
+# assign = _expr2(comma, ['=', '+=', '-=', '*=', '/='])
+
+expr = assign.run
 
 
 def do_from(p):
@@ -280,9 +319,13 @@ def do_import(p):
 	p.add(None)
 	p.addOp("import")
 
+# count = 1
 def skip_nl(p):
+	# global count
 	while p.token.type in ('nl', ';'):
 		p.next()
+		# count+=1
+		# print(count)
 
 def do_raise(p):
 	p.next()
@@ -314,8 +357,8 @@ def do_stm(p):
 		do_from(p)
 	elif t == 'import':
 		do_import(p)
-	elif t == "assert":
-		do_assert(p)
+	# elif t == "makesure":
+	# 	do_makesure(p)
 	elif t == 'def':
 		do_def(p)
 	elif t == 'class':
@@ -341,7 +384,7 @@ def do_stm(p):
 		p.next()
 		node = AstNode()
 		node.type = 'global'
-		assert p.token.type == 'name', p.error()
+		makesure (p.token.type == 'name', p.error())
 		p.next()
 		node.val = p.token.val
 		p.add( node )
@@ -387,8 +430,8 @@ def do_if(p):
 	temp = cur = ast # temp 
 	if p.token.type == 'elif':
 		while p.token.type == 'elif':
-			node = AstNode()
-			node.type , node.right = 'if', None
+			node = AstNode("if")
+			node.right = None
 			p.next()
 			expr(p)
 			p.expect(':')
@@ -413,11 +456,11 @@ def do_for_while(p, type):
 	ast.b = p.enterBlock()
 	p.add(ast)
 
-def do_assert(p):
+def do_makesure(p):
 	p.next()
 	expr(p)
 	p.add(None)
-	p.addOp("assert")
+	p.addOp("makesure")
 
 def do_arg(p):
 	p.expect('(')
@@ -451,7 +494,7 @@ def do_arg(p):
 				arg_with_default_val = True
 		if p.token.type == '*':
 			p.next()
-			assert p.token.type == 'name', 'invalide arguments ' + p.error()
+			makesure (p.token.type == 'name', 'invalide arguments ' + p.error())
 			arg = AstNode()
 			arg.type = 'varg'
 			arg.val = None
@@ -459,11 +502,12 @@ def do_arg(p):
 			args.append(arg)
 			p.next()
 		p.expect(')')
-		return args if len(args) > 0 else None
+		if len(args) > 0 : return args
+		return None
 
 def do_def(p):
 	p.next()
-	assert p.token.type == 'name'
+	makesure (p.token.type == 'name')
 	func = AstNode()
 	func.type = 'def'
 	func.name = p.token
@@ -475,14 +519,14 @@ def do_def(p):
 
 def do_class(p):
 	p.next()
-	assert p.token.type == 'name', 'ClassException' + p.error()
+	makesure( p.token.type == 'name', 'ClassException' + p.error())
 	clazz = AstNode()
 	clazz.type = 'class'
 	clazz.name = p.token
 	p.next()
 	if p.token.type == '(':
 		p.next()
-		assert p.token.type == 'name', 'ClassException'+p.error()
+		makesure (p.token.type == 'name', 'ClassException'+p.error())
 		p.parent = p.token.val
 		p.next()
 		p.expect(')')
@@ -507,10 +551,10 @@ def do_prog(p):
 		do_block(p)
 	return p.tree
 
-def do_prog1(p):
-	#p.showTokens()
-	try:
-		return compile_prog(p)
-	except Exception as e:
-		print(e)
-		p.error()
+# def do_prog1(p):
+# 	#p.showTokens()
+# 	try:
+# 		return compile_prog(p)
+# 	except e
+# 		print(e)
+# 		p.error()

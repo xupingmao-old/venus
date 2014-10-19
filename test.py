@@ -54,6 +54,14 @@ def show(tree):
 				rs = v.type + f(1 , v.name, 'name => ') + '\n'+ f(n + 2,  v.val, 'dafault => ')
 			elif v.type in ('return', 'global', 'raise'):
 				rs = v.type + '\n' + f(n+2, v.val)
+			elif v.type == 'dict':
+				items = v.items
+				ss = ""
+				if items != None:
+					for k in items:
+						ss += f(n+2, k)
+						ss += f(1, items[k])+'\n'
+				rs = v.type + '\n'+ ss
 			else:
 				# print(str(type(v))+":"+str(v))
 				rs = v.type

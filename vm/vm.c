@@ -1,23 +1,5 @@
 #include "tm.h"
 
-/*
-tm_obj tm_c_call(tm_vm* tm, char* mod, char* func, tm_obj params){
-	tm_obj m = tm->none;
-	if( mod != NULL ){
-		m = str_new(tm, mod);
-		m = tm_get(tm, tm->modules, m);
-	}else{
-		m = tm->builtins;
-	}
-	if( m.type == TM_NON ){
-		tm_raise(tm);
-	}
-	tm_obj fname = str_new(tm, func);
-	tm_obj f0 = tm_get(tm, m, fname);
-	return tm_call(tm, f0, params);
-}
-*/
-
 void constants_init(){
 	tm->none = obj_new(TM_NON, NULL);
 	int i;
@@ -52,10 +34,11 @@ void reg_builtins(){
         {"str", btm_str},
         {"int", tm_int},
         {"float", tm_float},
+        {"range", tm_range},
         {0, 0}
     };
     int i;for(i = 0; builtins[i].name != 0; i++){
-        reg_builtin(builtins[i].name, func_new(NULL, tm->none, tm->none, builtins[i].func));
+        reg_builtin(builtins[i].name, func_new(obj_none, tm->none, tm->none, builtins[i].func));
     };
 
     /* build str class */
@@ -70,29 +53,31 @@ void reg_builtins(){
    	};
    	for(i = 0; str_class_fnc_list[i].name != 0 ; i++){
    		tm_set( str_class, str_new(str_class_fnc_list[i].name, -1), 
-   			func_new(NULL, tm->none, tm->none, str_class_fnc_list[i].func));
+   			func_new(obj_none, tm->none, tm->none, str_class_fnc_list[i].func));
    	}
 
    	/* build list class */
    	list_class = dict_new();
    	static struct __builtin list_class_fnc_list[] = {
    		{"append", blist_append},
+        {"pop", blist_pop},
+        {"insert", blist_insert},
    		{0,0}
    	};
    	for(i = 0; list_class_fnc_list[i].name != 0 ; i++){
    		tm_set( list_class, str_new(list_class_fnc_list[i].name, -1), 
-   			func_new(NULL, tm->none, tm->none, list_class_fnc_list[i].func));
+   			func_new(obj_none, tm->none, tm->none, list_class_fnc_list[i].func));
    	}
 
    	/* build dict class */
    	dict_class = dict_new();
    	static struct __builtin dict_class_fnc_list[] = {
-   		{"append", blist_append},
+   		{"keys", bdict_keys},
    		{0,0}
    	};
    	for(i = 0; dict_class_fnc_list[i].name != 0 ; i++){
    		tm_set( dict_class, str_new(dict_class_fnc_list[i].name, -1), 
-   			func_new(NULL, tm->none, tm->none, dict_class_fnc_list[i].func));
+   			func_new(obj_none, tm->none, tm->none, dict_class_fnc_list[i].func));
    	}
 }
 
@@ -152,7 +137,7 @@ int tm_run(int argc, char* argv[]){
 			tm_obj mod_name = str_new(fname, strlen(fname));
 			tm->frames[tm->cur].file = mod_name;
 			tm_obj mod = module_new(mod_name, str_new("__main__", -1) , code );
-			tm_eval( mod.value.mod , 0, tm->none);
+			tm_eval( mod , get_str(code), tm->none);
 			// cprintln(mod);
 		}else {
 			print_usage();

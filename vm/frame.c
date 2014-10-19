@@ -17,8 +17,8 @@ typedef union tm_opcode {
 
 
 // 一个模块的常量
-tm_obj* push_constant(tm_module *mod, tm_obj v){
-  tm_obj cs = mod->constants;
+tm_obj* push_constant(tm_obj mod, tm_obj v){
+  tm_obj cs = get_mod(mod)->constants;
   int i = list_index( get_list(cs), v);
   if( i == -1 ){
     list_append(get_list(cs), v);
@@ -27,18 +27,18 @@ tm_obj* push_constant(tm_module *mod, tm_obj v){
 }
 
 tm_obj _tm_call( char* mod, char* fnc_name, tm_obj p){
-	tm_obj mod = tm_get(tm->modules, string_new(mod, -1));
-	tm_obj fnc = tm_get(mod, string_new(fnc_name, -1));
-	return tm_eval( get_mod(mod), fnc->pc, p);
+	tm_obj m = tm_get(tm->modules, str_new(mod, -1));
+	tm_obj fnc = tm_get(m, str_new(fnc_name, -1));
+	return tm_eval( m, get_func(fnc)->pc, p);
 }
 
-tm_obj* get_constants(tm_module *mod){
-  tm_obj constants = mod->constants;
+tm_obj* get_constants(tm_obj mod){
+  tm_obj constants = get_mod(mod)->constants;
   tm_obj v;
   if( constants.type == TM_NON){
     v = list_new(20);
     list_append( get_list(v), tm->none);
-    mod->constants = v;
+    get_mod(mod)->constants = v;
   }
   return get_list(v)->nodes;
 }
@@ -51,7 +51,7 @@ tm_obj* get_constants(tm_module *mod){
 
 #define CASE( code, body ) case code :  body ; break;
 
-tm_obj tm_def(tm_module* mod, char* s){
+tm_obj tm_def(tm_obj mod, char* s){
   int len = code_check( mod, s, 1);
   tm_obj code = str_new(s , len);
   tm_obj fnc = func_new(mod, code, tm->none, NULL);
@@ -107,14 +107,14 @@ tm_obj tm_def(tm_module* mod, char* s){
   locals = f->locals;
 
 
-tm_obj tm_eval( tm_module* mod, char* scode, tm_obj params){
-  tm_obj globals = mod->globals;
-  tm_obj code = mod->code;
+tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params){
+  tm_obj globals = get_mod(mod)->globals;
+  tm_obj code = get_mod(mod)->code;
   unsigned char* s = scode;
   // constants will be built in modules.
   // get constants from function object.
   tm_frame* f = tm->frames + tm->cur;
-  f->file = mod->file;
+  f->file = get_mod(mod)->file;
   register tm_obj* locals = f->locals;
   register tm_obj* top = f->stack;
 
@@ -125,10 +125,11 @@ tm_obj tm_eval( tm_module* mod, char* scode, tm_obj params){
   
   int i, ins, jmp;
 
-  if( ! mod->checked ){
+  if( ! get_mod(mod)->checked ){
     code_check( mod, s, 0);
   }
 
+  char** tags = get_mod(mod)->tags;
  start:
   ins = next_byte(s);
   switch( ins ) {
@@ -281,14 +282,19 @@ tm_obj tm_eval( tm_module* mod, char* scode, tm_obj params){
 
   case TM_FOR:{
     jmp = next_short(s);
-	k = *top;
+	  k = *top;
     x = *(top-1);
+#if PRINT_INS
+    printf("TM_FOR %d\n", jmp);
+#endif
     if( tm_iter( x, k, &v) ){
+      get_num(*top) += 1;
       TM_PUSH( v );
-	  get_num(*top) += 1;
       goto start;
+    }else{
+      s = tags[jmp];
     }
-    goto mod->tags[ jmp ];
+    goto start;
   }
 
   case TM_DEF:{
@@ -334,7 +340,7 @@ tm_obj tm_eval( tm_module* mod, char* scode, tm_obj params){
     printf("POP_JUMP_ON_TRUE %d\n", i);
 #endif
     if( tm_bool( TM_POP() )){
-      s = mod->tags[i];
+      s = tags[i];
     }
     goto start;
   }
@@ -345,10 +351,18 @@ tm_obj tm_eval( tm_module* mod, char* scode, tm_obj params){
     printf("POP_JUMP_ON_FALSE %d\n", i);
 #endif
     if( !tm_bool( TM_POP() )){
-      s = mod->tags[i];
+      s = tags[i];
     }
     goto start;
   }
+
+  case JUMP:
+    i = next_short(s);
+#if PRINT_INS
+    printf("JUMP %d\n", i);
+#endif
+    s = tags[i];
+    goto start;
 
   case TM_EOF:{
 #if PRINT_INS

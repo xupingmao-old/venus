@@ -199,8 +199,8 @@ def encode_item( tk ):
         start_tag_list.append( start_tag )
         end_tag_list.append( end_tag )
         ### load index and iterator
-        load_number(0)
         encode_item( tk.a.b )
+        load_number(0)
         tag(start_tag)
         jump(end_tag, TM_FOR)
         # store the next value to a, if in func , store to locals

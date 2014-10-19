@@ -230,3 +230,18 @@ int dict_iget(tm_dict* dict,tm_obj key,tm_obj *des){
 	}
 	return 0;
 }
+
+tm_obj dict_keys( tm_dict* dict){
+	tm_obj list = list_new( dict->len );
+	dict_iter_init(dict);
+	tm_obj k,v;
+	while( dict_inext(dict, &k, &v ) ){
+		list_append( get_list(list), k);
+	}
+	return list;
+}
+
+tm_obj bdict_keys( tm_obj p){
+	tm_obj dict = get_arg(p, 0, TM_DCT);
+	return dict_keys(get_dict(dict));
+}

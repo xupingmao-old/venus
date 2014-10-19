@@ -68,19 +68,19 @@ tm_obj tm_copy(tm_vm* tm, tm_obj o){
 	return tm->none;
 }
 
-tm_obj _tm_len(tm_obj o){
+int _tm_len(tm_obj o){
 	switch(o.type){
-	case TM_STR:return tm_number( get_str_len(o) );
-	case TM_LST:return tm_number( list_len(o));
-	case TM_DCT:return tm_number( dict_len(o));
+	case TM_STR:return get_str_len(o);
+	case TM_LST:return list_len(o);
+	case TM_DCT:return dict_len(o);
 	}
 	tm_raise("tm_len: @ has no attribute len", o);
-	return tm->none;
+	return 0;
 }
 
 tm_obj tm_len(tm_obj p){
 	tm_obj o = get_arg(p, 0, -1);
-	return _tm_len(o);
+	return number_new(_tm_len(o));
 }
 
 inline
@@ -88,7 +88,7 @@ int tm_get_int(tm_obj v){
 	if( v.type != TM_NUM){
 		tm_raise( "tm_get_int:@ is not a number", v );
 	}
-	return (int)v.value.dv;
+	return (int)get_num(v);
 }
 
 void tm_set( tm_obj self, tm_obj k, tm_obj v){
@@ -143,6 +143,7 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 	tm_raise("tm_get: keyError @", k );
 	return tm->none;
 }
+
 
 tm_obj tm_sub( tm_obj a, tm_obj b){
 	if( a.type == b.type ){
@@ -265,4 +266,15 @@ int tm_bool( tm_obj v){
 		case TM_DCT:return get_dict_len(v) > 0;
 	}
 	return 0;
+}
+
+int tm_iter( tm_obj self, tm_obj k, tm_obj *v){
+	int idx = tm_get_int(k);
+	if( idx >= _tm_len(self))  return 0;
+	if( self.type == TM_DCT ){
+		if( idx == 0) dict_iter_init(get_dict(self));
+		return dict_inext(get_dict(self),&k, v);
+	}
+	*v = tm_get(self, k);
+	return 1;
 }

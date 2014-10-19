@@ -1,85 +1,76 @@
-from a import b, c,d
-
-x = 3 + 4 * 5 and 43 or 12
-
-# x = y = 10
-x, y = 10 , 30
-
-x = 'test'
-y.name = 'test'
-x.name = 'test'
-
-x = [ 1, 2 , 4 , 5]
-
-test( 1, 2 )
-
-r = tokenize(open('tokenize.py').read())
+from tokenize import *
+from boot import *
 
 
-if x == 0:
-    print(x )
-elif x == 1:
-    print(1)
-elif x == 2:
-    print(2)
-else:
-    print('hello')
+r = tokenize(load(argv[1]))
 
-def complex(a, b, c):
-    a = b * c 
-    c = a + b
-    return a + c
+for i in r:
+    print(i)
 
-def test():
-	return 'hello,world'
+# if x == 0:
+#     print(x )
+# elif x == 1:
+#     print(1)
+# elif x == 2:
+#     print(2)
+# else:
+#     print('hello')
 
-def test(a, b = 2, c = 4):
-	pass
+# def complex(a, b, c):
+#     a = b * c 
+#     c = a + b
+#     return a + c
 
-x = test(1,3,4)
-def test3(a , b = 34):
-	pass
+# def test():
+# 	return 'hello,world'
 
-def test(*v):
-	return v[0] + v[1]
+# def test(a, b = 2, c = 4):
+# 	pass
 
-x = a + b
+# x = test(1,3,4)
+# def test3(a , b = 34):
+# 	pass
 
-def add(a, b):
-	return a + b
+# def test(*v):
+# 	return v[0] + v[1]
 
-x = not not 1
+# x = a + b
 
-y = --- x + +++ 34
+# def add(a, b):
+# 	return a + b
 
-def do_stm(p):
-    skip_nl(p)
-    t = p.token.type
-    if t == 'from':
-        do_from(p)
-    elif t == 'import':
-        do_import(p)
-    elif t == "assert":
-        do_assert(p)
-    elif t == 'def':
-        do_def(p)
-    elif t == 'class':
-        do_class(p)
-    elif t in ('for', 'while'):
-        do_for_while(p, t)
-    # elif t in ('return', "raise"):
-        do_stm1(p, t)
-        stm_next_if(p)
-    # elif t in ("break", "continue", "pass"):
-        p.next()
-        node = AstNode()
-        node.type = "pass"
-        p.add( node )
-    elif t == 'if':
-        do_if(p)
-    elif t == 'name':
-        expr(p)
-        stm_next_if(p)
-    else:
-        raise Exception('unknown expression, type = ' + t + ', pos = ' + str(p.token.pos))
-    skip_nl(p)
+# x = not not 1
+
+# y = --- x + +++ 34
+
+# def do_stm(p):
+#     skip_nl(p)
+#     t = p.token.type
+#     if t == 'from':
+#         do_from(p)
+#     elif t == 'import':
+#         do_import(p)
+#     elif t == "assert":
+#         do_assert(p)
+#     elif t == 'def':
+#         do_def(p)
+#     elif t == 'class':
+#         do_class(p)
+#     elif t in ('for', 'while'):
+#         do_for_while(p, t)
+#     # elif t in ('return', "raise"):
+#         do_stm1(p, t)
+#         stm_next_if(p)
+#     # elif t in ("break", "continue", "pass"):
+#         p.next()
+#         node = AstNode()
+#         node.type = "pass"
+#         p.add( node )
+#     elif t == 'if':
+#         do_if(p)
+#     elif t == 'name':
+#         expr(p)
+#         stm_next_if(p)
+#     else:
+#         raise Exception('unknown expression, type = ' + t + ', pos = ' + str(p.token.pos))
+#     skip_nl(p)

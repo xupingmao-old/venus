@@ -160,11 +160,11 @@ tm_obj blist_append( tm_obj params){
 	return tm->none;
 }
 
-tm_obj blt_list_pop(tm_obj params){
+tm_obj blist_pop(tm_obj params){
 	tm_obj self = get_arg(params, 0, TM_LST);
 	return list_pop(get_list(self));
 }
-tm_obj blt_list_insert(tm_obj params){
+tm_obj blist_insert(tm_obj params){
 	tm_obj self = get_arg(params, 0, TM_LST);
 	tm_obj idx = get_arg(params, 1, TM_NUM);
 	int n = idx.value.dv;

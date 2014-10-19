@@ -5,7 +5,7 @@
 
 #define strequals(a, b) a == b || strcmp(a,b) == 0
 
-#define get_val(obj) obj.value
+#define get_val(obj) (obj).value
 #define get_num(obj) get_val(obj).dv
 #define get_double(obj) get_val(obj).dv
 #define get_int(obj) get_val(obj).iv
@@ -22,6 +22,7 @@
 #define get_dict(obj) get_val(obj).dict
 #define get_dict_len(obj) get_dict(obj)->len
 #define get_map(obj) get_val(obj).map
+#define get_mod(obj) get_val(obj).mod
 #define get_map_len(obj) get_map(obj)->len
 
 #define get_nodes(obj)  get_list(obj)->nodes

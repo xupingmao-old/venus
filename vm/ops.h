@@ -25,11 +25,12 @@ void tm_set(tm_obj self, tm_obj k, tm_obj v);
 tm_obj _tm_str(tm_obj obj);
 tm_obj btm_str( tm_obj a);
 
-tm_obj _tm_len(tm_obj o);
+int _tm_len(tm_obj o);
 tm_obj tm_len( tm_obj p);
 
 tm_obj tm_has(tm_obj a, tm_obj b);
 
 int tm_bool(tm_obj v);
+int tm_iter(tm_obj self, tm_obj k, tm_obj *v);
 
 #endif /* OPS_H_ */

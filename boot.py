@@ -8,6 +8,9 @@ def load( name ):
     fp.close()
     return t
 
+def makesure( v , e = None):
+    assert v,e
+
 def save( name, content):
     fp = open(name, 'wb')
     fp.write(content)
