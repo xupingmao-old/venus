@@ -57,8 +57,11 @@ void _tm_print(tm_obj o, int depth){
 		if( get_func(o)->self.type != TM_NON){
 			printf("<method %x>", get_func(o));
 		}else{
-			printf("<function %x>", o.value.func);
+			printf("<function %x>", get_func(o));
 		}
+		break;
+	case TM_MOD:
+		printf("<module %x>", get_mod(o));
 		break;
 	case TM_NON:
 		printf("None");break;

@@ -172,3 +172,19 @@ tm_obj blist_insert(tm_obj params){
 	list_insert( get_list(self), n, v );
 	return self;
 }
+
+tm_obj blist_extend( tm_obj params){
+	tm_obj self = get_arg( params, 0, TM_LST);
+	tm_obj des = get_arg( params, 0, TM_LST);
+	int i;
+	for(i = 0; i < get_list(des)->len; i++){
+		list_append( get_list(self), get_list(des)->nodes[i]);
+	}
+	return obj_none;
+}
+
+tm_obj blist_index( tm_obj params){
+	tm_obj self = get_arg( params, 0, TM_LST);
+	tm_obj v = get_arg( params, 1, -1);
+	return number_new( list_index(get_list(self), v));
+}

@@ -28,13 +28,14 @@ tm_obj* push_constant(tm_obj mod, tm_obj v){
 
 tm_obj _tm_call( char* mod, char* fnc_name, tm_obj p){
 	tm_obj m = tm_get(tm->modules, str_new(mod, -1));
-	tm_obj fnc = tm_get(m, str_new(fnc_name, -1));
+  cprintln(m);
+	tm_obj fnc = tm_get(get_mod(m)->globals, str_new(fnc_name, -1));
 	return tm_eval( m, get_func(fnc)->pc, p);
 }
 
 tm_obj* get_constants(tm_obj mod){
   tm_obj constants = get_mod(mod)->constants;
-  tm_obj v;
+  tm_obj v = constants;
   if( constants.type == TM_NON){
     v = list_new(20);
     list_append( get_list(v), tm->none);
@@ -107,7 +108,7 @@ tm_obj tm_def(tm_obj mod, char* s){
   locals = f->locals;
 
 
-tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params){
+tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
   tm_obj globals = get_mod(mod)->globals;
   tm_obj code = get_mod(mod)->code;
   unsigned char* s = scode;
@@ -190,11 +191,14 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params){
     if( dict_iget( get_dict(tm->builtins), k, &v)){
       // already in v;
     }else{
+      // cprintln(globals);
+      // cprintln(k);
       v = tm_get(globals, k);
+      // cprintln(v);
     }
     TM_PUSH( v );
 #if PRINT_INS
-    tm_printf("LOAD_GLOBAL [@] @ = @\n", number_new(i), k, v);
+    tm_printf("LOAD_GLOBAL [@] @ = @ \n", number_new(i), k, v);
 #endif
     goto start;
   }
@@ -203,10 +207,10 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params){
     i = next_short( s );
     k = constants[ i ];
     x = TM_POP();
+    tm_set( globals, k, x );
 #if PRINT_INS
     tm_printf("STORE_GLOBAL [@] @\n", number_new(i), k);
 #endif
-    tm_set( globals, k, x );
     goto start;
   }
 
@@ -255,6 +259,16 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params){
 #endif
     goto start;
   }
+
+  case IN: {
+#if PRINT_INS
+    puts("IN");
+#endif
+    v = TM_POP();
+    x = TM_POP();
+    TM_PUSH( tm_has(x, v));
+    goto start;
+  }
     
   case CALL: {
     i = next_byte( s );
@@ -277,6 +291,9 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params){
     for(i = 0; i < len; i++){
       locals[i] = get_list(params)->nodes[i];
     }
+#if PRINT_INS
+    puts("PARAMS END");
+#endif
     goto start;
   }
 
@@ -410,6 +427,5 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params){
 
   end:
 
-  tm->cur = 0;
   return ret;
 }

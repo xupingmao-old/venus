@@ -37,6 +37,8 @@ tm_obj _tm_str(  tm_obj a){
 		return str_new("<dict>", 0);
 	case TM_FNC:
 		return str_new("<function>", 0);
+	case TM_MOD:
+		return str_new("<module>", 0);
 	}
 	return str_new("",0);
 }
@@ -140,7 +142,7 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 				return get_func( self )->code;
 			}
 	}
-	tm_raise("tm_get: keyError @", k );
+	tm_raise("tm_get: keyError @, target = @ ", k, self );
 	return tm->none;
 }
 
@@ -255,7 +257,7 @@ tm_obj tm_has( tm_obj a, tm_obj b ){
 			return number_new( dict_iget(get_dict(a), b, &v) );
 		}
 	}
-	return number_new(0);
+	return obj_false;
 }
 
 int tm_bool( tm_obj v){

@@ -21,7 +21,7 @@ tm_obj get_arg(tm_obj params, int pos, int type){
 	return v;
 }
 
-tm_obj tm_args( int n, ...){
+tm_obj args_new( int n, ...){
 	tm_obj params = list_new(n);
 	va_list a; va_start(a,n);
 	int i;

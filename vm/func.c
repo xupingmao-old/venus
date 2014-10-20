@@ -37,7 +37,9 @@ tm_obj class_new( tm_obj clazz ){
   tm_obj instance = dict_new();
   while( dict_inext( cl, &k, &v)){
     if( v.type == TM_FNC){
-      tm_set( instance, k, method_new(v, instance));
+      tm_obj method = method_new(v, instance);
+      get_func(method)->pc = get_func(v)->pc;
+      tm_set( instance, k, method);
     }
   }
   return instance;
@@ -64,7 +66,10 @@ tm_obj module_new( tm_obj file , tm_obj name, tm_obj code){
   tm_obj obj;
   obj.type = TM_MOD;
   obj.value.mod = mod;
-  return gc_track( obj );
+  tm_obj m = gc_track( obj );
+  /* set module */
+  tm_set( tm->modules, file, m);
+  return m;
 }
 
 void module_free( tm_module* mod ){

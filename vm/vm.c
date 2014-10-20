@@ -62,6 +62,8 @@ void reg_builtins(){
    		{"append", blist_append},
         {"pop", blist_pop},
         {"insert", blist_insert},
+        {"extend", blist_extend},
+        {"index", blist_index},
    		{0,0}
    	};
    	for(i = 0; list_class_fnc_list[i].name != 0 ; i++){
@@ -85,7 +87,7 @@ void frames_init(){
 	int i;
 	for(i = 0; i < FRAMES_COUNT; i++){
 		tm_frame* f = tm->frames + i;
-		f->stacksize = 100;
+		f->stacksize = 200;
 		f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
 		f->ex = tm->none;
 		f->file = tm->none;
@@ -116,6 +118,7 @@ int tm_run(int argc, char* argv[]){
 		gc_init();
 		constants_init();
 		tm->builtins = dict_new();
+        tm->modules = dict_new();
 		frames_init();
 
 		tm_obj p = list_new(argc);
@@ -139,6 +142,8 @@ int tm_run(int argc, char* argv[]){
 			tm_obj mod = module_new(mod_name, str_new("__main__", -1) , code );
 			tm_eval( mod , get_str(code), tm->none);
 			// cprintln(mod);
+            // tm_obj res = _tm_call( "token", "do_tokenize", args_new(1, str_new("print(\"hello,world\"", -1)));
+            // cprintln(res);
 		}else {
 			print_usage();
 		}
