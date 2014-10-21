@@ -8,6 +8,16 @@ def load(path):
         txt = open(path).read()
     return txt
 
+class ConfNode:
+    def __init__(self, ip, addr, desc = None):
+        self.ip = ip
+        self.addr = addr
+        self.desc = desc
+
+    def __str__(self):
+        if self.desc == None: self.desc = 'None'
+        return self.addr + ' : ' + self.ip + ' , ' + self.desc
+
 class HostConf:
     def __init__(self, path):
         self.path = path
@@ -18,105 +28,80 @@ class HostConf:
         lines = content.split('\n')
         self.lines = lines
         self.parse()
+    def enable( self, pos):
+        if pos >= len(self.frozen) or pos < 0:
+            return
+        node = self.frozen[pos]
+        self.active.append(node)
+        del self.frozen[pos]
+    def disable( self, pos):
+        if pos >= len(self.active) or pos < 0:
+            return
+        node = self.active[pos]
+        self.frozen.append(node)
+        del self.active[pos]
     def show(self, type='active'):
         if type == 'active':
-            print("active host configure:")
-            for i,k in enumerate(self.active):
-                print(i,k,self.active[k])
+            print("=======active host configure========")
+            for i,value in enumerate(self.active):
+                print(i,str(value))
+        elif type == 'frozen':
+            print('=======frozen host configure========')
+            for i,value in enumerate( self.frozen):
+                print(i,str( value ))
         else:
             print(self.frozen)
             print(self.active)
+    @staticmethod
+    def parse_line(line):
+        wordlist = []
+        word = ''
+        for c in line:
+            # notice the sequence of the word
+            if c == '#':
+                if len(word) > 0:
+                    wordlist.append(word)
+                wordlist.append(c)
+                word = ''
+            elif c != ' ' and c != '\t':
+                word+=c
+            elif len(word) > 0:
+                wordlist.append(word)
+                word = ''
+        # notice here, remember to handler tails
+        if len(word) > 0:
+            wordlist.append(word)
+        return wordlist
     def parse(self):
-        tokens = []
-        s = ''
-        for c in self.content:
-            if c.isalnum() or c == '.' or c == '-':
-                s+=c
-            elif c == ' ':
-                if s != '' :tokens.append(s)
-                s = ''
+        active = []
+        self.frozen = []
+        for line in self.lines:
+            wordlist = self.parse_line(line)
+            if len(wordlist) < 2:
+                continue
+            ip, addr = wordlist[0], wordlist[1]
+            desc = None
+            # host configure was blocked, it may like:
+            # # {ip} {addr} # {comment}*
+            if ip == '#':
+                ip = wordlist[1]
+                if len(wordlist) >= 5 and wordlist[3] == '#':
+                    addr = wordlist[2]
+                    desc = wordlist[4]
+                elif len( wordlist) >= 3:
+                    addr = wordlist[2]
+                else:
+                    continue
+                self.frozen.append( ConfNode(ip, addr, desc) )
             else:
-                if s != '': tokens.append(s)
-                tokens.append(c)
-                s = ''
-        self.tokens = tokens
-        key, val = None, None
-        comment = ""
-        comments = []
-        active = {}
-        state = -2
-        for t in tokens:
-            if t == '#':
-                comment = ""
-                state = 3
-            elif t == '\n':
-                if state == 2:
-                    active[key] = val
-                elif state == -1:
-                    comments.append(comment)
-                state = 0
-            else:
-                state += 1
-            if state == 1:
-                val = t
-            elif state == 2:
-                key = t
-            elif state > 2:
-                comment+=t
+                if len( wordlist) >= 4 and wordlist[2] == '#':
+                    desc = wordlist[3]
+                active.append( ConfNode(ip, addr, desc ) )
         self.active = active
-def print_effective_lines( lines ):
-    print('\n\neffective configures:')
-    for line in lines:
-        line = line.lstrip('\r\n ')
-        if line.startswith('#'):
-            continue
-        elif len(line) > 0:
-            print(line)
-
-def print_frozen_lines( lines):
-    print('\n\nfrozen configures:')
-    for line in lines:
-        line = line.lstrip()
-        if len(line) > 0 and line.startswith("#"):
-            print(line)
-
-
-def active_cainiaowork( lines ):
-    pass
-
-def frozen_cainiaowork( lines ):
-    pass
-
-def read_content():
-    fname = open('location.ini').read()
-    return load(fname)
-def main():
-    txt = read_content()
-    txt = txt.replace('\r', '')
-    lines = txt.split('\n')
-    x = input('''
-your choice?
-1. effective configures
-2. frozen configures
-3. active cainiaowork localhost
-4. frozen cainiaowork localhost
-5. exit
-''')
-    x = int(x)
-    if x == 1:
-        print_effective_lines(lines)
-    elif x == 2:
-        print_frozen_lines(lines)
-    elif x == 3:
-        active_cainiaowork(lines)
-    elif x == 4:
-        frozen_cainiaowork(lines)
-    elif x == 5:
-        exit(0)
-    input('press enter to quit')
+        
 
 conf = HostConf(open('location.ini').read())
 #print(conf.tokens)
 conf.show('active')
-if __name__ == '__main__':
-    main()
+conf.show('frozen')
+input('hold')

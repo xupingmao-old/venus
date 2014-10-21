@@ -101,6 +101,7 @@ typedef struct tm_frame
 	tm_obj file; // file name
 	tm_obj code; // byte code
 	tm_obj ex; // exception info
+	tm_obj line; // current line
 	int jmp; // catch/except position
 }tm_frame;
 

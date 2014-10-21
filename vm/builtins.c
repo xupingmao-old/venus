@@ -201,3 +201,10 @@ tm_obj tm_range( tm_obj p){
 	}
 	return list;
 }
+
+/* import file */
+tm_obj tm_import( tm_obj p){
+	tm_obj mod = get_arg(p, 0, TM_STR);
+	if(_tm_has( tm->modules, mod) ) return obj_none;
+	return obj_none;
+}

@@ -2,6 +2,7 @@
 
 void constants_init(){
 	tm->none = obj_new(TM_NON, NULL);
+	obj_none = obj_new(TM_NON, NULL);
 	int i;
 	for(i = 0; i < 256; i++){
 		unsigned char s[2] = {i, '\0'};
@@ -35,6 +36,7 @@ void reg_builtins(){
         {"int", tm_int},
         {"float", tm_float},
         {"range", tm_range},
+		{"import", tm_import},
         {0, 0}
     };
     int i;for(i = 0; builtins[i].name != 0; i++){
@@ -91,6 +93,7 @@ void frames_init(){
 		f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
 		f->ex = tm->none;
 		f->file = tm->none;
+		f->line = obj_none;
 		f->jmp = 0;
 		f->maxlocals = 0;
 	}
@@ -142,7 +145,7 @@ int tm_run(int argc, char* argv[]){
 			tm_obj mod = module_new(mod_name, str_new("__main__", -1) , code );
 			tm_eval( mod , get_str(code), tm->none);
 			// cprintln(mod);
-            // tm_obj res = _tm_call( "token", "do_tokenize", args_new(1, str_new("print(\"hello,world\"", -1)));
+            // tm_obj res = _tm_call( "token", "do_tokenize", as_list(1, str_new("print(\"hello,world\"", -1)));
             // cprintln(res);
 		}else {
 			print_usage();
@@ -154,7 +157,7 @@ int tm_run(int argc, char* argv[]){
 		// tm_obj v = obj_new(TM_LST, tm->all);
 		//tm_raise("tm->list = @", v);
 	}else{
-	// 发生了异常，返回捕捉异常的帧
+		/* catch exceptions */
 		int i;
 		int cur = tm->cur;
 		printf("Traceback (most recent call last):\n");
@@ -162,7 +165,7 @@ int tm_run(int argc, char* argv[]){
 		for(i = cur; i >= 0; i-- ){
 			tm_frame* f = tm->frames + i;
 			if( f->jmp == 0 ){
-				tm_printf("  File \"@\": @", f->file, f->ex);
+				tm_printf("  File \"@\": @\n", f->file, f->line);
 			}
 		}
 		tm_printf("Exception: @", tm->frames[tm->cur].ex);

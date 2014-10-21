@@ -21,16 +21,5 @@ tm_obj get_arg(tm_obj params, int pos, int type){
 	return v;
 }
 
-tm_obj args_new( int n, ...){
-	tm_obj params = list_new(n);
-	va_list a; va_start(a,n);
-	int i;
-	for (i=0; i<n; i++) {
-		list_append(get_list(params),va_arg(a,tm_obj));
-	}
-	va_end(a);
-	return params;
-}
-
 
 #endif

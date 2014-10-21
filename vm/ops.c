@@ -247,17 +247,21 @@ tm_obj tm_mod( tm_obj a, tm_obj b){
 }
 
 
-tm_obj tm_has( tm_obj a, tm_obj b ){
+int _tm_has( tm_obj a, tm_obj b ){
 	switch( a.type ){
 		case TM_LST:{
-			return number_new( list_index( get_list(a), b) != -1 );
+			return ( list_index( get_list(a), b) != -1 );
 		}
 		case TM_DCT:{
 			tm_obj v;
-			return number_new( dict_iget(get_dict(a), b, &v) );
+			return ( dict_iget(get_dict(a), b, &v) );
 		}
 	}
-	return obj_false;
+	return 0;
+}
+
+tm_obj tm_has(tm_obj a, tm_obj b){
+	return number_new( _tm_has(a, b));
 }
 
 int tm_bool( tm_obj v){

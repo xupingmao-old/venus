@@ -17,6 +17,18 @@ tm_obj list_new(int cap){
 	return gc_track(v);
 }
 
+/* build list of length n from object list */
+tm_obj as_list(int n, ...){
+	tm_obj list = list_new(n);
+	va_list a; va_start(a,n);
+	int i;
+	for (i=0; i<n; i++) {
+		list_append(get_list(list),va_arg(a,tm_obj));
+	}
+	va_end(a);
+	return list;
+}
+
 
 void list_free(tm_list* list){
 #if DEBUG_GC
