@@ -112,12 +112,12 @@ class ParserCtx:
 		return ' at ' + str(self.token.pos) + ' type = ' + self.token.type
 
 def parse(v):
-	try:
-		r = tokenize(v)
-		p = ParserCtx(r)
-		return do_prog(p)
-	except:
-		print(" at line " + str( p.token.pos ) + " unknown error")
+	# try:
+	r = tokenize(v)
+	p = ParserCtx(r)
+	return do_prog(p)
+	# except:
+		# print(" at line " + str( p.token.pos ) + " unknown error")
 
 # recursive desent
 

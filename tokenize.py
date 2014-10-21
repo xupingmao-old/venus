@@ -1,6 +1,7 @@
 class Token:
     def __init__(self,type='symbol',val=None,pos=(0,0)):
-        self.pos,self.type,self.val=pos,type,val
+        # self.pos,self.type,self.val=pos,type,val
+        self.pos=pos;self.type=type;self.val=val
     def show(self):
         print(self.type +' => ' + str(self.val))
     def __str__(self):
@@ -30,8 +31,10 @@ B_END = [']',')','}']
 
 class TData:
     def __init__(self):
-        self.y,self.yi,self.nl = 1,0,True
-        self.res,self.indent,self.braces = [],[0],0
+        # self.y,self.yi,self.nl = 1,0,True
+        self.y=1;self.yi=0;self.nl=True
+        # self.res,self.indent,self.braces = [],[0],0
+        self.res=[];self.indent=[0];self.braces=0
     def add(self,t,v): 
         if t == 'in':
             last = self.res.pop()
@@ -50,12 +53,14 @@ def clean(s):
 
 def tokenize(s):
     s = clean(s)
+    # return do_tokenize(s)
     try: return do_tokenize(s)
     except: u_error('tokenize',s,T.f)
 
 def do_tokenize(s):
     global T
-    T,i,l = TData(),0,len(s)
+    # T,i,l = TData(),0,len(s)
+    T = TData(); i = 0; l = len(s)
     T.f = (T.y,i-T.yi+1)
     while i < l:
         c = s[i]; T.f = (T.y,i-T.yi+1)
@@ -70,7 +75,7 @@ def do_tokenize(s):
         elif c=='"' or c=="'": i = do_string(s,i,l)
         elif c=='#': i = do_comment(s,i,l)
         elif c == '\\' and s[i+1] == '\n':
-            i += 2; T.y,T.yi = T.y+1,i
+            i += 2; T.y+=1; T.yi = i
         elif c == ' ' or c == '\t': i += 1
         else: u_error('tokenize',s,T.f)
     indent(0)
@@ -80,8 +85,10 @@ def do_tokenize(s):
 def do_nl(s,i,l):
     if not T.braces:
         T.add('nl','nl')
-    i,T.nl = i+1,True
-    T.y,T.yi = T.y+1,i
+    # i,T.nl = i+1,True
+    i+=1; T.nl=True
+    # T.y,T.yi = T.y+1,i
+    T.y+=1; T.yi=i
     return i
 
 def do_indent(s,i,l):
@@ -89,7 +96,8 @@ def do_indent(s,i,l):
     while i<l:
         c = s[i]
         if c != ' ' and c != '\t': break
-        i,v = i+1,v+1
+        # i,v = i+1,v+1
+        i+=1;v+=1
     if c != '\n' and c != '#' and not T.braces: indent(v)
     return i
 
@@ -107,12 +115,14 @@ def indent(v):
 
 def do_symbol(s,i,l):
     symbols = []
-    v,f,i = s[i],i,i+1
+    # v,f,i = s[i],i,i+1
+    v=s[i];f=i;i+=1
     if v in SYMBOLS: symbols.append(v)
     while i<l:
         c = s[i]
         if not c in ISYMBOLS: break
-        v,i = v+c,i+1
+        # v,i = v+c,i+1
+        v+=c;i+=1
         if v in SYMBOLS: symbols.append(v)
     v = symbols.pop(); n = len(v); i = f+n
     T.add(v,v)
@@ -121,32 +131,36 @@ def do_symbol(s,i,l):
     return i
 
 def do_number(s,i,l):
-    v,i,c =s[i],i+1,s[i]
+    # v,i,c =s[i],i+1,s[i]
+    v=s[i];i+=1;c=s[i]
     while i<l:
         c = s[i]
         if (c < '0' or c > '9') and (c < 'a' or c > 'f') and c != 'x': break
-        v,i = v+c,i+1
+        # v,i = v+c,i+1
+        v+=c;i+=1
     if c == '.':
-        v,i = v+c,i+1
+        # v,i = v+c,i+1
+        v+=c;i+=1
         while i<l:
             c = s[i]
             if c < '0' or c > '9': break
-            v,i = v+c,i+1
+            # v,i = v+c,i+1
+            v+=c;i+=1
     T.add('number',v)
     return i
 
 def do_name(s,i,l):
-    v,i =s[i],i+1
+    v=s[i];i+=1
     while i<l:
         c = s[i]
         if (c < 'a' or c > 'z') and (c < 'A' or c > 'Z') and (c < '0' or c > '9') and c != '_': break
-        v,i = v+c,i+1
+        v+=c; i+=1
     if v in SYMBOLS: T.add(v,v)
     else: T.add('name',v)
     return i
 
 def do_string(s,i,l):
-    v,q,i = '',s[i],i+1
+    v = ''; q=s[i]; i+=1
     if (l-i) >= 5 and s[i] == q and s[i+1] == q: # """
         i += 2
         while i<l-2:
@@ -156,8 +170,8 @@ def do_string(s,i,l):
                 T.add('string',v)
                 break
             else:
-                v,i = v+c,i+1
-                if c == '\n': T.y,T.yi = T.y+1,i
+                v+=c; i+=1
+                if c == '\n': T.y += 1;T.x = i
     else:
         while i<l:
             c = s[i]
@@ -167,13 +181,13 @@ def do_string(s,i,l):
                 if c == "r": c = chr(13)
                 if c == "t": c = "\t"
                 if c == "0": c = "\0"
-                v,i = v+c,i+1
+                v+=c;i+=1
             elif c == q:
                 i += 1
                 T.add('string',v)
                 break
             else:
-                v,i = v+c,i+1
+                v+=c;i+=1
     return i
 
 def do_comment(s,i,l):
