@@ -4,21 +4,36 @@
 
 
 
+void print_tags(tm_module *mod){
+  int i;
+  for(i = 0; i < mod->tagsize; i++){
+    printf("TAG %d : %d\n", i, mod->tags[i]);
+  }
+}
+
 /**
    store tag  index and value to module
 **/
-void store_tag( tm_module* mod, int idx, char* pos){
-  if( mod->tags == NULL || idx > mod->tagsize ){
-    tm_raise("code_check: invalid code, error with TAG value");
-  }else if( idx >= mod->tagsize ){
+void store_tag( tm_module* mod, int idx, unsigned char* pos){
+  if( mod->tags == NULL ){
     tm_raise("code_check: invalid code, miss TAGSIZE information");
+  }else if( idx >= mod->tagsize ){
+    tm_raise("code_check: invalid code, error with TAG value");
   }
+  // printf("tags:%d -> %s\n", idx, pos);
   mod->tags[idx] = pos;
 }
 
+unsigned char** init_tags(int size){
+  unsigned char** tags = tm_alloc(size * sizeof(unsigned char*));
+  int i = 0;for(i = 0; i < size; i++){
+    tags[i] = NULL;
+  }
+  return tags;
+}
 
 /** check code, compute stacksize, tags **/
-int code_check(tm_obj _mod,  char*s , int isFuncDef){
+int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
     int len = 0;
     int idx;
     int stacksize = 100;
@@ -40,7 +55,7 @@ int code_check(tm_obj _mod,  char*s , int isFuncDef){
         case ADD:case SUB:case MUL:case DIV:case MOD:
         case LOAD_PARAMS:
         case GT:case LT:case GTEQ:case LTEQ:case EQEQ:case NOTEQ:
-        case GET:case SET:case IN:
+        case GET:case SET:case IN:case NOTIN:
         case POP:
         case RETURN:
         case TM_DEF:
@@ -74,7 +89,9 @@ int code_check(tm_obj _mod,  char*s , int isFuncDef){
             break;
         case TAGSIZE:
             mod->tagsize = next_short(s);
-            mod->tags = tm_alloc( mod->tagsize * sizeof( char* ));
+            // printf("tagsize=%d\n", mod->tagsize);
+            mod->tags = init_tags(mod->tagsize);
+            len+=3;
             break;
         case TAG:
           idx = next_short(s);
@@ -85,6 +102,7 @@ int code_check(tm_obj _mod,  char*s , int isFuncDef){
           len++;
           if( isFuncDef )
             goto ret;
+          break;
         case TM_EOP:
             len++;
             mod->checked = 1;

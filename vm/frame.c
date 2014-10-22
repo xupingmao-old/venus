@@ -116,6 +116,7 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
   // get constants from function object.
   tm_frame* f = tm->frames + tm->cur;
   f->file = get_mod(mod)->file;
+  f->globals = globals;
   register tm_obj* locals = f->locals;
   register tm_obj* top = f->stack;
 
@@ -130,7 +131,8 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
     code_check( mod, s, 0);
   }
 
-  char** tags = get_mod(mod)->tags;
+
+  unsigned char** tags = get_mod(mod)->tags;
  start:
   ins = next_byte(s);
   switch( ins ) {
@@ -140,7 +142,7 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
     read_number( d, s);
     v = tm_number(d);
     constants = push_constant( mod , v);
-#if PRINT_INS
+#if PRINT_INS_CONST
     printf("NEW_NUMBER %g\n", d);
 #endif
     goto start;
@@ -151,7 +153,7 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
     v = str_new( s, len);
     s+=len;
     constants = push_constant( mod, v);
-#if PRINT_INS
+#if PRINT_INS_CONST
     // tm_printf("NEW_STRING \"@\"\n", v);
     printf("NEW_STRING [%d] ", len);
     puts(get_str(v));
@@ -187,18 +189,29 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
 
   case LOAD_GLOBAL: {
     i = next_short(s);
+#if PRINT_INS
+    // tm_printf("LOAD_GLOBAL [@] @\n", number_new(i), constants[i]);
+#endif
+    // cprintln( get_mod(mod)->constants);
     k = constants[ i ];
+    // puts("step1");
     if( dict_iget( get_dict(tm->builtins), k, &v)){
       // already in v;
+      // puts("step2");
     }else{
+      // cprintln(globals);
+      // cprintln(k);
+      // puts("step3");
       // cprintln(globals);
       // cprintln(k);
       v = tm_get(globals, k);
       // cprintln(v);
+      // puts("step4");
     }
+    // puts("step5");
     TM_PUSH( v );
 #if PRINT_INS
-    tm_printf("LOAD_GLOBAL [@] @ = @ \n", number_new(i), k, v);
+    tm_printf("LOAD_GLOBAL [@] @  \n", number_new(i), k);
 #endif
     goto start;
   }
@@ -241,6 +254,7 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
   TM_OP( DIV, "DIV", tm_div);
   TM_OP( MOD, "MOD", tm_mod);
   TM_OP( GET, "GET", tm_get);
+  TM_OP( EQEQ, "EQEQ", t_tm_equals);
   
   case SET:
     k = TM_POP();
@@ -265,10 +279,19 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
     puts("IN");
 #endif
     v = TM_POP();
-    x = TM_POP();
-    TM_PUSH( tm_has(x, v));
+    k = TM_POP();
+    TM_PUSH( tm_has(x, k));
     goto start;
   }
+
+  case NOTIN:
+#if PRINT_INS
+  puts("NOTIN");
+#endif
+  x = TM_POP();
+  k = TM_POP();
+  TM_PUSH( _tm_not( tm_has(x, k) ) );
+  goto start;
     
   case CALL: {
     i = next_byte( s );
@@ -284,7 +307,7 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
   }break;
 
   case LOAD_PARAMS:{
-#if PRINT_INS
+#if PRINT_INS_CONST
     tm_printf("LOAD_PARAMS @\n", params);
 #endif
     int len = list_len(params);
@@ -363,8 +386,10 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
   }
 
   case POP_JUMP_ON_FALSE:{
+    // print_tags(get_mod(mod));
     i = next_short(s);
 #if PRINT_INS
+    // cprintln(TM_TOP());
     printf("POP_JUMP_ON_FALSE %d\n", i);
 #endif
     if( !tm_bool( TM_POP() )){

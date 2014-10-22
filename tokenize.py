@@ -1,3 +1,6 @@
+if "tm" not in globals():
+    from boot import *
+
 class Token:
     def __init__(self,type='symbol',val=None,pos=(0,0)):
         # self.pos,self.type,self.val=pos,type,val
@@ -198,4 +201,9 @@ def do_comment(s,i,l):
         i += 1
     return i
 
+if __name__ == "__main__":
+    v = load("tokenize.py")
+    r = tokenize(v)
+    for tk in r:
+        print(tk.type, tk.pos, tk.val)
 

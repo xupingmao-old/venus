@@ -37,11 +37,13 @@ void reg_builtins(){
         {"float", tm_float},
         {"range", tm_range},
 		{"import", tm_import},
+        {"globals", tm_globals},
         {0, 0}
     };
     int i;for(i = 0; builtins[i].name != 0; i++){
         reg_builtin(builtins[i].name, func_new(obj_none, tm->none, tm->none, builtins[i].func));
     };
+    tm_set( tm->builtins, str_new("tm", -1), number_new(1));
 
     /* build str class */
     str_class = dict_new();
@@ -94,6 +96,7 @@ void frames_init(){
 		f->ex = tm->none;
 		f->file = tm->none;
 		f->line = obj_none;
+        f->globals = obj_none;
 		f->jmp = 0;
 		f->maxlocals = 0;
 	}
@@ -143,6 +146,9 @@ int tm_run(int argc, char* argv[]){
 			tm_obj mod_name = str_new(fname, strlen(fname));
 			tm->frames[tm->cur].file = mod_name;
 			tm_obj mod = module_new(mod_name, str_new("__main__", -1) , code );
+
+            tm_set( get_mod(mod)->globals, str_new("__name__", -1), str_new("__main__", -1));
+            tm_set( get_mod(mod)->globals, str_new("tm", -1), number_new(1));
 			tm_eval( mod , get_str(code), tm->none);
 			// cprintln(mod);
             // tm_obj res = _tm_call( "token", "do_tokenize", as_list(1, str_new("print(\"hello,world\"", -1)));

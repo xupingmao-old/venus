@@ -4,7 +4,8 @@
 #define tm_h
 
 #define DEBUG_GC 0
-#define PRINT_INS 0
+#define PRINT_INS 1
+#define PRINT_INS_CONST 0
 
 #include <stdio.h>
 #include <string.h>
@@ -57,7 +58,7 @@ typedef struct tm_obj
 typedef struct tm_module
 {
 	int marked;
-	char** tags;
+	unsigned char** tags;
 	int tagsize;
 	int checked;
 	tm_obj globals;

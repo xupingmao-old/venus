@@ -32,13 +32,13 @@ tm_obj _tm_str(  tm_obj a){
 		return str_new(s, strlen(s));
 	}
 	case TM_LST:
-		return str_new("<list>", 0);
+		return str_new("<list>", -1);
 	case TM_DCT:
-		return str_new("<dict>", 0);
+		return str_new("<dict>", -1);
 	case TM_FNC:
-		return str_new("<function>", 0);
+		return str_new("<function>", -1);
 	case TM_MOD:
-		return str_new("<module>", 0);
+		return str_new("<module>", -1);
 	}
 	return str_new("",0);
 }
@@ -130,11 +130,10 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 			}
 		}
 		case TM_DCT:
-			if( dict_iget(self.value.dict, k, &v)){
+			if( dict_iget( get_dict(self), k, &v)){
 				return v;
-			}else {
-				tm_obj fnc = tm_get(dict_class, k);
-				return method_new( fnc, self);
+			}else if(dict_iget(get_dict(dict_class), k, &v)){
+				return method_new( v, self);
 			}
 			break;
 		case TM_FNC:
@@ -142,7 +141,7 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 				return get_func( self )->code;
 			}
 	}
-	tm_raise("tm_get: keyError @, target = @ ", k, self );
+	tm_raise("tm_get: keyError @, self = @ ", k, self );
 	return tm->none;
 }
 
@@ -221,6 +220,10 @@ int tm_eq(tm_obj a, tm_obj b){
 	return 0;
 }
 
+tm_obj t_tm_equals(tm_obj a, tm_obj b){
+	return number_new( tm_eq(a,b));
+}
+
 
 tm_obj tm_mul( tm_obj a, tm_obj b){
 	if( a.type == b.type && a.type == TM_NUM){
@@ -262,6 +265,20 @@ int _tm_has( tm_obj a, tm_obj b ){
 
 tm_obj tm_has(tm_obj a, tm_obj b){
 	return number_new( _tm_has(a, b));
+}
+
+tm_obj _tm_not( tm_obj o){
+	switch( o.type ){
+		case TM_NUM:
+			if( get_num(o) ) return obj_false;
+			return obj_true;
+		case TM_STR:
+			if( get_str_len(o) > 0) return obj_false;
+			return obj_true;
+		case TM_NON:
+			return obj_true;
+	}
+	return obj_false;
 }
 
 int tm_bool( tm_obj v){

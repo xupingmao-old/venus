@@ -208,3 +208,9 @@ tm_obj tm_import( tm_obj p){
 	if(_tm_has( tm->modules, mod) ) return obj_none;
 	return obj_none;
 }
+
+
+/* get globals */
+tm_obj tm_globals(tm_obj p){
+	return tm->frames[tm->cur].globals;
+}
