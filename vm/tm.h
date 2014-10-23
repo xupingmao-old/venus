@@ -156,6 +156,7 @@ tm_obj dict_class;
 tm_obj obj_true;
 tm_obj obj_false;
 tm_obj obj_none;
+tm_obj obj__init__;
 
 #include "constants.h"
 #include "object.h"

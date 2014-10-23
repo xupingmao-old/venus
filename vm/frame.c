@@ -26,11 +26,24 @@ tm_obj* push_constant(tm_obj mod, tm_obj v){
   return get_list(cs)->nodes;
 }
 
-tm_obj _tm_call( char* mod, char* fnc_name, tm_obj p){
-	tm_obj m = tm_get(tm->modules, str_new(mod, -1));
-  cprintln(m);
-	tm_obj fnc = tm_get(get_mod(m)->globals, str_new(fnc_name, -1));
-	return tm_eval( m, get_func(fnc)->pc, p);
+tm_obj _tm_call( tm_obj fnc, tm_obj params){
+	if( fnc.type == TM_FNC){
+    if( get_func(fnc)->self.type != TM_NON) {
+      list_insert( get_list(params), 0, get_func(fnc)->self);
+    }
+    if( get_func(fnc)->native_func != NULL ){
+      return get_func(fnc)->native_func(params);
+    }
+    return tm_eval(fnc, params);
+  }else if( fnc.type == TM_DCT){
+    fnc = class_new(fnc);
+    if( _tm_has(fnc, obj__init__)){
+      tm_obj f = tm_get(fnc, obj__init__);
+      list_insert( get_list(params), 0, fnc);
+      tm_eval(f , params);
+    }
+    return fnc;
+  }
 }
 
 tm_obj* get_constants(tm_obj mod){
@@ -107,13 +120,14 @@ tm_obj tm_def(tm_obj mod, char* s){
   top = f->stack;                   \
   locals = f->locals;
 
-
-tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
+tm_obj tm_eval( tm_obj fnc, tm_obj params ){
+  tm_obj mod = get_func(fnc)->mod;
   tm_obj globals = get_mod(mod)->globals;
   tm_obj code = get_mod(mod)->code;
-  unsigned char* s = scode;
+  unsigned char* s = get_func(fnc)->pc;
   // constants will be built in modules.
   // get constants from function object.
+  tm->cur++;
   tm_frame* f = tm->frames + tm->cur;
   f->file = get_mod(mod)->file;
   f->globals = globals;
@@ -255,6 +269,7 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
   TM_OP( MOD, "MOD", tm_mod);
   TM_OP( GET, "GET", tm_get);
   TM_OP( EQEQ, "EQEQ", t_tm_equals);
+  TM_OP( LT, "LT", tm_lt);
   
   case SET:
     k = TM_POP();
@@ -300,9 +315,7 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
 #endif
     LOAD_LIST(params, i);
     func = TM_POP();
-    goto call_func;
-    func_ret:
-    TM_PUSH(ret);
+    TM_PUSH( _tm_call(func, params));
     goto start;
   }break;
 
@@ -353,8 +366,7 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
     puts("RETURN");
 #endif
     ret = TM_POP();
-    restore_frame();
-    goto func_ret;
+    goto end;
   }
 
   case TAG:{
@@ -410,15 +422,17 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
 #if PRINT_INS
     puts("TM_EOF");
 #endif
-    restore_frame();
-    ret = tm->none;
-    goto func_ret;
+    // restore_frame();
+    ret = obj_none;
+    goto end;
   }
 
   case TM_EOP:{
 #if PRINT_INS
     puts("TM_EOP");
 #endif
+    // restore_frame();
+    ret = obj_none;
     goto end;
   }
 
@@ -428,11 +442,13 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
 }
   // cprintln(mod);
 
- call_func:
+/* call_func:
 
-  /* instance a class */
   if( func.type == TM_DCT ){
     ret = class_new( func );
+    if( _tm_has(ret, str_new("__init__", -1)) ){
+
+    }
     goto func_ret;
   }
   if( get_func(func)->self.type != TM_NON){
@@ -448,9 +464,9 @@ tm_obj tm_eval( tm_obj mod, instruction* scode, tm_obj params ){
   // new frame
   new_frame();
   s = get_func(func)->pc;
-  goto start;
+  goto start;*/
 
   end:
-
+  tm->cur--;
   return ret;
 }

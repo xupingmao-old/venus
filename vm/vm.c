@@ -22,6 +22,7 @@ void reg_builtins(){
 	obj_true = number_new(1);
 	obj_false = number_new(0);
 	obj_none.type = TM_NON;
+    obj__init__ = str_new("__init__", -1);
 	
 
     struct __builtin {
@@ -38,12 +39,15 @@ void reg_builtins(){
         {"range", tm_range},
 		{"import", tm_import},
         {"globals", tm_globals},
+        {"len", tm_len},
         {0, 0}
     };
     int i;for(i = 0; builtins[i].name != 0; i++){
         reg_builtin(builtins[i].name, func_new(obj_none, tm->none, tm->none, builtins[i].func));
     };
     tm_set( tm->builtins, str_new("tm", -1), number_new(1));
+    tm_set( tm->builtins, str_new("True", -1), number_new(1));
+    tm_set( tm->builtins, str_new("False",-1), number_new(0));
 
     /* build str class */
     str_class = dict_new();
@@ -149,7 +153,10 @@ int tm_run(int argc, char* argv[]){
 
             tm_set( get_mod(mod)->globals, str_new("__name__", -1), str_new("__main__", -1));
             tm_set( get_mod(mod)->globals, str_new("tm", -1), number_new(1));
-			tm_eval( mod , get_str(code), tm->none);
+            tm_obj fnc = func_new(mod, code, tm->none, NULL);
+            get_func(fnc)->pc = get_str(code);
+            tm->cur--; // to use the first frame;
+			tm_eval( fnc , tm->none);
 			// cprintln(mod);
             // tm_obj res = _tm_call( "token", "do_tokenize", as_list(1, str_new("print(\"hello,world\"", -1)));
             // cprintln(res);

@@ -141,6 +141,7 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 				return get_func( self )->code;
 			}
 	}
+	cprintln(self);
 	tm_raise("tm_get: keyError @, self = @ ", k, self );
 	return tm->none;
 }
@@ -222,6 +223,12 @@ int tm_eq(tm_obj a, tm_obj b){
 
 tm_obj t_tm_equals(tm_obj a, tm_obj b){
 	return number_new( tm_eq(a,b));
+}
+
+tm_obj tm_lt( tm_obj a, tm_obj b){
+	if( a.type != b.type || a.type != TM_NUM)
+		tm_raise("tm_lt: can not compare @ and @", a, b);
+	return number_new( get_num(a) < get_num(b) );
 }
 
 

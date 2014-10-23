@@ -1,6 +1,6 @@
 #include "tm.h"
 
-void _tm_print(tm_obj o, int depth){
+void _tm_print(tm_obj o, int depth, int show_special){
 	depth--;
 	if( depth < 0 )
 		return;
@@ -9,14 +9,20 @@ void _tm_print(tm_obj o, int depth){
 		{
 			int i;int len = str_len(o);
 			char *s = get_str(o);
-			for(i = 0; i < len; i++){
-				if(s[i] == '\0'){
-					putchar('\\');
-					putchar('0');
-				}else{
-					putchar(s[i]);
+			if(show_special)
+				for(i = 0; i < len; i++){
+					if(s[i] == '\0'){
+						printf("\\0");
+					}else if( s[i] == '\r'){
+						printf("\\r");
+					}else if( s[i] == '\n'){
+						printf("\\n");
+					}else{
+						putchar(s[i]);
+					}
 				}
-			}
+			else
+				printf("%s", s);
 		}
 		break;
 	case TM_NUM:
@@ -28,7 +34,7 @@ void _tm_print(tm_obj o, int depth){
 		tm_list* list = get_list(o);
 		printf("[");
 		for(i = 0; i < list->len; i++){
-			_tm_print(list->nodes[i], depth);
+			_tm_print(list->nodes[i], depth, show_special);
 			if( i+1 != list->len){
 				putchar(',');
 			}
@@ -44,9 +50,9 @@ void _tm_print(tm_obj o, int depth){
 		int len = dict->len;
 		putchar('{');
 		for(i = 0; dict_inext(dict, &k, &v); i++){
-			_tm_print(k, depth);
+			_tm_print(k, depth, show_special);
 			putchar(':');
-			_tm_print(v, depth);
+			_tm_print(v, depth, show_special);
 			if( i != len -1 ) putchar(',');
 		}
 		putchar('}');
@@ -69,7 +75,12 @@ void _tm_print(tm_obj o, int depth){
 }
 
 void cprint(tm_obj o){
-	_tm_print(o, 4);
+	_tm_print(o, 4, 0);
+}
+
+void cprintln_show_special(tm_obj o){
+	_tm_print(o, 4, 1);
+	puts("");
 }
 
 void cprintln(tm_obj o){

@@ -5,6 +5,7 @@
 
 void cprint(tm_obj v);
 void cprintln(tm_obj v);
+void cprintln_show_special(tm_obj o);
 tm_obj tm_print( tm_obj params);
 tm_obj _tm_format(char* fmt, va_list ap);
 tm_obj tm_format(char*fmt, ...);

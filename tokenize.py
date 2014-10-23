@@ -57,8 +57,9 @@ def clean(s):
 def tokenize(s):
     s = clean(s)
     # return do_tokenize(s)
-    try: return do_tokenize(s)
-    except: u_error('tokenize',s,T.f)
+    # try: return do_tokenize(s)
+    # except: u_error('tokenize',s,T.f)
+    return do_tokenize(s)
 
 def do_tokenize(s):
     global T

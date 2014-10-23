@@ -41,7 +41,7 @@ int _str_find( tm_str* s1, tm_str* s2, int start){
 	char* p = strstr( ss1 + start, ss2);
 	if( p == NULL ) return -1;
 	// printf("%d[%s -> %s]\n",start,ss1 + start, p );
-	return p - ss1 + start;
+	return p - ss1;
 }
 
 
@@ -131,15 +131,37 @@ tm_obj str_replace(tm_obj params){
 	tm_obj nstr = str_new("", 0);
 	int pos = _str_find( self.value.str, src.value.str, 0);
 	int lastpos = 0;
-	while (pos != -1){
-		nstr = tm_add(nstr, _str_substring(self.value.str, lastpos, pos - 1));
+	// puts("step0");
+	// cprintln_show_special(src);
+	// cprintln_show_special(des);
+	while (pos != -1 && pos < get_str_len(self)){
+		// printf("%d\n",pos );
+		if( pos != 0)
+			nstr = tm_add(nstr, _str_substring(self.value.str, lastpos, pos - 1));
 		nstr = tm_add(nstr, des);
 		// Sleep(1000);
 		lastpos = pos + get_str_len(src);
 		pos = _str_find( self.value.str, src.value.str, lastpos);
 		// printf("lastpos = %d\n", lastpos);
 	}
+	// puts("step1");
 	nstr = tm_add( nstr, _str_substring(self.value.str, lastpos, -1 ));
+	// puts("step2");
+	// cprintln_show_special(self);
+	// cprintln_show_special(nstr);
 	// cprintln(nstr);
 	return nstr;
 }
+
+
+/*void find_test(char*self, char* src, int p){
+	tm_str s0, s1;
+	s0.value = self;s1.value = src;
+	printf("%s.find(%s) = %d \n", self, src, _str_find(&s0, &s1, p));
+}
+
+int main(){
+	find_test("wwhello", "he", 0);
+	find_test("wwhello", "he", 2);
+	return 0;
+}*/
