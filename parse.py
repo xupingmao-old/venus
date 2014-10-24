@@ -53,8 +53,7 @@ class ParserCtx:
 	def addOp(self,v):
 		r = self.tree.pop()
 		l = self.tree.pop()
-		node = AstNode()
-		node.type = v
+		node = AstNode(v)
 		node.a = l
 		node.b = r
 		self.tree.append( node )
@@ -121,23 +120,23 @@ def parse(v):
 
 # recursive desent
 
-def factor(p):
-	if p.token.type in ['+', '-', 'not']:
-		t = p.token.type
-		p.next()
-		if t == '+':
-			t='pos'
-		elif t == '-':
-			t='neg'
-		factor(p)
-		node = AstNode()
-		node.type = t
-		node.val = p.pop()
-		p.add(node)
-	else:
-		factor_(p)
+#def factor(p):
+#	if p.token.type in ['+', '-', 'not']:
+#		t = p.token.type
+#		p.next()
+#		if t == '+':
+#			t='pos'
+#		elif t == '-':
+#			t='neg'
+#		factor(p)
+#		node = AstNode()
+#		node.type = t
+#		node.val = p.pop()
+#		p.add(node)
+#	else:
+#		factor_(p)
 
-def factor_(p):
+def factor(p):
 	t = p.token.type
 	token = p.token
 	if t in ('number', 'string', 'name', 'None'):
@@ -215,7 +214,6 @@ class MyExpr:
 			t = p.token.type
 			# print(p.token.pos)
 			p.next()
-			expr(p)
 			self.fnc(p)
 			p.addOp(t)
 
@@ -270,12 +268,39 @@ class Temp:
 					p.expect(')')
 					node.args = p.pop()
 					p.add( node )
+            # handler dot (.)
 			else:
 				self.fnc(p)
-				p.addOp( 'get' )
-
+				b = p.pop()
+				b.type = 'string'
+				a = p.pop()
+				node = AstNode('get')
+				node.a = a
+				node.b = b
+				p.add(node)
+class PreExpr:
+	def __init__(self, fnc, range):
+		self.fnc = fnc
+		self.range = range
+	def run(self, p):
+		if p.token.type in self.range:
+			node = p.token
+			# print(p.token.pos)
+			p.next()
+			self.run(p)
+			if p.token.type == '+':
+				node = AstNode("pos")
+			elif p.token.type == '-':
+				node = AstNode("neg")
+			else:
+				node = AstNode(".")
+			node = p.pop()
+			p.add(node)
+		else:
+			self.fnc(p)
 dot_expr = Temp(factor, ['.', '[', '('])
-item2 = MyExpr(dot_expr.run, ['*', '/', '%'])
+pre_expr = PreExpr(dot_expr.run, ['not', '+', '-']);
+item2 = MyExpr(pre_expr.run, ['*', '/', '%'])
 item = MyExpr(item2.run, ['+', '-'])
 in_expr = MyExpr(item.run, ['in', 'notin'] )
 compare = MyExpr(in_expr.run,  ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
@@ -372,8 +397,7 @@ def do_stm(p):
 		#stm_next_if(p)
 	elif t in ("break", "continue", "pass"):
 		p.next()
-		node = AstNode()
-		node.type = "pass"
+		node = AstNode(t)
 		p.add( node )
 	elif t == 'name':
 		expr(p)
@@ -382,12 +406,11 @@ def do_stm(p):
 		do_try(p)
 	elif t == 'global':
 		p.next()
-		node = AstNode()
-		node.type = 'global'
+		node = AstNode('global')
 		makesure (p.token.type == 'name', p.error())
-		p.next()
-		node.val = p.token.val
+		node.val = p.token
 		p.add( node )
+		p.next()
 	else:
 		raise Exception('unknown expression'+ p.error())
 	skip_nl(p)

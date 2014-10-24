@@ -160,7 +160,7 @@ tm_obj tm_add(  tm_obj a, tm_obj b){
 	if( a.type == b.type ){
 		switch( a.type ){
 			case TM_NUM:
-				a.value.dv += b.value.dv;
+				get_num(a) += get_num(b);
 				return a;
 			case TM_STR:
 			{
@@ -187,7 +187,7 @@ tm_obj tm_add(  tm_obj a, tm_obj b){
 			}
 		}
 	}
-	tm_raise("tm_add: can not add @ and @", a, b);
+	tm_raise("tm_add: can not add @:@ and @:@", _tm_type(a), a, _tm_type(b), b);
 	return tm->none;
 }
 
@@ -223,6 +223,10 @@ int tm_eq(tm_obj a, tm_obj b){
 
 tm_obj t_tm_equals(tm_obj a, tm_obj b){
 	return number_new( tm_eq(a,b));
+}
+
+tm_obj tm_not_equals( tm_obj a, tm_obj b){
+	return number_new(!tm_eq(a,b));
 }
 
 tm_obj tm_lt( tm_obj a, tm_obj b){
@@ -288,7 +292,7 @@ tm_obj _tm_not( tm_obj o){
 	return obj_false;
 }
 
-int tm_bool( tm_obj v){
+int _tm_bool( tm_obj v){
 	switch( v.type ){
 		case TM_NUM:return get_num(v) != 0;
 		case TM_STR:return get_str_len(v) > 0;

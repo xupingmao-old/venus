@@ -29,6 +29,15 @@ tm_obj as_list(int n, ...){
 	return list;
 }
 
+/* build list from tm_obj arrays */
+tm_obj build_list( int n, tm_obj* items){
+	tm_obj obj = list_new(n);
+	int i;for(i = 0; i < n; i++){
+		list_append( get_list(obj), items[i]);
+	}
+	return obj;
+}
+
 
 void list_free(tm_list* list){
 #if DEBUG_GC

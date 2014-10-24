@@ -1,4 +1,4 @@
-if 'tinytm' not in globals():
+if 'tm' not in globals():
     from boot import *
 
 from tokenize import Token
@@ -109,10 +109,10 @@ class Constants:
 	def __init__(self):
 		self.values = [None]
 	def add( self, v):
-		if v.type == 'number':
-			v.val = float(v.val)
-		elif v.type == 'None':
-			pass
+#		if v.type == 'number':
+#			v.val = float(v.val)
+#		elif v.type == 'None':
+#			pass
 		if v.val not in self.values:
 			self.values.append( v.val)
 	def load( self, v):
@@ -131,15 +131,14 @@ class Constants:
 class Scope:
 	def __init__(self):
 		self.locals = []
-		self.g = []
+		self.globals = []
 	def def_global(self, v):
-		if v not in self.cg:
-			self.g.append(v)
+		if v not in self.globals:
+			self.globals.append(v)
 class Names:
 	def __init__(self):
 		self.scope = Scope()
-		self.scopes = []
-		self.scopes.append( self.scope )
+		self.scopes = [self.scope]
 	def open(self):
 		self.scope = Scope()
 		self.scopes.append( self.scope )
@@ -153,18 +152,30 @@ class Names:
 	def get_local(self, lc):
 		return self.scope.locals.index(lc.val)
 	def load(self, v):
+		# same as store, check scope level first
 		if len( self.scopes ) == 1:
 			idx = constants.index(v)
 			emit(LOAD_GLOBAL, idx)
+		# check locals
 		elif v.val not in self.scope.locals:
 			idx = constants.index(v)
 			emit(LOAD_GLOBAL, idx)
 		else:
 			idx = self.scope.locals.index(v.val)
 			emit(LOAD_LOCAL, idx)
+	def indexlocal(self, v):
+		if v.val not in self.scope.locals:
+			self.scope.locals.append(v.val)
+		return self.scope.locals.index(v.val)
 	def store(self, v):
-		if v.val in self.scope.locals:
-			idx = self.scope.locals.index(v.val)
+		# first ,check scope level
+		if len(self.scopes) == 1:
+			idx = constants.index(v)
+			emit(STORE_GLOBAL, idx)
+		# check if in globals defined in the function, 
+		# or store as local
+		elif v.val not in self.scope.globals:
+			idx = self.indexlocal(v)
 			emit(STORE_LOCAL, idx)
 		else:
 			idx = constants.index(v)
@@ -174,6 +185,8 @@ constants = Constants()
 names = Names()
 bin = "" # binary code
 out = []
+def def_global( v ):
+	names.scope.globals.append(v.val)
 # opcode : op
 mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF, 
         LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,IN, NOTIN,
@@ -283,9 +296,6 @@ def close_scope():
 def emit_store( v ):
 	names.store(v)
 
-
-def def_global( v ):
-	constants.add(v)
 
 def print_constants():
 	for i,k in enumerate(constants.values):

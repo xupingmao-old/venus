@@ -33,6 +33,7 @@ void reg_builtins(){
         {"load", tm_load},
         {"save", tm_save},
         {"print", tm_print},
+        {"input", tm_input},
         {"str", btm_str},
         {"int", tm_int},
         {"float", tm_float},
@@ -142,8 +143,12 @@ int tm_run(int argc, char* argv[]){
 		reg_builtin("argv", p);
 		// cprintln(tm_add(str_new("fdsaf",-1), str_new("fdsaf",-1)));
 		// tm_printf("hello, @", str_new("34234@", -1));
-		if( argc == 2){
+		if( argc >= 2){
 			char* fname = argv[1];
+			if( strcmp(argv[1], "-d") == 0){
+				enable_debug = 1;
+				fname = argv[2];
+			}
 			tm_obj code = _load(fname);
 			// printf("load file %s\n", fname);
 			// cprintln(code);

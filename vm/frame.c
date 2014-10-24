@@ -149,6 +149,23 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   unsigned char** tags = get_mod(mod)->tags;
  start:
   ins = next_byte(s);
+
+if( enable_debug ){
+  char c = getch();
+  if(c == 'd'){
+    cprintln( f->globals);
+    tm_printf("x = @\n", x);
+    tm_printf("v = @\n", v);
+    tm_printf("k = @\n", k);
+  }else if ( c == 'l'){
+    tm_obj temp = build_list( 10, locals);
+    cprintln( temp );
+  }else if (c == 'g'){
+    cprintln( f->globals );
+  }else if (c == 'q'){
+    tm_raise("quit");
+  }
+}
   switch( ins ) {
 
   case NEW_NUMBER: {
@@ -179,7 +196,8 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     i = next_short( s );
     TM_PUSH( constants[ i ] );
 #if PRINT_INS 
-    tm_printf("LOAD_CONSTANT [@] @\n",number_new(i), constants[i]);
+    tm_printf("LOAD_CONSTANT [@] ",number_new(i));
+    cprintln_show_special(constants[i]);
 #endif
     goto start;
   }
@@ -269,6 +287,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   TM_OP( MOD, "MOD", tm_mod);
   TM_OP( GET, "GET", tm_get);
   TM_OP( EQEQ, "EQEQ", t_tm_equals);
+  TM_OP( NOTEQ, "NOTEQ", tm_not_equals);
   TM_OP( LT, "LT", tm_lt);
   
   case SET:
@@ -391,7 +410,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
 #if PRINT_INS
     printf("POP_JUMP_ON_TRUE %d\n", i);
 #endif
-    if( tm_bool( TM_POP() )){
+    if( _tm_bool( TM_POP() )){
       s = tags[i];
     }
     goto start;
@@ -404,7 +423,31 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     // cprintln(TM_TOP());
     printf("POP_JUMP_ON_FALSE %d\n", i);
 #endif
-    if( !tm_bool( TM_POP() )){
+    if( !_tm_bool( TM_POP() )){
+      s = tags[i];
+    }
+    goto start;
+  }
+
+  case JUMP_ON_TRUE:{
+    i = next_short(s);
+#if PRINT_INS
+    printf("JUMP_ON_TRUE %d\n", i);
+#endif
+    if( _tm_bool( TM_TOP() )){
+      s = tags[i];
+    }
+    goto start;
+  }
+
+  case JUMP_ON_FALSE:{
+    // print_tags(get_mod(mod));
+    i = next_short(s);
+#if PRINT_INS
+    // cprintln(TM_TOP());
+    printf("JUMP_ON_FALSE %d\n", i);
+#endif
+    if( !_tm_bool( TM_TOP() )){
       s = tags[i];
     }
     goto start;

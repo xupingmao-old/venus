@@ -7,6 +7,8 @@
 #define PRINT_INS 1
 #define PRINT_INS_CONST 0
 
+int enable_debug = 0;
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

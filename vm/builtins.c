@@ -9,7 +9,8 @@ void _tm_print(tm_obj o, int depth, int show_special){
 		{
 			int i;int len = str_len(o);
 			char *s = get_str(o);
-			if(show_special)
+			if(show_special){
+				putchar('"');
 				for(i = 0; i < len; i++){
 					if(s[i] == '\0'){
 						printf("\\0");
@@ -17,11 +18,14 @@ void _tm_print(tm_obj o, int depth, int show_special){
 						printf("\\r");
 					}else if( s[i] == '\n'){
 						printf("\\n");
+					}else if( s[i] == '\t'){
+						printf("\\t");
 					}else{
 						putchar(s[i]);
 					}
 				}
-			else
+				putchar('"');
+			}else
 				printf("%s", s);
 		}
 		break;
@@ -169,7 +173,9 @@ tm_obj tm_sleep( tm_obj p){
 tm_obj tm_input(tm_obj p){
 	int i = 0;
 	if( list_len(p) > 0){
-		tm_print(p);
+		for(i = 0; i < list_len(p); i++){
+			cprint(get_list(p)->nodes[i]);
+		}
 	}
 	char buf[2048];
 	fgets(buf, 2048, stdin);
@@ -224,4 +230,17 @@ tm_obj tm_import( tm_obj p){
 /* get globals */
 tm_obj tm_globals(tm_obj p){
 	return tm->frames[tm->cur].globals;
+}
+
+/* get object type */
+tm_obj _tm_type( tm_obj o){
+	switch( o.type ){
+	case TM_NUM: return str_new("number", -1);
+	case TM_STR: return str_new("string", -1);
+	case TM_DCT: return str_new("dict", -1);
+	case TM_LST: return str_new("list", -1);
+	case TM_FNC: return str_new("function", -1);
+	case TM_NON: return str_new("None", -1);
+	}
+	return str_new("unknown",-1);
 }

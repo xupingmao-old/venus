@@ -24,7 +24,7 @@ class App():
         if fp == None:
             return
         self.name = fp.name
-        x = HexPaser(fname = fp.name)
+        x = HexPaser(fp.name, self.cols, self.gap)
         self.txt = x.getResult()
         fp.close()
         self.update()
@@ -48,16 +48,27 @@ class App():
         filebtn.add_command(label="exit",command=self.exit) 
         return filebtn
     def exit(self):
+        self.root.quit()
         exit(0)
     def exitmenu(self):
         btn = Tkinter.Menu(self.menuframe)
         btn.add_command( label = "exit", command = self.exit )
         return btn
 
-    def __init__(self, title = 'Example', convertTab = True):
+    def get_cols_text(self):
+        hex_cols = ''
+        txt_cols = ''
+        for i in range(1, self.cols+1):
+            hex_cols+=str(i).ljust(3)
+        return hex_cols
+
+    def __init__(self, title = 'Example', cols = 20, gap = 5, convertTab = True):
         self.title = title
         self.convertTab = convertTab
         self.charslen = 0.0
+        self.cols = cols
+        self.gap = gap
+
         root = Tkinter.Tk()
         width = 900
         root.minsize(width, 500)
@@ -70,12 +81,21 @@ class App():
         menuframe.add_cascade(label="file", menu = self.filemenu())
         root.config(menu = menuframe)
 
+        # colums number
+##        colsFrame = Tkinter.Frame(root)
+##        self.colsFrame = colsFrame
+##        colsFrame.pack( fill = Tkinter.X, side = Tkinter.TOP)
+##        colsLabel = Tkinter.Label(colsFrame)
+##        colsLabel.config(text = self.get_cols_text())
+##        colsLabel.pack(fill = Tkinter.X, side = Tkinter.LEFT)
+
         # main
         mainframe = Tkinter.Frame(root)
-        mainframe.pack(fill = Tkinter.BOTH, side = Tkinter.TOP)
+        mainframe.pack(fill = Tkinter.X, side = Tkinter.TOP)
 
         self.font = tkFont.Font(family = 'Consolas', size = 10)
-        
+
+        # main text view
         textView = Tkinter.Text(mainframe, wrap=Tkinter.WORD,
                                 highlightthickness=0, width=width)
         textView.config( background ='black', foreground = 'green',

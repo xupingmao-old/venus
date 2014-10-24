@@ -5,26 +5,22 @@ symbols = "`!@#$%^&*(){}_+=-[]\\|:;'\"<>?,./ "
 chars = numbers + alphas + alphas.upper() + symbols
 class HexPaser:
 
-    def __init__(self, fp = None, fname = None):
-        if fp == None and fname == None:
-            return
-        if fp == None:
-            fp = open( fname, "rb")
-            self.txt = fp.read()
-            fp.close()
+    def __init__(self, fname, cols = 20 , gap = 5):
         if fname == None:
-            fname = fp.name
-            self.txt = fp.read()
+            return
+        fp = open( fname, "rb")
+        self.txt = fp.read()
+        fp.close()
         self.fp = fp
         self.name = fname
-        # close outside because it is not open here
-        # fp.close()
+        self.cols = cols
+        self.gap = gap
 
     def getResult(self):
         des = ""
         count = 0
         temp = ""
-        size = 20
+        size = self.cols
         def hexchar(c):
             return hex(ord(c))[2:]
         line = ""
@@ -41,7 +37,7 @@ class HexPaser:
                 line = ""
                 des+='\n'
         if line != "":
-           des += line.ljust(size * 3) + ' '*5 + temp 
+           des += line.ljust(size * 3) + ' '* self.gap + temp 
         return des
 
 if __name__ == '__main__':

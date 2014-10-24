@@ -10,10 +10,7 @@ def store(t):
         emit_store( t )
     elif t.type == 'get':
         encode_item(t.a)
-        if t.b.type == 'name':
-            emit_load_str(t.b)
-        else:
-            encode_item(t.b)
+        encode_item(t.b)
         emit(SET)
     elif t.type == ',':
         store(t.b)
@@ -99,6 +96,11 @@ def encode_item( tk ):
         encode_item(tk.name)
         n = encode_item(tk.args)
         emit(CALL , n)
+    elif t == 'neg':
+        if tk.val.type == 'number':
+            tk.type = 'number'
+            tk.val = -tk.val.val
+        emit_load(tk)
     elif t == 'arg':
         def_local(tk.name)
         if tk.val:
@@ -158,7 +160,7 @@ def encode_item( tk ):
     elif t == 'break':
         jump( end_tag_list [-1] )
     elif t == 'continue':
-        jump( end_tag_list[-1] )
+        jump( start_tag_list[-1] )
     elif t == 'from':
         encode_item(Token('name','importfrom'))
         n = encode_item(tk.a)
@@ -167,10 +169,7 @@ def encode_item( tk ):
         emit(POP)
     elif t == "get":
         encode_item(tk.a)
-        if tk.b.type == 'name':
-            emit_load_str( tk.b)
-        else:
-            encode_item(tk.b)
+        encode_item(tk.b)
         emit( GET )
     elif t in op_list:
         encode_item(tk.a)
@@ -204,8 +203,10 @@ def encode_item( tk ):
         tag(start_tag)
         jump(end_tag, TM_FOR)
         # store the next value to a, if in func , store to locals
-        if inlocal():
-            def_local(tk.a.a)
+        #if inlocal():
+            #def_local(tk.a.a)
+        # not need anymore, because we will assume the var to be locals
+        # if it is not in globals of the scope
         store( tk.a.a )
         encode_item(tk.b)
         jump(start_tag)
@@ -217,6 +218,8 @@ def encode_item( tk ):
         emit(POP)
     elif t in ('number', 'name', "string", 'None'):
         emit_load( tk )
+    elif t == 'global':
+        def_global(tk.val)
     else:
         pass
     return 1
