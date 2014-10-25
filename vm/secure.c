@@ -38,7 +38,7 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
     int idx;
     int stacksize = 100;
     int curstack = 0;
-    int temp;
+    int temp = 0;
     tm_module* mod = get_mod(_mod);
     while(1){
         int ins = next_byte(s);
