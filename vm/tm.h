@@ -8,6 +8,7 @@
 #define PRINT_INS_CONST 0
 #define EVAL_DEBUG 1
 #define DEBUG_INS 1
+#define LIGHT_DEBUG_GC 0
 
 int enable_debug = 0;
 
@@ -113,7 +114,7 @@ typedef struct tm_frame
 
 #include "dict.h"
 
-#define FRAMES_COUNT 256
+#define FRAMES_COUNT 128
 
 typedef struct tm_vm
 {

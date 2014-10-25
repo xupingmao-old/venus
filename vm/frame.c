@@ -121,13 +121,18 @@ tm_obj tm_def(tm_obj mod, char* s){
   locals = f->locals;
 
 tm_obj tm_eval( tm_obj fnc, tm_obj params ){
+
+    tm->cur++;
+/* check if frame overflow */
+  if( tm->cur >= FRAMES_COUNT)
+    tm_raise("tm_eval: frame overflow");
+
   tm_obj mod = get_func(fnc)->mod;
   tm_obj globals = get_mod(mod)->globals;
   tm_obj code = get_mod(mod)->code;
   unsigned char* s = get_func(fnc)->pc;
   // constants will be built in modules.
   // get constants from function object.
-  tm->cur++;
   tm_frame* f = tm->frames + tm->cur;
   f->file = get_mod(mod)->file;
   f->globals = globals;
@@ -143,12 +148,19 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   
   int i, ins, jmp;
 
+  /* will optimize later */
+  for(i = 0; i < 256; i++){
+    locals[i].type = TM_NON;
+  }
+
   if( ! get_mod(mod)->checked ){
     code_check( mod, s, 0);
   }
 
 //  cprintln_show_special(params);
   unsigned char** tags = get_mod(mod)->tags;
+  
+
  start:
   ins = next_byte(s);
 /*
@@ -266,7 +278,6 @@ if( enable_debug ){
     #if PRINT_INS
         printf("LIST %d\n", i);
     #endif
-    templist = list_new(i);
     LOAD_LIST( templist, i );
     TM_PUSH( templist );
     goto start;

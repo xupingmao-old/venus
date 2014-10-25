@@ -123,7 +123,10 @@ void frames_init(){
 void frames_free(){
 	int i;
 	for(i = 0; i < FRAMES_COUNT; i++){
-		tm_frame*f = tm->frames + i;
+		tm_frame*f = tm->frames + i ;
+#if LIGHT_DEBUG_GC
+        printf("free frame %d: %p\n", i, f);
+#endif
 		tm_free(f->stack, f->stacksize * sizeof(tm_obj));
 		// f->ex, f->file will handled by gc
 	}
@@ -174,7 +177,6 @@ int tm_run(int argc, char* argv[]){
             tm_obj fnc = func_new(mod, code, tm->none, NULL);
             get_func(fnc)->pc = get_str(code);
             get_func(fnc)->name = obj__main__;
-            tm->cur--; // to use the first frame;
 			tm_eval( fnc , obj_none);
 			// cprintln(mod);
             // tm_obj res = _tm_call( "token", "do_tokenize", as_list(1, str_new("print(\"hello,world\"", -1)));
@@ -217,8 +219,17 @@ int tm_init(int argc, char* argv[]){
 		return -1;
 	}
 	tm_run(argc, argv);
+#if LIGHT_DEBUG_GC
+    puts("free frames ...");
+#endif
 	frames_free();
+#if LIGHT_DEBUG_GC
+    puts("free gc objects ...");
+#endif
 	gc_free();
+#if LIGHT_DEBUG_GC
+    puts("free tm ...");
+#endif
 	free(tm);
 	return 0;
 }
