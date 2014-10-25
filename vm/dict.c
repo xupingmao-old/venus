@@ -157,6 +157,7 @@ void dict_free_node(dict_node* node){
 void dict_free(tm_dict* dict){
 #if DEBUG_GC
     int old = tm->allocated_mem;
+    printf("free dict %p ...\n",dict );
 #endif
 
 	int cap = dict->cap;

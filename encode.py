@@ -176,8 +176,8 @@ def encode_item( tk ):
         encode_item(tk.b)
         emit( op_map[t])
     elif t in op_ext_list:
-        encode_item(tk.b)
         encode_item(tk.a)
+        encode_item(tk.b)
         emit( op_ext_map[t] )
         store(tk.a)
     elif t == 'and':

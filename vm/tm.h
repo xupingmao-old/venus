@@ -7,6 +7,7 @@
 #define PRINT_INS 0
 #define PRINT_INS_CONST 0
 #define EVAL_DEBUG 1
+#define DEBUG_INS 1
 
 int enable_debug = 0;
 
@@ -162,6 +163,7 @@ tm_obj obj_false;
 tm_obj obj_none;
 tm_obj obj__init__;
 tm_obj obj__main__;
+tm_obj obj__name__;
 tm_obj __chars__[256];
 #include "constants.h"
 #include "object.h"

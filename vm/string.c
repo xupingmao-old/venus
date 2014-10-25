@@ -31,7 +31,7 @@ tm_obj str_new(char *s , int size)
 void str_free( tm_str *str){
 #if DEBUG_GC
 int old = tm->allocated_mem;
-printf("free string %x...\n", str);
+printf("free string %p...\n", str);
 #endif
 	if( str->inHeap ){
 		tm_free( str->value, str->len + 1);
@@ -159,6 +159,27 @@ tm_obj str_replace(tm_obj params){
 	// cprintln_show_special(nstr);
 	// cprintln(nstr);
 	return nstr;
+}
+
+tm_obj str_split(tm_obj params){
+	tm_obj self = get_arg( params, 0, TM_STR);
+	tm_obj pattern = get_arg(params, 1, TM_STR);
+	if( get_str_len(pattern) == 0){
+		/* currently return none */
+		return obj_none;
+	}
+	int pos = _str_find( self.value.str, pattern.value.str, 0);
+	int lastpos = 0;
+	tm_obj nstr = str_new("", 0);
+	tm_obj list = list_new(10);
+	while ( pos > 0 && pos < get_str_len(self)){
+		tm_obj str = _str_substring(self.value.str, lastpos, pos - 1);
+		list_append( get_list(list), str);
+		lastpos = pos + get_str_len(pattern);
+		pos = _str_find(self.value.str, pattern.value.str, lastpos);
+	}
+	list_append( get_list(list), _str_substring(self.value.str, lastpos, -1));
+	return list;
 }
 
 

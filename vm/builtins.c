@@ -98,6 +98,9 @@ tm_obj tm_print(tm_obj params){
 	tm_list* list = get_list(params);
 	for(i = 0; i < list->len; i++ ){
 		cprint(list->nodes[i]);
+		if( i + 1 != list->len){
+			putchar(' ');
+		}
 	}
 	putchar('\n');
 	return tm->none;
@@ -251,4 +254,9 @@ tm_obj _obj_info(tm_obj o){
 	tm_obj com = str_new(":", -1);
 	str = tm_add(str, com);
 	return tm_add(str, _tm_str(o));
+}
+
+tm_obj tm_exit( tm_obj p){
+	longjmp(tm->buf, 2);
+	return obj_none;
 }

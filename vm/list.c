@@ -41,7 +41,7 @@ tm_obj build_list( int n, tm_obj* items){
 
 void list_free(tm_list* list){
 #if DEBUG_GC
-    printf("free list %x ...\n", list);
+    printf("free list %p ...\n", list);
 	int old = tm->allocated_mem;
 #endif
 	tm_free(list->nodes, list->cap * sizeof(tm_obj));

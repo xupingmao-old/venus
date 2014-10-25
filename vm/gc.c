@@ -121,8 +121,8 @@ void gc_free(){
 	printf("\nallocated_mem: %d\n", tm->allocated_mem);
 	printf("total object num: %d\n", tm->all->len);
 
-	tm_obj b = obj_new(TM_LST, tm->all);
-	cprint(b);
+	// tm_obj b = obj_new(TM_LST, tm->all);
+	// cprint(b);
 #endif
 	tm_list* all = tm->all;
 	int i;

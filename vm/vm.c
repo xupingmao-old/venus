@@ -24,6 +24,7 @@ void reg_builtins(){
 	obj_none.type = TM_NON;
     obj__init__ = str_new("__init__", -1);
     obj__main__ = str_new("__main__", -1);
+    obj__name__ = str_new("__name__", -1);
 
     /* init chars , will never collected until last */
     int i;
@@ -49,6 +50,7 @@ void reg_builtins(){
 		{"import", tm_import},
         {"globals", tm_globals},
         {"len", tm_len},
+        {"exit", tm_exit},
         {0, 0}
     };
     for(i = 0; builtins[i].name != 0; i++){
@@ -66,6 +68,7 @@ void reg_builtins(){
    		{"substring", str_substring},
    		{"upper", str_upper},
    		{"lower", str_lower},
+        {"split", str_split},
    		{0,0}
    	};
    	for(i = 0; str_class_fnc_list[i].name != 0 ; i++){
@@ -132,7 +135,8 @@ print_usage(){
 }
 
 int tm_run(int argc, char* argv[]){
-	if(  setjmp(tm->buf) == 0 ){
+    int rs = setjmp(tm->buf);
+	if(  rs == 0 ){
 	// 真正要执行的代码,发生异常之后返回setjmp的地方
 		//test_dict();
 		gc_init();
@@ -151,8 +155,7 @@ int tm_run(int argc, char* argv[]){
         
         reg_builtins();
 		reg_builtin("ARGV", p);
-		// cprintln(tm_add(str_new("fdsaf",-1), str_new("fdsaf",-1)));
-		// tm_printf("hello, @", str_new("34234@", -1));
+
 		if( argc >= 2){
 			char* fname = argv[1];
 			if( strcmp(argv[1], "-d") == 0){
@@ -164,9 +167,9 @@ int tm_run(int argc, char* argv[]){
 			// cprintln(code);
 			tm_obj mod_name = str_new(fname, strlen(fname));
 			tm->frames[tm->cur].file = mod_name;
-			tm_obj mod = module_new(mod_name, str_new("__main__", -1) , code );
+			tm_obj mod = module_new(mod_name, obj__main__ , code );
 
-            tm_set( get_mod(mod)->globals, str_new("__name__", -1), str_new("__main__", -1));
+            tm_set( get_mod(mod)->globals, obj__name__, obj__main__);
             tm_set( get_mod(mod)->globals, str_new("tm", -1), number_new(1));
             tm_obj fnc = func_new(mod, code, tm->none, NULL);
             get_func(fnc)->pc = get_str(code);
@@ -185,7 +188,7 @@ int tm_run(int argc, char* argv[]){
 		// tm->cur = 0;
 		// tm_obj v = obj_new(TM_LST, tm->all);
 		//tm_raise("tm->list = @", v);
-	}else{
+	}else if(rs == 1) {
 		/* catch exceptions */
 		int i;
 		int cur = tm->cur;
@@ -202,7 +205,9 @@ int tm_run(int argc, char* argv[]){
         cprintln( temp );
         // cprintln( tm->frames[cur].globals);
         // cprintln( tm->builtins);
-	}
+	}else if( rs == 2){
+        // normal exit
+    }
 }
 
 int tm_init(int argc, char* argv[]){

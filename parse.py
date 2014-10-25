@@ -157,16 +157,8 @@ def factor(p):
 		p.add( node )
 	elif t == '(':
 		p.next()
-		node = AstNode()
-		node.type = 'list'
-		if p.token.type == ')':
-			p.next()
-			node.val = None
-		else:
-			expr(p)
-			p.expect(')')
-			node.val = p.pop()
-		p.add(node)
+		expr(p)
+		p.expect(')')
 	elif t == '{':
 		p.next()
 		node = AstNode('dict')

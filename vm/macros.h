@@ -8,7 +8,7 @@
 #define get_val(obj) (obj).value
 #define get_num(obj) get_val(obj).dv
 #define get_double(obj) get_val(obj).dv
-#define get_int(obj) get_val(obj).iv
+#define get_int(obj) (int) get_num(obj)
 #define get_long(obj) get_val(obj).lv
 #define get_str(obj) (obj.value.str)->value
 #define get_file(obj) (obj.value.stream)->fp

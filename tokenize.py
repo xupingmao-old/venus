@@ -2,7 +2,7 @@ if "tm" not in globals():
     from boot import *
 
 class Token:
-    def __init__(self,type='symbol',val=None,pos=(0,0)):
+    def __init__(self,type='symbol',val=None,pos=[0,0]):
         # self.pos,self.type,self.val=pos,type,val
         self.pos=pos;self.type=type;self.val=val
     def show(self):
@@ -11,14 +11,17 @@ class Token:
         return str([self.type, self.val])
 
 def u_error(ctx,s,i):
-    y,x = i
+    y = i[0]
+    x = i[1]
     line = s.split('\n')[y-1]
     p = ''
     if y < 10: p += ' '
     if y < 100: p += '  '
     r = p + str(y) + ": " + line + "\n"
     r += "     "+" "*x+"^" +'\n'
-    raise 'error: '+ctx+'\n'+r
+    # raise 'error: '+ctx+'\n'+r
+    print("error: " + ctx + '\n' + r)
+    exit(0)
 
 ISYMBOLS = '`-=[];,./~!@$%^&*()+{}:<>?'
 SYMBOLS = [
@@ -65,9 +68,8 @@ def do_tokenize(s):
     global T
     # T,i,l = TData(),0,len(s)
     T = TData(); i = 0; l = len(s)
-    T.f = (T.y,i-T.yi+1)
     while i < l:
-        c = s[i]; T.f = (T.y,i-T.yi+1)
+        c = s[i]; T.f = [T.y,i-T.yi+1]
         if T.nl: 
             T.nl = False
             i = do_indent(s,i,l)

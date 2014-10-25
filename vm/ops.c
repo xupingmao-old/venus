@@ -267,6 +267,20 @@ tm_obj tm_mul( tm_obj a, tm_obj b){
 	if( a.type == b.type && a.type == TM_NUM){
 		return number_new( get_num(a) * get_num(b) );
 	}
+	if( a.type == TM_NUM && b.type == TM_STR){
+		tm_obj temp = a;
+		a = b;
+		b = temp;
+	}
+	if( a.type == TM_STR && b.type == TM_NUM){
+		if( get_str_len(a) == 0) return a;
+		tm_obj str = str_new(NULL, get_int(b) * get_str_len(a) );
+		char* s = get_str(str);
+		int i;for(i = 0; i < get_str_len(str) ; i+= get_str_len(a)){
+			memcpy( s + i , get_str(a), get_str_len(a));
+		}
+		return str;
+	}
 	tm_raise("tm_mul: can not mul  @ and @", a,b );
 	return tm->none;
 }
@@ -293,6 +307,10 @@ int _tm_has( tm_obj a, tm_obj b ){
 		case TM_LST:{
 			return ( list_index( get_list(a), b) != -1 );
 		}
+		case TM_STR:{
+			if( b.type != TM_STR) return 0;
+			return _str_find( a.value.str, b.value.str, 0) != -1;
+		}
 		case TM_DCT:{
 			tm_obj v;
 			return ( dict_iget(get_dict(a), b, &v) );
@@ -301,9 +319,11 @@ int _tm_has( tm_obj a, tm_obj b ){
 	return 0;
 }
 
+
 tm_obj tm_has(tm_obj a, tm_obj b){
 	return number_new( _tm_has(a, b));
 }
+
 
 tm_obj _tm_not( tm_obj o){
 	switch( o.type ){
@@ -318,6 +338,8 @@ tm_obj _tm_not( tm_obj o){
 	}
 	return obj_false;
 }
+#define tm_in(k , x) tm_has(x, k)
+#define tm_notin( k, x) _tm_not( tm_has(x,k))
 
 int _tm_bool( tm_obj v){
 	switch( v.type ){

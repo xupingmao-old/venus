@@ -295,6 +295,8 @@ if( enable_debug ){
   TM_OP( LTEQ,  tm_lteq);
   TM_OP( GT, tm_gt);
   TM_OP( GTEQ, tm_gteq);
+  TM_OP( IN, tm_in);
+  TM_OP( NOTIN, tm_notin);
   
   case SET:
     k = TM_POP();
@@ -314,24 +316,25 @@ if( enable_debug ){
     goto start;
   }
 
-  case IN: {
+/*  case IN: {
 #if PRINT_INS
     puts("IN");
 #endif
-    v = TM_POP();
     k = TM_POP();
+    x = TM_POP();
     TM_PUSH( tm_has(x, k));
     goto start;
   }
 
   case NOTIN:
-#if PRINT_INS
+  k = TM_POP();
+  x = TM_POP();
+#if DEBUG_INS
+  tm_printf("x = @, k = @\n", x, k);
   puts("NOTIN");
 #endif
-  x = TM_POP();
-  k = TM_POP();
   TM_PUSH( _tm_not( tm_has(x, k) ) );
-  goto start;
+  goto start;*/
     
   case CALL: {
     i = next_byte( s );
