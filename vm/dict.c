@@ -155,21 +155,22 @@ void dict_free_node(dict_node* node){
 }
 
 void dict_free(tm_dict* dict){
+#if DEBUG_GC
+    int old = tm->allocated_mem;
+#endif
+
 	int cap = dict->cap;
 	int i;
-#if DEBUG_GC
-	int old = tm->allocated_mem;
-	printf("before dict_free %d, \n", old);
-#endif
 	for(i = 0; i < cap; i++){
 		dict_free_node( dict->nodes[i]);
 	}
 	tm_free(dict->nodes, sizeof(dict_node*) * cap);
 	tm_free(dict, sizeof(tm_dict));
 #if DEBUG_GC
-	int new_ = tm->allocated_mem;
-	printf("after dict_free %d : freed : %d \n", new_, old - new_);
+    int _new = tm->allocated_mem;
+    printf("dict free , from %d to %d, free %d B\n", old, _new, old-_new);
 #endif
+
 }
 
 void dict_print(tm_dict* dict){

@@ -7,7 +7,7 @@
 void print_tags(tm_module *mod){
   int i;
   for(i = 0; i < mod->tagsize; i++){
-    printf("TAG %d : %d\n", i, mod->tags[i]);
+    printf("TAG %d : %p\n", i, mod->tags[i]);
   }
 }
 
@@ -89,7 +89,6 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
             break;
         case TAGSIZE:
             mod->tagsize = next_short(s);
-            // printf("tagsize=%d\n", mod->tagsize);
             mod->tags = init_tags(mod->tagsize);
             len+=3;
             break;
@@ -108,7 +107,7 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
             mod->checked = 1;
             goto ret;
         default:
-          tm_raise("code_check: BAD INSTRUCTION @", number_new(ins));
+          tm_raise("code_check: BAD INSTRUCTION @, handled code len = @", number_new(ins), number_new(len));
         }
     }
     ret:

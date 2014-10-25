@@ -50,9 +50,14 @@ tm_obj class_new( tm_obj clazz ){
 void func_free( tm_func* func){
   // the references will be tracked by gc collecter
 #if DEBUG_GC
-  printf("free function , free %d B\n", sizeof(tm_func));
+ printf("free function %x...\n", func);
+ int old = tm->allocated_mem;
 #endif
   tm_free(func, sizeof(tm_func));
+#if DEBUG_GC
+int _new = tm->allocated_mem;
+  printf("free function ,%d => %d , free %d B\n", old, _new, old - _new ); 
+#endif
 }
 
 tm_obj module_new( tm_obj file , tm_obj name, tm_obj code){
@@ -81,12 +86,17 @@ void module_free( tm_module* mod ){
   obj_free( mod->constants );
   obj_free( mod->globals );*/
 #if DEBUG_GC
-  printf("free module , free %d B\n", sizeof(tm_module) );
+printf("free module %x...\n", mod);
+int old = tm->allocated_mem;
 #endif
   if( mod->tags != NULL ){
     tm_free(mod->tags, mod->tagsize * sizeof(char*) );
   }
   tm_free( mod, sizeof( tm_module ));
+#if DEBUG_GC
+int _new = tm->allocated_mem;
+printf("free module, from %d => %d, free %d B\n", old, _new, old - _new);
+#endif
 }
 
 

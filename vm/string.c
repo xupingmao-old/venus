@@ -29,10 +29,18 @@ tm_obj str_new(char *s , int size)
 }
 
 void str_free( tm_str *str){
+#if DEBUG_GC
+int old = tm->allocated_mem;
+printf("free string %x...\n", str);
+#endif
 	if( str->inHeap ){
 		tm_free( str->value, str->len + 1);
 	}
 	tm_free(str, sizeof(tm_str));
+#if DEBUG_GC
+int _new = tm->allocated_mem;
+printf("free string , %d => %d, freed %d B\n", old, _new, old - _new);
+#endif
 }
 
 int _str_find( tm_str* s1, tm_str* s2, int start){

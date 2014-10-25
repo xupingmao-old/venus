@@ -104,7 +104,7 @@ void gc_full(){
 
 void gc_info(){
 	puts("===================vm infomation===============");
-	printf("objsize=%d\n", sizeof( tm_obj ));
+	printf("objsize=%d\n",(int) sizeof( tm_obj ));
 
 	puts("===================gc infomation===============");
 	printf("\nallocated_mem: %d\n", tm->allocated_mem);

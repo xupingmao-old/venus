@@ -106,8 +106,8 @@ void frames_init(){
 		tm_frame* f = tm->frames + i;
 		f->stacksize = 200;
 		f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
-		f->ex = tm->none;
-		f->file = tm->none;
+		f->ex = obj_none;
+		f->file = obj_none;
 		f->line = obj_none;
         f->globals = obj_none;
         f->func_name = obj_none;
@@ -172,7 +172,7 @@ int tm_run(int argc, char* argv[]){
             get_func(fnc)->pc = get_str(code);
             get_func(fnc)->name = obj__main__;
             tm->cur--; // to use the first frame;
-			tm_eval( fnc , tm->none);
+			tm_eval( fnc , obj_none);
 			// cprintln(mod);
             // tm_obj res = _tm_call( "token", "do_tokenize", as_list(1, str_new("print(\"hello,world\"", -1)));
             // cprintln(res);

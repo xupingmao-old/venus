@@ -65,13 +65,13 @@ void _tm_print(tm_obj o, int depth, int show_special){
 	// case TM_DCT:dict_print(get_dict(o));break;
 	case TM_FNC:
 		if( get_func(o)->self.type != TM_NON){
-			printf("<method %x>", get_func(o));
+			printf("<method %p>",get_func(o));
 		}else{
-			printf("<function %x>", get_func(o));
+			printf("<function %p>",get_func(o));
 		}
 		break;
 	case TM_MOD:
-		printf("<module %x>", get_mod(o));
+		printf("<module %p>",get_mod(o));
 		break;
 	case TM_NON:
 		printf("None");break;
