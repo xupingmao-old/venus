@@ -129,8 +129,9 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 				if (n < 0) n += get_str_len(self);	
 				if( n >= get_str_len(self) || n < 0)
 					tm_raise("tm_get: index overflow");
-				tm_printf("str = @, index = @\n", self, k);
-				int c = get_str(self)[n];
+				//tm_printf("str = @, len = @, index = @\n", self,number_new(get_str_len(self)),  k);
+				unsigned char c = get_str(self)[n];
+                //printf("c = %d\n", c);
 				return __chars__[c];
 			}else{
 				tm_obj fnc = tm_get(str_class, k);
@@ -202,7 +203,7 @@ tm_obj tm_add(  tm_obj a, tm_obj b){
 			}
 		}
 	}
-	tm_raise("tm_add: can not add @:@ and @:@", _tm_type(a), a, _tm_type(b), b);
+	tm_raise("tm_add: can not add @ and @", _obj_info(a),_obj_info(b));
 	return tm->none;
 }
 

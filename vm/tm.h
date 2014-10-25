@@ -15,7 +15,6 @@ int enable_debug = 0;
 #include <stdlib.h>
 #include <setjmp.h>
 #include <stdarg.h>
-
 typedef char instruction;
 
 typedef struct tm_str{

@@ -147,11 +147,11 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     code_check( mod, s, 0);
   }
 
-  cprintln_show_special(params);
+//  cprintln_show_special(params);
   unsigned char** tags = get_mod(mod)->tags;
  start:
   ins = next_byte(s);
-
+/*
 if( enable_debug ){
   char c = getch();
   if(c == 'd'){
@@ -167,7 +167,7 @@ if( enable_debug ){
   }else if (c == 'q'){
     tm_raise("quit");
   }
-}
+}*/
   switch( ins ) {
 
   case NEW_NUMBER: {

@@ -27,8 +27,8 @@ void reg_builtins(){
 
     /* init chars , will never collected until last */
     int i;
-    for(i = 0; i < sizeof(__chars__) / sizeof(tm_obj); i++){
-        char s[2] = {i, '\0'};
+    for(i = 0; i < 256; i++){
+        unsigned char s[2] = {i, '\0'};
         __chars__[i] = str_new(s, 1);
     }
 	
@@ -143,7 +143,8 @@ int tm_run(int argc, char* argv[]){
 
 		tm_obj p = list_new(argc);
 		// init argv;
-		int i;for(i = 0; i < argc; i++){
+        // first vm itself, second srcfile
+		int i;for(i = 1; i < argc; i++){
 			tm_obj arg = str_new(argv[i], strlen(argv[i]));
 			list_append( get_list(p), arg);
 		}
