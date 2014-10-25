@@ -244,3 +244,11 @@ tm_obj _tm_type( tm_obj o){
 	}
 	return str_new("unknown",-1);
 }
+
+/* return the type and value of a object */
+tm_obj _obj_info(tm_obj o){
+	tm_obj str = _tm_type(o);
+	tm_obj com = str_new(":", -1);
+	str = tm_add(str, com);
+	return tm_add(str, _tm_str(o));
+}

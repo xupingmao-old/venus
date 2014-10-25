@@ -59,7 +59,7 @@ tm_obj list_get(tm_list* list, int n)
 	 n += list->len;
 	if( n >= list->len || n < 0)
 	{
-		tm_raise("list_get: index overflow");
+		tm_raise("list_get: index overflow, @, @", obj_new(TM_LST, list), number_new(n));
 	}
 	return list->nodes [n];
 }

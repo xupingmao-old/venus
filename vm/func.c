@@ -27,7 +27,9 @@ tm_obj func_new(tm_obj mod,
 
 tm_obj method_new(tm_obj _fnc, tm_obj self){
   tm_func* fnc = get_func(_fnc);
-  return func_new( fnc->mod, fnc->code, self, fnc->native_func);
+  tm_obj nfnc = func_new( fnc->mod, fnc->code, self, fnc->native_func);
+  get_func(nfnc)->name = get_func(_fnc)->name;
+  return nfnc;
 }
 
 tm_obj class_new( tm_obj clazz ){

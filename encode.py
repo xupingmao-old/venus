@@ -98,8 +98,8 @@ def encode_item( tk ):
         emit(CALL , n)
     elif t == 'neg':
         if tk.val.type == 'number':
-            tk.type = 'number'
-            tk.val = -tk.val.val
+            tk = tk.val
+            tk.val = -tk.val
         emit_load(tk)
     elif t == 'arg':
         def_local(tk.name)
@@ -108,7 +108,7 @@ def encode_item( tk ):
             store(tk.name)
         #emit('set_arg '+tk.name)
     elif t == 'def':
-        emit(TM_DEF)
+        emit_def(tk.name)
         open_scope()
         encode_item(tk.args)
         emit(LOAD_PARAMS)

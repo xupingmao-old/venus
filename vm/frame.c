@@ -74,13 +74,13 @@ tm_obj tm_def(tm_obj mod, char* s){
 }
 
 #if PRINT_INS
-#define TM_OP( OP_CODE, OP_STR, OP_FUNC ) case OP_CODE: x = TM_POP();\
+#define TM_OP( OP_CODE, OP_FUNC ) case OP_CODE: x = TM_POP();\
   v = TM_TOP();\
-  puts(OP_STR);  \
+  puts(#OP_CODE"");  \
   TM_TOP() = OP_FUNC(v, x);\
   goto start;
 #else
-#define TM_OP( OP_CODE, OP_STR, OP_FUNC ) case OP_CODE: x = TM_POP();\
+#define TM_OP( OP_CODE, OP_FUNC ) case OP_CODE: x = TM_POP();\
   v = TM_TOP();\
   TM_TOP() = OP_FUNC(v, x);\
   goto start;
@@ -131,6 +131,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   tm_frame* f = tm->frames + tm->cur;
   f->file = get_mod(mod)->file;
   f->globals = globals;
+  f->func_name = get_func(fnc)->name;
   register tm_obj* locals = f->locals;
   register tm_obj* top = f->stack;
 
@@ -138,6 +139,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   tm_obj x, k, v;
   tm_obj func;
   tm_obj ret = tm->none;
+  tm_obj templist;
   
   int i, ins, jmp;
 
@@ -145,7 +147,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     code_check( mod, s, 0);
   }
 
-
+  cprintln_show_special(params);
   unsigned char** tags = get_mod(mod)->tags;
  start:
   ins = next_byte(s);
@@ -264,8 +266,9 @@ if( enable_debug ){
     #if PRINT_INS
         printf("LIST %d\n", i);
     #endif
-    LOAD_LIST( params, i );
-    TM_PUSH( params );
+    templist = list_new(i);
+    LOAD_LIST( templist, i );
+    TM_PUSH( templist );
     goto start;
   }
 
@@ -280,15 +283,18 @@ if( enable_debug ){
     goto start;
   }
 
-  TM_OP( ADD, "ADD", tm_add);
-  TM_OP( SUB, "SUB", tm_sub);
-  TM_OP( MUL, "MUL", tm_mul);
-  TM_OP( DIV, "DIV", tm_div);
-  TM_OP( MOD, "MOD", tm_mod);
-  TM_OP( GET, "GET", tm_get);
-  TM_OP( EQEQ, "EQEQ", t_tm_equals);
-  TM_OP( NOTEQ, "NOTEQ", tm_not_equals);
-  TM_OP( LT, "LT", tm_lt);
+  TM_OP( ADD, tm_add);
+  TM_OP( SUB, tm_sub);
+  TM_OP( MUL, tm_mul);
+  TM_OP( DIV, tm_div);
+  TM_OP( MOD, tm_mod);
+  TM_OP( GET, tm_get);
+  TM_OP( EQEQ, t_tm_equals);
+  TM_OP( NOTEQ, tm_not_equals);
+  TM_OP( LT, tm_lt);
+  TM_OP( LTEQ,  tm_lteq);
+  TM_OP( GT, tm_gt);
+  TM_OP( GTEQ, tm_gteq);
   
   case SET:
     k = TM_POP();
@@ -370,7 +376,9 @@ if( enable_debug ){
   }
 
   case TM_DEF:{
+    i = next_short(s);
     func = tm_def(mod, s);
+    get_func(func)->name = constants[i];
     tm_obj code = get_func(func)->code;
     s+= get_str_len(code);
 #if PRINT_INS

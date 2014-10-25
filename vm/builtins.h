@@ -13,5 +13,6 @@ void _tm_printf(char* fmt, va_list ap);
 void tm_printf(char* fmt, ...);
 tm_obj tm_int( tm_obj p);
 tm_obj tm_float(tm_obj p);
+tm_obj _obj_info(tm_obj o);
 
 #endif

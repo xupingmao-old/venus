@@ -58,7 +58,6 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
         case GET:case SET:case IN:case NOTIN:
         case POP:
         case RETURN:
-        case TM_DEF:
           len++;
           break;
         case STORE_LOCAL:
@@ -75,6 +74,7 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
         case LOAD_CONSTANT:
         case LOAD_GLOBAL:
         case STORE_GLOBAL:
+        case TM_DEF:
             next_short(s);
             len+=3;
             break;

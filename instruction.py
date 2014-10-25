@@ -188,7 +188,7 @@ out = []
 def def_global( v ):
 	names.scope.globals.append(v.val)
 # opcode : op
-mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, TM_DEF, 
+mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, 
         LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,IN, NOTIN,
 	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS]
 # opcode : op byte
@@ -196,7 +196,7 @@ mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST, DICT]
 # opcode : op short
 mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE, TAG, TAGSIZE,
 JUMP_ON_TRUE, JUMP_ON_FALSE,
-POP_JUMP_ON_TRUE, POP_JUMP_ON_FALSE, JUMP, TM_FOR]
+POP_JUMP_ON_TRUE, POP_JUMP_ON_FALSE, JUMP, TM_FOR, TM_DEF]
 
 def code_pos():
 	return len(out) - 1
@@ -247,6 +247,10 @@ def emit(ins, val = None):
 		print( codes[ins] + ' ' + str(val) )
 	else:
 		print( codes[ins])
+
+def emit_def( v):
+	idx = constants.index(v)
+	emit(TM_DEF, idx)
 
 def emit_load( v ):
 	t = v.type

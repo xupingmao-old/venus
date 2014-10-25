@@ -31,8 +31,23 @@ tm_obj _tm_str(  tm_obj a){
 		sprintf(s, "%g", get_num(a));
 		return str_new(s, strlen(s));
 	}
-	case TM_LST:
-		return str_new("<list>", -1);
+	case TM_LST:{
+		tm_obj str = str_new("[", -1);
+		int i, l = get_list_len(a);
+		for(i = 0; i < l ; i++){
+			tm_obj obj = get_list(a)->nodes[i];
+			if( tm_eq(a, obj)){
+				obj = str_new("[...]", -1);
+			}else{
+				obj = _tm_str(obj);
+			}
+			str= tm_add(str, obj);
+			if( i != l -1)
+				str= tm_add(str, str_new(",", -1));
+		}
+		str = tm_add(str, str_new("]", -1));
+		return str;
+	}
 	case TM_DCT:
 		return str_new("<dict>", -1);
 	case TM_FNC:
@@ -110,15 +125,16 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 	switch( self.type){
 		case TM_STR:{
 			if( k.type == TM_NUM ){
-				int n = get_num(k);			
-				if( n >= get_str_len(self))
+				int n = get_num(k);		
+				if (n < 0) n += get_str_len(self);	
+				if( n >= get_str_len(self) || n < 0)
 					tm_raise("tm_get: index overflow");
-				char v = get_str(self)[n];
-				return tm->chars[v];
+				tm_printf("str = @, index = @\n", self, k);
+				int c = get_str(self)[n];
+				return __chars__[c];
 			}else{
 				tm_obj fnc = tm_get(str_class, k);
-				get_func(fnc)->self = self;
-				return fnc;
+				return method_new(fnc, self);
 			}
 		}
 		case TM_LST: {
@@ -141,7 +157,6 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 				return get_func( self )->code;
 			}
 	}
-	cprintln(self);
 	tm_raise("tm_get: keyError @, self = @ ", k, self );
 	return tm->none;
 }
@@ -206,6 +221,7 @@ int tm_eq(tm_obj a, tm_obj b){
 		}
 		case TM_LST:
 		{
+			if( get_list(a) == get_list(b)) return 1;
 			int i;
 			int len = get_list(a)->len;
 			tm_obj* nodes1 = get_list(a)->nodes;
@@ -229,11 +245,21 @@ tm_obj tm_not_equals( tm_obj a, tm_obj b){
 	return number_new(!tm_eq(a,b));
 }
 
-tm_obj tm_lt( tm_obj a, tm_obj b){
-	if( a.type != b.type || a.type != TM_NUM)
-		tm_raise("tm_lt: can not compare @ and @", a, b);
-	return number_new( get_num(a) < get_num(b) );
+
+#define tm_comp( fnc_name, op) tm_obj fnc_name(tm_obj a, tm_obj b) {      \
+	if( a.type != b.type )                             \
+		tm_raise( #fnc_name": can not compare [@] and [@]", _obj_info(a), _obj_info(b));                 \
+	switch(a.type){                      \
+		case TM_NUM: return number_new( get_num(a) op get_num(b) ); \
+		case TM_STR: return  number_new(strcmp( get_str(a) , get_str(b)) op 0); \
+		default : tm_raise(#fnc_name" not support yet"); \
+	}                           \
 }
+
+tm_comp( tm_lt, < );
+tm_comp( tm_gt, >);
+tm_comp( tm_lteq, <=);
+tm_comp( tm_gteq, >=);
 
 
 tm_obj tm_mul( tm_obj a, tm_obj b){

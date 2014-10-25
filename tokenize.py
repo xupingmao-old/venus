@@ -124,7 +124,7 @@ def do_symbol(s,i,l):
     if v in SYMBOLS: symbols.append(v)
     while i<l:
         c = s[i]
-        if not c in ISYMBOLS: break
+        if c  not in ISYMBOLS: break
         # v,i = v+c,i+1
         v+=c;i+=1
         if v in SYMBOLS: symbols.append(v)
@@ -203,8 +203,11 @@ def do_comment(s,i,l):
     return i
 
 if __name__ == "__main__":
-    v = load("tokenize.py")
-    r = tokenize(v)
-    for tk in r:
-        print(tk.type, tk.pos, tk.val)
+    if len(ARGV) < 2: pass
+    else:
+        f = ARGV[1]
+        v = load(f)
+        r = tokenize(v)
+        for tk in r:
+            print(tk.type, tk.pos, tk.val)
 

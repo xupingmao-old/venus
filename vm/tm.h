@@ -4,8 +4,9 @@
 #define tm_h
 
 #define DEBUG_GC 0
-#define PRINT_INS 1
+#define PRINT_INS 0
 #define PRINT_INS_CONST 0
+#define EVAL_DEBUG 1
 
 int enable_debug = 0;
 
@@ -85,6 +86,7 @@ typedef struct tm_func
 	tm_obj self;
 	tm_obj mod; // module, includes global, constants, etc.
 	tm_obj code; // string
+	tm_obj name;
 	tm_obj (*native_func)( tm_obj);
 }tm_func;
 
@@ -105,6 +107,7 @@ typedef struct tm_frame
 	tm_obj code; // byte code
 	tm_obj ex; // exception info
 	tm_obj line; // current line
+	tm_obj func_name;
 	int jmp; // catch/except position
 }tm_frame;
 
@@ -159,7 +162,8 @@ tm_obj obj_true;
 tm_obj obj_false;
 tm_obj obj_none;
 tm_obj obj__init__;
-
+tm_obj obj__main__;
+tm_obj __chars__[256];
 #include "constants.h"
 #include "object.h"
 

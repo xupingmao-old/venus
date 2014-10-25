@@ -1,5 +1,6 @@
 import sys
 import struct
+ARGV = sys.argv
 argv = sys.argv
 
 def load( name ):

@@ -5,7 +5,7 @@ void constants_init(){
 	obj_none = obj_new(TM_NON, NULL);
 	int i;
 	for(i = 0; i < 256; i++){
-		unsigned char s[2] = {i, '\0'};
+		char s[2] = {i, '\0'};
 		tm->chars[i] = str_new(s, 1);
 	}
 }
@@ -23,6 +23,14 @@ void reg_builtins(){
 	obj_false = number_new(0);
 	obj_none.type = TM_NON;
     obj__init__ = str_new("__init__", -1);
+    obj__main__ = str_new("__main__", -1);
+
+    /* init chars , will never collected until last */
+    int i;
+    for(i = 0; i < sizeof(__chars__) / sizeof(tm_obj); i++){
+        char s[2] = {i, '\0'};
+        __chars__[i] = str_new(s, 1);
+    }
 	
 
     struct __builtin {
@@ -43,7 +51,7 @@ void reg_builtins(){
         {"len", tm_len},
         {0, 0}
     };
-    int i;for(i = 0; builtins[i].name != 0; i++){
+    for(i = 0; builtins[i].name != 0; i++){
         reg_builtin(builtins[i].name, func_new(obj_none, tm->none, tm->none, builtins[i].func));
     };
     tm_set( tm->builtins, str_new("tm", -1), number_new(1));
@@ -102,6 +110,7 @@ void frames_init(){
 		f->file = tm->none;
 		f->line = obj_none;
         f->globals = obj_none;
+        f->func_name = obj_none;
 		f->jmp = 0;
 		f->maxlocals = 0;
 	}
@@ -140,7 +149,7 @@ int tm_run(int argc, char* argv[]){
 		}
         
         reg_builtins();
-		reg_builtin("argv", p);
+		reg_builtin("ARGV", p);
 		// cprintln(tm_add(str_new("fdsaf",-1), str_new("fdsaf",-1)));
 		// tm_printf("hello, @", str_new("34234@", -1));
 		if( argc >= 2){
@@ -160,6 +169,7 @@ int tm_run(int argc, char* argv[]){
             tm_set( get_mod(mod)->globals, str_new("tm", -1), number_new(1));
             tm_obj fnc = func_new(mod, code, tm->none, NULL);
             get_func(fnc)->pc = get_str(code);
+            get_func(fnc)->name = obj__main__;
             tm->cur--; // to use the first frame;
 			tm_eval( fnc , tm->none);
 			// cprintln(mod);
@@ -183,10 +193,14 @@ int tm_run(int argc, char* argv[]){
 		for(i = cur; i >= 0; i-- ){
 			tm_frame* f = tm->frames + i;
 			if( f->jmp == 0 ){
-				tm_printf("  File \"@\": @\n", f->file, f->line);
+				tm_printf("  File \"@\": in @ , @\n", f->file, f->func_name, f->line);
 			}
 		}
 		tm_printf("Exception: @", tm->frames[tm->cur].ex);
+        tm_obj temp = build_list( 10, tm->frames[tm->cur].locals);
+        cprintln( temp );
+        // cprintln( tm->frames[cur].globals);
+        // cprintln( tm->builtins);
 	}
 }
 

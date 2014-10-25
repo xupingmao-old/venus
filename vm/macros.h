@@ -21,7 +21,6 @@
 #define get_list_len(obj) get_list(obj)->len
 #define get_dict(obj) get_val(obj).dict
 #define get_dict_len(obj) get_dict(obj)->len
-#define get_map(obj) get_val(obj).map
 #define get_mod(obj) get_val(obj).mod
 #define get_map_len(obj) get_map(obj)->len
 

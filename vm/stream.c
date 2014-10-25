@@ -92,12 +92,12 @@ tm_obj _load(char* fname){
 	FILE* fp = fopen(fname, "rb");
 	if( fp == NULL ){
 		tm_raise("load: can not open file \"@\"", str_new(fname, strlen(fname)));
-		return tm->none;
+		return obj_none;
 	}
 	long len = _get_file_rest_len(fp);
 	if(len > MAX_FILE_SIZE ){
 		tm_raise("load: file too big to load, size = @", number_new(len));
-		return tm->none;
+		return obj_none;
 	}
 	tm_obj text = str_new(NULL, len);
 	char* s = get_str(text);
