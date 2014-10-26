@@ -18,7 +18,8 @@ void store_tag( tm_module* mod, int idx, unsigned char* pos){
   if( mod->tags == NULL ){
     tm_raise("code_check: invalid code, miss TAGSIZE information");
   }else if( idx >= mod->tagsize ){
-    tm_raise("code_check: invalid code, error with TAG value");
+    tm_raise("code_check: invalid code, error with TAG value @ , but tagsize = @, s0 = @, s1 = @", 
+      number_new(idx), number_new(mod->tagsize), number_new(*(pos-2)), number_new(*(pos-1)) );
   }
   // printf("tags:%d -> %s\n", idx, pos);
   mod->tags[idx] = pos;
@@ -39,6 +40,9 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
     int stacksize = 100;
     int curstack = 0;
     int temp = 0;
+    int def_count = 0;
+    if( isFuncDef )
+      def_count = 1;
     tm_module* mod = get_mod(_mod);
     while(1){
         int ins = next_byte(s);
@@ -52,12 +56,13 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
             len+=1 + sizeof(double);
             s+=sizeof( double);
             break;
-        case ADD:case SUB:case MUL:case DIV:case MOD:
+        case ADD:case SUB:case MUL:case DIV:case MOD:case NEG : case NOT:
         case LOAD_PARAMS:
         case GT:case LT:case GTEQ:case LTEQ:case EQEQ:case NOTEQ:
         case GET:case SET:case IN:case NOTIN:
         case POP:
         case RETURN:
+        case AND: case OR:
           len++;
           break;
         case STORE_LOCAL:
@@ -74,9 +79,14 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
         case LOAD_CONSTANT:
         case LOAD_GLOBAL:
         case STORE_GLOBAL:
+          next_short(s);
+          len+=3;
+          break;
         case TM_DEF:
             next_short(s);
             len+=3;
+            if( isFuncDef )
+              def_count++;
             break;
         case POP_JUMP_ON_TRUE:
         case POP_JUMP_ON_FALSE:
@@ -89,6 +99,7 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
             break;
         case TAGSIZE:
             mod->tagsize = next_short(s);
+            // printf("tagsize = %d\n", mod->tagsize );
             mod->tags = init_tags(mod->tagsize);
             len+=3;
             break;
@@ -99,8 +110,12 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
           break;
         case TM_EOF:
           len++;
-          if( isFuncDef )
-            goto ret;
+          if( isFuncDef){
+            def_count--;
+            // printf("def_count = %d\n",def_count );
+            if( def_count == 0)
+              goto ret;
+          }
           break;
         case TM_EOP:
             len++;

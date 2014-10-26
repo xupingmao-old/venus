@@ -68,14 +68,16 @@ tm_obj module_new( tm_obj file , tm_obj name, tm_obj code){
   mod->tags = NULL;
   mod->tagsize = 0;
   mod->checked = 0;
-  mod->constants = tm->none;
+  mod->constants = list_new(20);
+  list_append( get_list(mod->constants), obj_none);
   mod->globals = dict_new();
   tm_obj obj;
   obj.type = TM_MOD;
   obj.value.mod = mod;
   tm_obj m = gc_track( obj );
   /* set module */
-  tm_set( tm->modules, file, m);
+  tm_set( tm->modules, file, mod->globals);
+  tm_set(mod->globals, obj__name__, name);
   return m;
 }
 

@@ -65,10 +65,14 @@ void _tm_print(tm_obj o, int depth, int show_special){
 	// case TM_DCT:dict_print(get_dict(o));break;
 	case TM_FNC:
 		if( get_func(o)->self.type != TM_NON){
-			printf("<method %p>",get_func(o));
+			printf("<method %p ",get_func(o));
 		}else{
-			printf("<function %p>",get_func(o));
+			printf("<function %p ",get_func(o));
 		}
+		if( get_func(o)->name.type != TM_NON){
+			cprint(get_func(o)->name);
+		}
+		printf(">");
 		break;
 	case TM_MOD:
 		printf("<module %p>",get_mod(o));
@@ -222,10 +226,36 @@ tm_obj tm_range( tm_obj p){
 	return list;
 }
 
+tm_obj _merge(tm_obj des, tm_obj src){
+	if( des.type != src.type || des.type != TM_DCT)
+		tm_raise("merge: can not merge @ and @", des, src);
+	tm_obj k,v;
+	dict_iter_init(get_dict(src));
+	while( dict_inext(get_dict(src), &k, &v)){
+		tm_set( des, k, v);
+	}
+	return des;
+}
+
 /* import file */
 tm_obj tm_import( tm_obj p){
-	tm_obj mod = get_arg(p, 0, TM_STR);
-	if(_tm_has( tm->modules, mod) ) return obj_none;
+	tm_obj name = get_arg(p, 0, TM_STR);
+	tm_obj arg1 = get_arg(p, 1, TM_STR);
+	tm_obj mod;
+	// puts("call import");
+	// name = tm_add( name, obj_mod_ext);
+	if(_tm_has( tm->modules, name) ) {
+		// puts("enter");
+		// cprint(tm->modules);
+	 	mod = tm_get( tm->modules, name);
+	}else{
+		mod = dict_new();
+		// printf("new a module with empty value\n");
+	}
+	if( tm_eq(arg1, obj_star) ){
+		// printf("import *\n");
+		_merge(tm->frames[tm->cur].globals,  mod);
+	}
 	return obj_none;
 }
 

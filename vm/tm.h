@@ -2,7 +2,7 @@
 
 #ifndef tm_h
 #define tm_h
-
+#pragma pack(4)
 #define DEBUG_GC 0
 #define PRINT_INS 0
 #define PRINT_INS_CONST 0
@@ -36,10 +36,14 @@ typedef struct tm_list
 	struct tm_obj* nodes;
 }tm_list;
 
+struct  _gc_obj
+{
+	int marked;
+	/* data */
+};
 
 typedef union tm_value
 {
-	int marked;
 	double dv;
 	double num;
 	int iv;
@@ -50,6 +54,7 @@ typedef union tm_value
 	struct tm_func* func;
 	struct tm_dict* dict;
 	struct tm_module* mod;
+	struct _gc_obj* gc;
 }tm_value;
 
 
@@ -74,6 +79,7 @@ typedef struct tm_module
 
 typedef struct tm_stream
 {
+	int marked;
 	tm_obj name;
 	FILE* fp;
 }tm_stream;
@@ -132,27 +138,25 @@ typedef struct tm_vm
 	tm_obj chars[256];
 
 	tm_obj none;
-	tm_obj string_methods;
-	tm_obj list_methods;
 
 	tm_obj modules;
 	tm_obj builtins;
+	tm_obj root;
 	int steps;
 
-	tm_list* root;
 	tm_list* all;
 	tm_list* black;
 	tm_list* white;
 	tm_dict* strings;
 
 	int allocated_mem;
-	int used_mem;
+	int gc_limit;
 
 }tm_vm;
 
 /**
  * global virtual machine
- */
+*/
 tm_vm* tm;
 
 tm_obj str_class;
@@ -165,6 +169,8 @@ tm_obj obj_none;
 tm_obj obj__init__;
 tm_obj obj__main__;
 tm_obj obj__name__;
+tm_obj obj_mod_ext;
+tm_obj obj_star;
 tm_obj __chars__[256];
 #include "constants.h"
 #include "object.h"
@@ -187,6 +193,7 @@ tm_obj tm_number(double v){
 #include "instruction.h"
 #include "args.h"
 
+#include "compile.c"
 #include "string.c"
 #include "list.c"
 #include "func.c"

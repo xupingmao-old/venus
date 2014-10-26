@@ -1,5 +1,4 @@
-if "tm" not in globals():
-    from boot import *
+from boot import *
 
 class Token:
     def __init__(self,type='symbol',val=None,pos=[0,0]):

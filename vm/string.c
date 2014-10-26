@@ -14,7 +14,7 @@ tm_obj str_new(char *s , int size)
 		str->value[size] = '\0'; 
 	}else{
 		str->inHeap = 0;
-		if( size == 0 && str->value != ""){
+		if( size == 0 ){
 			str->value = "";
 			str->len = 0;
 		}else{

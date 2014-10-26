@@ -1,6 +1,4 @@
 from tokenize import *
-if "tmvm" not in globals():
-	from boot import *
 
 class AstNode:
 	def __init__(self, type=None):
@@ -164,7 +162,7 @@ def factor(p):
 		node = AstNode('dict')
 		if p.token.type == '}':
 			p.next()
-			node.items = None
+			node.items = []
 			p.add(node)
 		else:
 			items = {}
@@ -285,7 +283,7 @@ class PreExpr:
 			elif lasttoken.type == '-':
 				node = AstNode("neg")
 			else:
-				node = AstNode(".")
+				node = AstNode("not")
 			node.val = p.pop()
 			p.add(node)
 		else:
@@ -313,6 +311,12 @@ assign = MyExpr(comma.run, ['=', '+=', '-=', '*=', '/=', '%='])
 
 expr = assign.run
 
+def name2str(obj):
+	if obj.type == 'name':
+		obj.type = 'string'
+	elif obj.type == ',':
+		name2str(obj.a)
+		name2str(obj.b)
 
 def do_from(p):
 	p.next()
@@ -320,6 +324,7 @@ def do_from(p):
 	p.expect("import")
 	node = AstNode("from")
 	node.a = p.pop()
+	name2str(node.a)
 	if p.token.type == "*":
 		p.token.type = 'string'
 		node.b = p.token
@@ -327,6 +332,7 @@ def do_from(p):
 	else:
 		expr(p)
 		node.b = p.pop()
+		name2str(node.b)
 	p.add( node )
 
 def do_import(p):
@@ -484,8 +490,7 @@ def do_arg(p):
 		# [ arg * ]
 		# [ arg , arg = v ]
 		while p.token.type == 'name':
-			arg = AstNode()
-			arg.type = 'arg'
+			arg = AstNode("arg")
 			arg.val = None
 			arg.name = p.token
 			p.next()
@@ -506,8 +511,7 @@ def do_arg(p):
 		if p.token.type == '*':
 			p.next()
 			makesure (p.token.type == 'name', 'invalide arguments ' + p.error())
-			arg = AstNode()
-			arg.type = 'varg'
+			arg = AstNode("varg")
 			arg.val = None
 			arg.name = p.token
 			args.append(arg)
@@ -519,8 +523,7 @@ def do_arg(p):
 def do_def(p):
 	p.next()
 	makesure (p.token.type == 'name')
-	func = AstNode()
-	func.type = 'def'
+	func = AstNode("def")
 	func.name = p.token
 	p.next()
 	func.args = do_arg(p)

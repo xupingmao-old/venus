@@ -51,7 +51,7 @@ tm_obj _tm_str(  tm_obj a){
 	case TM_DCT:
 		return str_new("<dict>", -1);
 	case TM_FNC:
-		return str_new("<function>", -1);
+		return tm_format("<function @>", get_func(a)->name);
 	case TM_MOD:
 		return str_new("<module>", -1);
 	}
@@ -158,6 +158,7 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 				return get_func( self )->code;
 			}
 	}
+	cprintln(self);
 	tm_raise("tm_get: keyError @, self = @ ", k, self );
 	return tm->none;
 }
@@ -344,11 +345,34 @@ tm_obj _tm_not( tm_obj o){
 int _tm_bool( tm_obj v){
 	switch( v.type ){
 		case TM_NUM:return get_num(v) != 0;
+		case TM_NON:return 0;
 		case TM_STR:return get_str_len(v) > 0;
 		case TM_LST:return get_list_len(v) > 0;
 		case TM_DCT:return get_dict_len(v) > 0;
 	}
 	return 0;
+}
+
+tm_obj tm_and( tm_obj a, tm_obj b){
+	return number_new(_tm_bool(a) && _tm_bool(b));
+}
+
+tm_obj tm_or( tm_obj a, tm_obj b){
+	return number_new(_tm_bool(a) || _tm_bool(b));
+}
+
+tm_obj tm_not( tm_obj o){
+	if( _tm_bool(o)) return obj_false;
+	return obj_true;
+}
+
+tm_obj tm_neg(tm_obj o){
+	if( o.type == TM_NUM){
+		get_num(o) = -get_num(o);
+		return o;
+	}
+	tm_raise("tm_neg: can not handle @", o);
+	return obj_none;
 }
 
 int tm_iter( tm_obj self, tm_obj k, tm_obj *v){

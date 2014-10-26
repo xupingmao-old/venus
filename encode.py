@@ -1,7 +1,3 @@
-if 'tinytm' not in globals():
-    from boot import *
-# encode for
-
 from parse import *
 from instruction import *
 
@@ -92,6 +88,13 @@ def encode_item( tk ):
     elif tk.type == 'list':
         n = encode_item(tk.val)
         emit(LIST, n)
+    elif tk.type == 'dict':
+        items = tk.items
+        l = len(items)
+        for k in items:
+            encode_item(k)
+            encode_item(items[k])
+        emit(DICT, l)
     elif t == '$':
         encode_item(tk.name)
         n = encode_item(tk.args)
@@ -100,7 +103,13 @@ def encode_item( tk ):
         if tk.val.type == 'number':
             tk = tk.val
             tk.val = -tk.val
-        emit_load(tk)
+            encode_item(tk)
+        else:
+            encode_item(tk.val)
+            emit(NEG)
+    elif t == 'not':
+        encode_item(tk.val)
+        emit(NOT)
     elif t == 'arg':
         def_local(tk.name)
         if tk.val:
@@ -162,7 +171,7 @@ def encode_item( tk ):
     elif t == 'continue':
         jump( start_tag_list[-1] )
     elif t == 'from':
-        encode_item(Token('name','importfrom'))
+        encode_item(Token('name','import'))
         n = encode_item(tk.a)
         n += encode_item(tk.b)
         emit(CALL, n)
@@ -185,12 +194,14 @@ def encode_item( tk ):
         encode_item(tk.a)
         emit(JUMP_ON_FALSE, end)
         encode_item(tk.b)
+        emit(AND)
         tag( end )
     elif t == 'or':
         end = newtag()
         encode_item(tk.a)
         emit( JUMP_ON_TRUE, end)
         encode_item( tk.b )
+        emit(OR)
         tag( end )
     elif t == "for":
         start_tag, end_tag = newtag(), newtag()
@@ -229,6 +240,12 @@ def encode(content):
     r = parse(content)
     encode_item(r)
 
+def save_bin(src, tar):
+    global tag_count
+    tag_count = 0
+    ins_init()
+    encode(load(src))
+    save_code(tar, tag_count)
 
 def main( ):
     import sys
@@ -237,10 +254,11 @@ def main( ):
         name = argv[1]
     elif len(argv) == 3 and argv[1] == '-save':
         name = argv[2]
+    ins_init()
     encode( load(name) )
     save_code("bin", tag_count)
-    print('\n\n==========constants=============')
-    print_constants()
+    # print('\n\n==========constants=============')
+    # print_constants()
     # input("pause")
-
-main()
+if __name__ == "__main__":
+    main()

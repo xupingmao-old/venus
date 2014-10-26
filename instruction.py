@@ -1,6 +1,4 @@
-if 'tm' not in globals():
-    from boot import *
-
+from boot import *
 from tokenize import Token
 #constants
 # NONE = 5
@@ -14,6 +12,8 @@ SUB = 12
 MUL = 13
 DIV = 14
 MOD = 15
+NEG = 16
+NOT = 17
 
 # compare
 GT = 20
@@ -77,10 +77,13 @@ codes = {
 	DIV : "DIV",
 	GT : "GT",
 	LT : "LT",
+	NEG: "NEG",
 	GTEQ: "GTEQ",
 	LTEQ: "LTEQ",
 	EQEQ: "EQEQ",
 	NOTEQ: "NOTEQ",
+	AND: "AND",
+	OR: "OR",
 	RETURN : "RETURN",
 	TM_DEF : "TM_DEF",
 	GET : "GET",
@@ -100,7 +103,8 @@ codes = {
 	TAG : "TAG",
 	JUMP : "JUMP",
 	TAGSIZE : "TAGSIZE",
-	TM_FOR : "TM_FOR"
+	TM_FOR : "TM_FOR",
+	NOT : "NOT"
 }
 # instructions 
 
@@ -181,14 +185,27 @@ class Names:
 			idx = constants.index(v)
 			emit(STORE_GLOBAL, idx)
 
-constants = Constants()
-names = Names()
-bin = "" # binary code
-out = []
+constants = None
+names = None
+bin = None
+out = None
+
+def ins_init():
+	global constants
+	global names
+	global bin
+	global out
+
+	constants = Constants()
+	names = Names()
+	bin = "" # binary code
+	out = []
+
+ins_init()
 def def_global( v ):
 	names.scope.globals.append(v.val)
 # opcode : op
-mode1 = [ADD, SUB, MUL, DIV, MOD, POP, GET, SET, 
+mode1 = [ADD, SUB, MUL, DIV, MOD, NEG, NOT, POP, GET, SET, AND, OR,
         LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,IN, NOTIN,
 	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS]
 # opcode : op byte
@@ -240,13 +257,13 @@ def emit(ins, val = None):
 		bin += code(ins, val)
 	elif ins == NEW_NUMBER:
 		bin += code(ins, val)
-	if ins == NEW_STRING:
-		print( codes[ins] + '['+str(len(val))+']'+str(val))
-	elif val != None:
-		# val = '(' + str(constants.get(val)) + ')'
-		print( codes[ins] + ' ' + str(val) )
-	else:
-		print( codes[ins])
+	# if ins == NEW_STRING:
+	# 	print( codes[ins] + '['+str(len(val))+']'+str(val))
+	# elif val != None:
+	# 	# val = '(' + str(constants.get(val)) + ')'
+	# 	print( codes[ins] + ' ' + str(val) )
+	# else:
+	# 	print( codes[ins])
 
 def emit_def( v):
 	idx = constants.index(v)

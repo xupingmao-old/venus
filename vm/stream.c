@@ -50,7 +50,7 @@ tm_obj stream_close(tm_obj params){
 	return tm->none;
 }
 
-int _get_file_rest_len( FILE* fp){
+long _get_file_rest_len( FILE* fp){
 	if( fp == NULL ){
 		tm_raise("stream_read: can not open stream");
 	}
@@ -102,6 +102,7 @@ tm_obj _load(char* fname){
 	tm_obj text = str_new(NULL, len);
 	char* s = get_str(text);
 	fread(s, len, 1, fp);
+	fclose(fp);
 	return text;
 }
 

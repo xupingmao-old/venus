@@ -1,5 +1,6 @@
 import sys
 import struct
+import os
 ARGV = sys.argv
 argv = sys.argv
 
@@ -16,6 +17,9 @@ def save( name, content):
     fp = open(name, 'wb')
     fp.write(content)
     fp.close()
+
+def rm(fname):
+    os.remove(fname)
 
 def istype(val,  type):
     if type == 'string':
@@ -34,6 +38,11 @@ def typeof(val):
 
 def short( a, b):
     return (a << 8) + b
+
+def getshort(a, b):
+    return (ord(a) << 8) + ord(b)
+
+nextshort = getshort
 _code = ''
 
 def code8(ins):

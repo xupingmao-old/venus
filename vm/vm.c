@@ -19,13 +19,23 @@ void reg_builtin(char* name, tm_obj v){
 void reg_builtins(){
 	/* constants */
 
-	obj_true = number_new(1);
-	obj_false = number_new(0);
-	obj_none.type = TM_NON;
+    tm->builtins = dict_new();
+    tm->modules = dict_new();
+    obj_true = number_new(1);
+    obj_false = number_new(0);
+    obj_none.type = TM_NON;
     obj__init__ = str_new("__init__", -1);
     obj__main__ = str_new("__main__", -1);
     obj__name__ = str_new("__name__", -1);
+    obj_mod_ext = str_new("_pyc", -1);
+    obj_star = str_new("*", -1);
 
+    list_append( get_list(tm->root), tm->builtins);
+    list_append( get_list(tm->root), tm->modules);
+
+    /* set module boot */
+    tm_set( tm->modules, str_new("boot", -1), dict_new());
+    // tm_set( tm->modules, str_new("tokenize_pyc", -1), dict_new());
     /* init chars , will never collected until last */
     int i;
     for(i = 0; i < 256; i++){
@@ -47,7 +57,7 @@ void reg_builtins(){
         {"int", tm_int},
         {"float", tm_float},
         {"range", tm_range},
-		{"import", tm_import},
+        {"import", tm_import},
         {"globals", tm_globals},
         {"len", tm_len},
         {"exit", tm_exit},
@@ -59,6 +69,7 @@ void reg_builtins(){
     tm_set( tm->builtins, str_new("tm", -1), number_new(1));
     tm_set( tm->builtins, str_new("True", -1), number_new(1));
     tm_set( tm->builtins, str_new("False",-1), number_new(0));
+    tm_set( tm->builtins, str_new("__builtins__", -1), tm->builtins);
 
     /* build str class */
     str_class = dict_new();
@@ -103,17 +114,28 @@ void reg_builtins(){
    	}
 }
 
+void load_bultin_module(char* fname, unsigned char* s, int codelen){
+  tm_obj mod_name = str_new(fname, strlen(fname));
+  tm_obj code = str_new(s, codelen) ;
+  tm_obj mod = module_new(mod_name, mod_name , code );
+  tm_obj fnc = func_new(mod, code, tm->none, NULL);
+  get_func(fnc)->pc = get_str(code);
+  get_func(fnc)->name = obj__main__;
+  tm_eval( fnc , obj_none);
+  // tm_set( tm->modules, mod_name, get_mod(mod)->globals);
+}
+
 void frames_init(){
 	int i;
 	for(i = 0; i < FRAMES_COUNT; i++){
 		tm_frame* f = tm->frames + i;
-		f->stacksize = 200;
+		f->stacksize = 1000;
 		f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
 		f->ex = obj_none;
 		f->file = obj_none;
 		f->line = obj_none;
-        f->globals = obj_none;
-        f->func_name = obj_none;
+	        f->globals = obj_none;
+		f->func_name = obj_none;
 		f->jmp = 0;
 		f->maxlocals = 0;
 	}
@@ -144,10 +166,7 @@ int tm_run(int argc, char* argv[]){
 		//test_dict();
 		gc_init();
 		constants_init();
-		tm->builtins = dict_new();
-        tm->modules = dict_new();
 		frames_init();
-
 		tm_obj p = list_new(argc);
 		// init argv;
         // first vm itself, second srcfile
@@ -156,8 +175,8 @@ int tm_run(int argc, char* argv[]){
 			list_append( get_list(p), arg);
 		}
         
-        reg_builtins();
-		reg_builtin("ARGV", p);
+            reg_builtins();
+            reg_builtin("ARGV", p);
 
 		if( argc >= 2){
 			char* fname = argv[1];
@@ -169,15 +188,22 @@ int tm_run(int argc, char* argv[]){
 			// printf("load file %s\n", fname);
 			// cprintln(code);
 			tm_obj mod_name = str_new(fname, strlen(fname));
-			tm->frames[tm->cur].file = mod_name;
-			tm_obj mod = module_new(mod_name, obj__main__ , code );
 
-            tm_set( get_mod(mod)->globals, obj__name__, obj__main__);
-            tm_set( get_mod(mod)->globals, str_new("tm", -1), number_new(1));
-            tm_obj fnc = func_new(mod, code, tm->none, NULL);
+       load_bultin_module("tokenize", tokenize_pyc, sizeof(tokenize_pyc));  
+       // puts("tokenize done");
+       // cprintln(tm->modules);
+       load_bultin_module("parse", parse_pyc, sizeof(parse_pyc));  
+       // cprintln(tm->modules);
+       // puts("parse done");
+       load_bultin_module("instruction", instruction_pyc, sizeof(instruction_pyc));  
+       // puts("instruction done");
+       load_bultin_module("encode", encode_pyc, sizeof(encode_pyc));  
+       // puts("encode done");
+	tm_obj mod = module_new(mod_name, obj__main__ , code );
+          tm_obj fnc = func_new(mod, code, tm->none, NULL);
             get_func(fnc)->pc = get_str(code);
             get_func(fnc)->name = obj__main__;
-			tm_eval( fnc , obj_none);
+      tm_eval( fnc , obj_none);
 			// cprintln(mod);
             // tm_obj res = _tm_call( "token", "do_tokenize", as_list(1, str_new("print(\"hello,world\"", -1)));
             // cprintln(res);
@@ -218,6 +244,7 @@ int tm_init(int argc, char* argv[]){
 		fprintf(stderr, "vm init fail");
 		return -1;
 	}
+
 	tm_run(argc, argv);
 #if LIGHT_DEBUG_GC
     puts("free frames ...");

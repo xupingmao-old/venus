@@ -5,18 +5,22 @@
 
 void gc_init( ){
 	tm->allocated_mem = 0;
+	tm->gc_limit = 1024 * 8; // set 8k to see gc process
 
 	int init_size = 100;
-	tm->root = _list_new( init_size );
+	tm->all = _list_new(init_size);
+
 	tm->black = _list_new(init_size);
 	tm->white = _list_new(init_size);
-	tm->all = _list_new(init_size);
+
+	tm->root = list_new( init_size );
 	// tm->strings = dict_new_();
 	// tm->strings = _dict_new();
 }
 tm_obj gc_track( tm_obj v){
 	switch( v.type ){
 	case TM_NUM:
+	case TM_NON:
 		return v;
 	case TM_STR:
 		v.value.str->marked = 1;
@@ -32,20 +36,30 @@ tm_obj gc_track( tm_obj v){
 		break;
 	}
 	list_append(tm->all, v);
+	if( tm->allocated_mem > tm->gc_limit){
+		tm->gc_limit += tm->gc_limit / 2;
+		gc_full();
+	}
 	return v;
 }
+/*
+ -1 : unused
+ 0  : not stable
+ 1  : new
+2   : handled
+*/
 
 void gc_mark(tm_obj o){
-	if( o.value.marked )
+	if( o.value.gc->marked == 2 )
 		return;
 	switch(o.type){
 		case TM_NUM:return;
 		case TM_STR:{
-			o.value.str->marked = 1;
+			o.value.str->marked = 2;
 			break;
 		}
 		case TM_LST:{
-				get_list(o)->marked = 1;
+				get_list(o)->marked = 2;
 				tm_list* list = get_list(o);
 				int n = list->len;
 				int i;for(i = 0; i < n; i++){
@@ -54,7 +68,7 @@ void gc_mark(tm_obj o){
 			}
 			break;
 		case TM_DCT:{
-			get_dict(o)->marked = 1;
+			get_dict(o)->marked = 2;
 			tm_obj k,v;
 			dict_iter_init(get_dict(o));
 			while( dict_inext(get_dict(o),&k, &v)){
@@ -64,12 +78,14 @@ void gc_mark(tm_obj o){
 			break;
 		}
 		case TM_FNC:
-			get_func(o)->marked = 1;
+			get_func(o)->marked = 2;
 			gc_mark(get_func(o)->code);
 			gc_mark(get_func(o)->mod);
 			gc_mark(get_func(o)->self);
+			gc_mark(get_func(o)->name);
 			break;
 		case TM_MOD:
+			get_mod(o)->marked = 2;
 			gc_mark(get_mod(o)->code);
 			gc_mark(get_mod(o)->name);
 			gc_mark(get_mod(o)->file);
@@ -79,27 +95,58 @@ void gc_mark(tm_obj o){
 	}
 }
 
+void gc_clean(){
+	int n,i;
+	n = tm->all->len;
+	tm_obj* nodes = tm->all->nodes;
+	tm->black->len = 0;
+	for(i = 0; i < n; i++){
+		if( -1 == nodes[i].value.gc->marked ){
+			obj_free(nodes[i]);
+		}
+		else{
+			list_append( tm->black, nodes[i]);
+		}
+	}
+	tm_list* temp = tm->black;
+	tm->black = tm->all;
+	tm->all = temp;
+}
+
 void gc_full(){
 	int n,i;
 	// mark vm core
-	gc_mark(tm->builtins);
-	gc_mark(tm->modules);
-	for(i = tm->cur; i >= 0; i--){
+	// gc_mark(tm->builtins);
+	// gc_mark(tm->modules);
+/*	for(i = tm->cur; i >= 0; i--){
 		tm_frame* f = tm->frames + i;
 		int maxlocals = f->maxlocals;
 		int j;for(j = 0; j < maxlocals; j++){
 			gc_mark(f->locals[j]);
 		}
-	}
+	}*/
 
-	// mark all object 0
+	long t1,t2;
+	t1 = clock();
 	n = tm->all->len;
 	tm_obj* nodes = tm->all->nodes;
+	// mark all object except new , to 0
 	for(i = 0; i < n; i++){
-		nodes[i].value.marked = 0;
+		if( 0 == nodes[i].value.gc->marked ){
+			nodes[i].value.gc->marked = -1;
+		}
+		else{
+			nodes[i].value.gc->marked = 0;
+		}
 	}
-	tm_obj root = obj_new(TM_LST, tm->root);
-	gc_mark(root);
+	puts("full gc start ...");
+	int old = tm->allocated_mem, _new;
+	// mark all used object 2;
+	gc_mark(tm->root);
+	gc_clean();
+	t2 = clock();
+	_new = tm->allocated_mem;
+	printf("full gc , elapsed time %ld, %d = > %d , freed %d B\n",t2-t1, old, _new, old- _new );
 }
 
 void gc_info(){
@@ -130,7 +177,7 @@ void gc_free(){
 		obj_free(all->nodes[i]);
 	}
 
-	list_free( tm->root);
+	obj_free( tm->root);
 	list_free( tm->all);
 	list_free( tm->black );
 	list_free( tm->white);

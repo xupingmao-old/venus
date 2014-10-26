@@ -48,20 +48,14 @@ tm_obj _tm_call( tm_obj fnc, tm_obj params){
 
 tm_obj* get_constants(tm_obj mod){
   tm_obj constants = get_mod(mod)->constants;
-  tm_obj v = constants;
-  if( constants.type == TM_NON){
-    v = list_new(20);
-    list_append( get_list(v), tm->none);
-    get_mod(mod)->constants = v;
-  }
-  return get_list(v)->nodes;
+  return get_list(constants)->nodes;
 }
 
 
 #define read_number( v, s) v = *(double*)s; s+=sizeof(double);
-#define TM_PUSH( x ) *(++top) = x
+#define TM_PUSH( x ) *(++top) = (x)
 #define TM_POP() *(top--)
-#define TM_TOP() *top
+#define TM_TOP() (*top)
 
 #define CASE( code, body ) case code :  body ; break;
 
@@ -137,8 +131,8 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   f->file = get_mod(mod)->file;
   f->globals = globals;
   f->func_name = get_func(fnc)->name;
-  register tm_obj* locals = f->locals;
-  register tm_obj* top = f->stack;
+  tm_obj* locals = f->locals;
+  tm_obj* top = f->stack;
 
   tm_obj* constants = get_constants(mod);
   tm_obj x, k, v;
@@ -308,6 +302,8 @@ if( enable_debug ){
   TM_OP( GTEQ, tm_gteq);
   TM_OP( IN, tm_in);
   TM_OP( NOTIN, tm_notin);
+  TM_OP(AND, tm_and);
+  TM_OP(OR, tm_or);
   
   case SET:
     k = TM_POP();
@@ -326,6 +322,14 @@ if( enable_debug ){
 #endif
     goto start;
   }
+
+  case NOT:
+    TM_TOP() = tm_not(TM_TOP());
+    goto start;
+
+  case NEG:
+    TM_TOP() = tm_neg(TM_TOP());
+    goto start;
 
 /*  case IN: {
 #if PRINT_INS
@@ -374,7 +378,7 @@ if( enable_debug ){
 
   case TM_FOR:{
     jmp = next_short(s);
-	  k = *top;
+    k = *top;
     x = *(top-1);
 #if PRINT_INS
     printf("TM_FOR %d\n", jmp);
@@ -502,6 +506,7 @@ if( enable_debug ){
   }
 
   default:
+    cprintln(f->globals);
     tm_raise("BAD INSTRUCTION, @\n", number_new(ins));
   goto end;
 }
@@ -533,5 +538,9 @@ if( enable_debug ){
 
   end:
   tm->cur--;
+  if( top != f->stack ) {
+    printf("func_name = %s, count = %d\n", get_str(f->func_name) , (int)( top - f->stack));
+    // tm_raise("top stack leaks");
+  }
   return ret;
 }
