@@ -90,6 +90,7 @@ typedef struct tm_func
 	int marked;
 	int fnc_type;
 	int maxlocals;
+	int maxstack;
 	instruction* pc;
 	tm_obj self;
 	tm_obj mod; // module, includes global, constants, etc.
@@ -109,6 +110,7 @@ typedef struct tm_frame
 	char* last_code;
 	int stacksize;
 	int maxlocals;
+	int maxstack;
 	tm_obj globals;
 	tm_obj constants; 
 	tm_obj file; // file name

@@ -38,7 +38,13 @@ tm_obj gc_track( tm_obj v){
 	list_append(tm->all, v);
 	if( tm->allocated_mem > tm->gc_limit){
 		tm->gc_limit += tm->gc_limit / 2;
-		//gc_full();
+		gc_full();
+		// int i;
+		// for(i = 0; i < tm->cur; i++){
+		// 	tm_frame* f = tm->frames+i;
+		// 	printf("func_name = %s, maxstack = %d, maxlocals = %d\n", get_str(f->func_name),
+		// 	f->maxstack, f->maxlocals );
+		// }
 	}
 	return v;
 }
@@ -46,16 +52,17 @@ tm_obj gc_track( tm_obj v){
 */
 
 void gc_mark(tm_obj o){
-	if( o.value.gc->marked)
+	if( o.type == TM_NUM || o.type == TM_NON)
+		return;
+	if( 2 == o.value.gc->marked )
 		return;
 	switch(o.type){
-		case TM_NUM:return;
 		case TM_STR:{
-			o.value.str->marked = 1;
+			o.value.str->marked = 2;
 			break;
 		}
 		case TM_LST:{
-				get_list(o)->marked = 1;
+				get_list(o)->marked = 2;
 				tm_list* list = get_list(o);
 				int n = list->len;
 				int i;for(i = 0; i < n; i++){
@@ -64,7 +71,7 @@ void gc_mark(tm_obj o){
 			}
 			break;
 		case TM_DCT:{
-			get_dict(o)->marked = 1;
+			get_dict(o)->marked = 2;
 			tm_obj k,v;
 			dict_iter_init(get_dict(o));
 			while( dict_inext(get_dict(o),&k, &v)){
@@ -74,14 +81,14 @@ void gc_mark(tm_obj o){
 			break;
 		}
 		case TM_FNC:
-			get_func(o)->marked = 1;
+			get_func(o)->marked = 2;
 			gc_mark(get_func(o)->code);
 			gc_mark(get_func(o)->mod);
 			gc_mark(get_func(o)->self);
 			gc_mark(get_func(o)->name);
 			break;
 		case TM_MOD:
-			get_mod(o)->marked = 1;
+			get_mod(o)->marked = 2;
 			gc_mark(get_mod(o)->code);
 			gc_mark(get_mod(o)->name);
 			gc_mark(get_mod(o)->file);
@@ -93,10 +100,13 @@ void gc_mark(tm_obj o){
 
 void gc_mark_frames(){
 	int i,n;
-	for(i = 0; i < tm->cur; i++){
+	for(i = 0; i <= tm->cur; i++){
 		tm_frame* f = tm->frames+i;
-		int j;for(j = 0; j < f->maxlocals; j++){
+		int j;for(j = 0; j < 100; j++){
 			gc_mark(f->locals[j]);
+		}
+		for(j = 0; j < 200; j++){
+			gc_mark(f->stack[j]);
 		}
 	}
 }
@@ -107,11 +117,14 @@ void gc_clean(){
 	tm_obj* nodes = tm->all->nodes;
 	tm->black->len = 0;
 	for(i = 0; i < n; i++){
-		if( nodes[i].value.gc->marked ){
-			list_append( tm->black, nodes[i]);
-		}
-		else{
+		if( -1 == nodes[i].value.gc->marked) {
 			obj_free(nodes[i]);
+		}
+		else if(2 == nodes[i].value.gc->marked){
+			list_append( tm->black, nodes[i]);
+		}else {
+			nodes[i].value.gc->marked = -1;
+			list_append( tm->black, nodes[i]);
 		}
 	}
 	tm_list* temp = tm->black;
@@ -138,7 +151,11 @@ void gc_full(){
 	tm_obj* nodes = tm->all->nodes;
 	// mark all object except new , to 0
 	for(i = 0; i < n; i++){
-		nodes[i].value.gc->marked = 0;
+		if( 1 == nodes[i].value.gc->marked){
+			// nodes[i].value.gc->marked = -1;
+		}else{
+			nodes[i].value.gc->marked = 0;
+		}
 	}
 	puts("full gc start ...");
 	int old = tm->allocated_mem, _new;

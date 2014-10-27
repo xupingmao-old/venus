@@ -67,6 +67,7 @@ tm_obj tm_def(tm_obj mod, char* s){
 	tm_obj fnc = func_new(mod, code, tm->none, NULL);
 	get_func(fnc)->pc = s;
 	get_func(fnc)->maxlocals = maxlocals;
+  get_func(fnc)->maxstack = maxstack;
 	return fnc;
 }
 
@@ -135,6 +136,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   f->globals = globals;
   f->func_name = get_func(fnc)->name;
   f->maxlocals = get_func(fnc)->maxlocals;
+  f->maxstack  = get_func(fnc)->maxstack;
   tm_obj* locals = f->locals;
   tm_obj* top = f->stack;
 
@@ -149,6 +151,9 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   /* will optimize later */
   for(i = 0; i < 256; i++){
     locals[i].type = TM_NON;
+  }
+  for(i = 0; i < 256; i++){
+    top[i].type = TM_NON;
   }
 
   if( ! get_mod(mod)->checked ){
@@ -280,6 +285,18 @@ if( enable_debug ){
     TM_PUSH( templist );
     goto start;
   }
+
+  case LIST_APPEND:
+    #if PRINT_INS
+      printf("LIST_APPEND\n");
+    #endif
+    v = TM_POP();
+    x = TM_TOP();
+    if( x.type != TM_LST){
+      tm_raise("tm_eval: LIST_APPEND expect a list but see @", x);
+    }
+    list_append(get_list(x), v);
+    goto start;
 
   case DICT:{
     i = next_byte(s);

@@ -58,13 +58,17 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef, int* maxlocals, in
 		case GT:case LT:case GTEQ:case LTEQ:case EQEQ:case NOTEQ:
 		case IN:case NOTIN:case GET:case POP:
 		case RETURN:case AND: case OR:
+        case LIST_APPEND:
 			len++;
 			stacksize--;
 			break;
 		case NEG : case NOT:
         case LOAD_PARAMS:
+            len++;
+            break;
         case SET:
 			len++;
+            stacksize-=2;
 			break;
         case STORE_LOCAL:
         case LOAD_LOCAL:

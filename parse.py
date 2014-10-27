@@ -109,12 +109,12 @@ class ParserCtx:
 		return ' at ' + str(self.token.pos) + ' type = ' + self.token.type
 
 def parse(v):
-	# try:
-	r = tokenize(v)
-	p = ParserCtx(r)
-	return do_prog(p)
-	# except:
-		# print(" at line " + str( p.token.pos ) + " unknown error")
+	try:
+		r = tokenize(v)
+		p = ParserCtx(r)
+		return do_prog(p)
+	except:
+		print(" at line " + str( p.token.pos ) + " unknown error")
 
 # recursive desent
 
@@ -207,36 +207,18 @@ class MyExpr:
 			self.fnc(p)
 			p.addOp(t)
 
-# def f(self, p):
-# 	self.fnc(p)
-# 	while p.token.type in self.range:
-# 		p.next()
-# 		if t == '[':
-# 			expr(p)
-# 			p.expect(']')
-# 			p.addOp('get')
-# 		elif t == '(':
-# 			node = AstNode()
-# 			node.type = '$'
-# 			node.name = p.pop()
-# 			if p.token.type == ')':
-# 				p.next()
-# 				node.args = None
-# 				p.add( node )
-# 			else:
-# 				expr(p)
-# 				p.expect(')')
-# 				node.args = p.pop()
-# 				p.add( node )
-# 		else:
-# 			self.fnc(p)
-# 			p.addOp( 'get' )
-
 class Temp:
 	def __init__(self,fnc, range):
 		self.fnc = fnc
 		self.range = range
 	def run(self, p):
+		if p.token.type == '-':
+			p.next()
+			self.run(p)
+			node = AstNode("neg")
+			node.val = p.pop()
+			p.add(node)
+			return
 		self.fnc(p)
 		while p.token.type in self.range:
 			t = p.token.type
@@ -275,25 +257,20 @@ class PreExpr:
 	def run(self, p):
 		if p.token.type in self.range:
 			# print(p.token.pos)
-			lasttoken = p.token
 			p.next()
 			self.run(p)
-			if lasttoken.type == '+':
-				node = AstNode("pos")
-			elif lasttoken.type == '-':
-				node = AstNode("neg")
-			else:
-				node = AstNode("not")
+			node = AstNode("not")
 			node.val = p.pop()
 			p.add(node)
 		else:
 			self.fnc(p)
+
 dot_expr = Temp(factor, ['.', '[', '('])
 item2 = MyExpr(dot_expr.run, ['*', '/', '%'])
 item = MyExpr(item2.run, ['+', '-'])
 in_expr = MyExpr(item.run, ['in', 'notin'] )
 compare = MyExpr(in_expr.run,  ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
-pre_expr = PreExpr(compare.run, ['not', '+', '-']);
+pre_expr = PreExpr(compare.run, ['not']);
 and_expr = MyExpr(pre_expr.run, ['and'])
 or_expr = MyExpr(and_expr.run, ['or'])
 comma = MyExpr(or_expr.run, [','])
@@ -590,72 +567,74 @@ def sp_str(v):
 		else:x+=i
 	return x
 
-ops_list = ['from', '+', '-', '*', '/', '%', ',' ,'=', 
+
+ops_list = [
+		'from', '+', '-', '*', '/', '%', ',' ,'=', 
 		'+=', '-=', '/=', '*=', 'get',
 		"==", "!=", ">", "<", ">=", "<=", "and",
 		 "or", "for","while", "in", "notin"]
 
-def show(tree):
-	if not istype(tree, 'list'):
-		return
-	#print(self.tree)
-	def f(n, v, pre = ""):
-		rs = ''
-		if v == None:
-			rs = 'None'
-		elif isinstance(v, list):
-			s = ''
-			for i in v:
-				s += '\n' + f(n+2, i)
-			rs = s
-		elif isinstance(v, Token):
-			if v.type == 'string':
-				rs = "'" + sp_str(v.val) + "'"
-			elif v.type == 'number':
-				rs = sp_str(v.val)
-			elif v.type == 'name':
-				rs = sp_str(v.val)
-			elif v.type in ['neg', 'pos', 'not', 'list']:
-				rs = v.type + '\n' + f(n+2, v.val)
-		else:
-			if v.type in ['neg', 'pos', 'not', 'list']:
-				rs = v.type + '\n' + f(n+2, v.val)
-			elif v.type in ops_list:
-				rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
-			elif v.type == '$':
-				rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
-			elif v.type in ['if', 'choose']:
-				rs = v.type+'\n' + f(n+2, v.cond, 'cond => ') + \
-					'\n' + f(n+2, v.left, 'body => ') + '\n' + f(n+2, v.right, 'else => ')
-			elif v.type == 'def':
-				rs = 'def\n' + f(n + 2 , v.name , 'name => ') + \
-					'\n' + f(n+2, v.args, 'args => ') + '\n' + f(n+2, v.body, "body => ")
-			elif v.type == 'class':
-				rs = 'class ' + f( 0, v.name, 'name => ') + \
-					'\n' + f(n+2, v.body, 'body => ')
-			elif v.type in ['varg', 'arg']:
-				rs = v.type + f(1 , v.name, 'name => ') + '\n'+ f(n + 2,  v.val, 'dafault => ')
-			elif v.type in ('return', 'global', 'raise'):
-				rs = v.type + '\n' + f(n+2, v.val)
-			elif v.type in ("break", "continue", "pass"):
-				rs = v.type
-			elif v.type == 'dict':
-				items = v.items
-				ss = ""
-				if items != None:
-					for k in items:
-						ss += f(n+2, k)
-						ss += f(1, items[k])+'\n'
-				rs = v.type + '\n'+ ss
-			else:
-				# print(str(type(v))+":"+str(v))
-				rs = sp_str(v)
-#		else:
-#			rs = sp_str(v)
-		return ' ' * n + pre + rs
-	for i in tree:
-		s = f(0, i)
-		print(s)
+# def show(tree):
+# 	if not istype(tree, 'list'):
+# 		return
+# 	#print(self.tree)
+# 	def f(n, v, pre = ""):
+# 		rs = ''
+# 		if v == None:
+# 			rs = 'None'
+# 		elif isinstance(v, list):
+# 			s = ''
+# 			for i in v:
+# 				s += '\n' + f(n+2, i)
+# 			rs = s
+# 		elif isinstance(v, Token):
+# 			if v.type == 'string':
+# 				rs = "'" + sp_str(v.val) + "'"
+# 			elif v.type == 'number':
+# 				rs = sp_str(v.val)
+# 			elif v.type == 'name':
+# 				rs = sp_str(v.val)
+# 			elif v.type in ['neg', 'pos', 'not', 'list']:
+# 				rs = v.type + '\n' + f(n+2, v.val)
+# 		else:
+# 			if v.type in ['neg', 'pos', 'not', 'list']:
+# 				rs = v.type + '\n' + f(n+2, v.val)
+# 			elif v.type in ops_list:
+# 				rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
+# 			elif v.type == '$':
+# 				rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
+# 			elif v.type in ['if', 'choose']:
+# 				rs = v.type+'\n' + f(n+2, v.cond, 'cond => ') + \
+# 					'\n' + f(n+2, v.left, 'body => ') + '\n' + f(n+2, v.right, 'else => ')
+# 			elif v.type == 'def':
+# 				rs = 'def\n' + f(n + 2 , v.name , 'name => ') + \
+# 					'\n' + f(n+2, v.args, 'args => ') + '\n' + f(n+2, v.body, "body => ")
+# 			elif v.type == 'class':
+# 				rs = 'class ' + f( 0, v.name, 'name => ') + \
+# 					'\n' + f(n+2, v.body, 'body => ')
+# 			elif v.type in ['varg', 'arg']:
+# 				rs = v.type + f(1 , v.name, 'name => ') + '\n'+ f(n + 2,  v.val, 'dafault => ')
+# 			elif v.type in ('return', 'global', 'raise'):
+# 				rs = v.type + '\n' + f(n+2, v.val)
+# 			elif v.type in ("break", "continue", "pass"):
+# 				rs = v.type
+# 			elif v.type == 'dict':
+# 				items = v.items
+# 				ss = ""
+# 				if items != None:
+# 					for k in items:
+# 						ss += f(n+2, k)
+# 						ss += f(1, items[k])+'\n'
+# 				rs = v.type + '\n'+ ss
+# 			else:
+# 				# print(str(type(v))+":"+str(v))
+# 				rs = sp_str(v)
+# #		else:
+# #			rs = sp_str(v)
+# 		return ' ' * n + pre + rs
+# 	for i in tree:
+# 		s = f(0, i)
+# 		print(s)
 # tree = parse(open('parse.py').read())
 
 def main():

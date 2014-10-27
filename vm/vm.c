@@ -134,11 +134,17 @@ void frames_init(){
 		f->ex = obj_none;
 		f->file = obj_none;
 		f->line = obj_none;
-	    f->globals = obj_none;
+    f->globals = obj_none;
 		f->func_name = obj_none;
 		f->maxlocals = 0;
 		f->jmp = 0;
 		f->maxlocals = 0;
+    int j;for(j = 0; j < f->stacksize; j++){
+      f->stack[j].type = TM_NON;
+    }
+    for(j = 0; j < 256; j++){
+      f->locals[j].type = TM_NON;
+    }
 	}
 	tm->cur = 0;
 }
