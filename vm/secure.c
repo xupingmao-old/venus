@@ -2,8 +2,6 @@
 
 #include "tm.h"
 
-
-
 void print_tags(tm_module *mod){
   int i;
   for(i = 0; i < mod->tagsize; i++){
@@ -34,10 +32,10 @@ unsigned char** init_tags(int size){
 }
 
 /** check code, compute stacksize, tags **/
-int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
+int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef, int* maxlocals, int *maxstack){
     int len = 0;
     int idx;
-    int stacksize = 100;
+    int stacksize = 1;
     int curstack = 0;
     int temp = 0;
     int def_count = 0;
@@ -56,21 +54,37 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
             len+=1 + sizeof(double);
             s+=sizeof( double);
             break;
-        case ADD:case SUB:case MUL:case DIV:case MOD:case NEG : case NOT:
+        case ADD:case SUB:case MUL:case DIV:case MOD:
+		case GT:case LT:case GTEQ:case LTEQ:case EQEQ:case NOTEQ:
+		case IN:case NOTIN:case GET:case POP:
+		case RETURN:case AND: case OR:
+			len++;
+			stacksize--;
+			break;
+		case NEG : case NOT:
         case LOAD_PARAMS:
-        case GT:case LT:case GTEQ:case LTEQ:case EQEQ:case NOTEQ:
-        case GET:case SET:case IN:case NOTIN:
-        case POP:
-        case RETURN:
-        case AND: case OR:
-          len++;
-          break;
+        case SET:
+			len++;
+			break;
         case STORE_LOCAL:
         case LOAD_LOCAL:
+			idx = next_byte(s);
+			len+=2;
+			if( LOAD_LOCAL == ins) {
+				stacksize++;
+			}else{
+				stacksize--;
+			}
+			*maxstack = max( *maxstack, stacksize);
+			if( isFuncDef){
+				*maxlocals = max(*maxlocals, idx);
+			}
+			break;
         case CALL:
-          next_byte(s);
-          len+=2;
-          break;
+			idx = next_byte(s);
+			stacksize-=idx;
+			len+=2;
+			break;
         case LIST:
         case DICT:
             next_byte(s);
@@ -79,10 +93,18 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
         case LOAD_CONSTANT:
         case LOAD_GLOBAL:
         case STORE_GLOBAL:
-          next_short(s);
-          len+=3;
-          break;
+			idx = next_short(s);
+			if( STORE_GLOBAL == ins){
+				stacksize--;
+			}else{
+				stacksize++;
+			}
+			*maxstack = max(*maxstack, stacksize);
+			len+=3;
+			break;
         case TM_DEF:
+			stacksize++;
+			*maxstack = max( *maxstack, stacksize);
             next_short(s);
             len+=3;
             if( isFuncDef )
@@ -90,11 +112,15 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
             break;
         case POP_JUMP_ON_TRUE:
         case POP_JUMP_ON_FALSE:
+			idx = next_short(s);
+			len+=3;
+			stacksize--;
+			break;
         case JUMP_ON_FALSE:
         case JUMP_ON_TRUE:
         case JUMP:
         case TM_FOR:
-            next_short(s);
+            idx = next_short(s);
             len+=3;
             break;
         case TAGSIZE:
@@ -104,25 +130,26 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
             len+=3;
             break;
         case TAG:
-          idx = next_short(s);
-          len+=3;
-          store_tag(mod, idx, s);
-          break;
+			idx = next_short(s);
+			len+=3;
+			store_tag(mod, idx, s);
+			break;
         case TM_EOF:
-          len++;
-          if( isFuncDef){
-            def_count--;
-            // printf("def_count = %d\n",def_count );
-            if( def_count == 0)
-              goto ret;
-          }
-          break;
+			len++;
+			stacksize--;
+			if( isFuncDef){
+				def_count--;
+			// printf("def_count = %d\n",def_count );
+			if( def_count == 0)
+				goto ret;
+			}
+			break;
         case TM_EOP:
             len++;
             mod->checked = 1;
             goto ret;
         default:
-          tm_raise("code_check: BAD INSTRUCTION @, handled code len = @", number_new(ins), number_new(len));
+			tm_raise("code_check: BAD INSTRUCTION @, handled code len = @", number_new(ins),number_new(len));
         }
     }
     ret:

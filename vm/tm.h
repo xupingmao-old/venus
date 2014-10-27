@@ -89,6 +89,7 @@ typedef struct tm_func
 {
 	int marked;
 	int fnc_type;
+	int maxlocals;
 	instruction* pc;
 	tm_obj self;
 	tm_obj mod; // module, includes global, constants, etc.

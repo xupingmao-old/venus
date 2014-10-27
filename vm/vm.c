@@ -134,8 +134,9 @@ void frames_init(){
 		f->ex = obj_none;
 		f->file = obj_none;
 		f->line = obj_none;
-	        f->globals = obj_none;
+	    f->globals = obj_none;
 		f->func_name = obj_none;
+		f->maxlocals = 0;
 		f->jmp = 0;
 		f->maxlocals = 0;
 	}

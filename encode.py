@@ -71,6 +71,15 @@ def build_set(self, key, val):
     node.a = setNode
     return node
 
+def encode_list(v):
+    if v == None: return
+    if v.type == ',':
+        encode_list(v.a)
+        encode_list(v.b)
+    else:
+        encode_item(v)
+        emit(LIST_APPEND)
+
 def encode_item( tk ):
     global in_class
     if tk == None: return 0
@@ -86,8 +95,10 @@ def encode_item( tk ):
     elif t == ',':
         return encode_item( tk.a ) + encode_item(tk.b)
     elif tk.type == 'list':
-        n = encode_item(tk.val)
-        emit(LIST, n)
+        emit(LIST, 0)
+        #n = encode_item(tk.val)
+        #emit(LIST, n)
+        encode_list(tk.val)
     elif tk.type == 'dict':
         items = tk.items
         l = len(items)

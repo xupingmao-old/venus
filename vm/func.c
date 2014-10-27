@@ -12,6 +12,7 @@ tm_obj func_new(tm_obj mod,
   f->code = code;
   f->pc = NULL;
   f->native_func = native_func;
+  f->maxlocals = 0;
   /*	if( native_func != NULL ){
 	f->native_func = native_func;
 	// check if the func is native by f->native_func == NULL?

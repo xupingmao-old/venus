@@ -22,7 +22,6 @@
 #define get_dict(obj) get_val(obj).dict
 #define get_dict_len(obj) get_dict(obj)->len
 #define get_mod(obj) get_val(obj).mod
-#define get_map_len(obj) get_map(obj)->len
 
 #define get_nodes(obj)  get_list(obj)->nodes
 #define get_keys(obj)   get_dict(obj)->keys
@@ -31,7 +30,6 @@
 
 #define list_len(obj)  get_list(obj)->len
 #define dict_len(obj)  get_dict_len(obj)
-#define map_len( obj)  get_map(obj)->len
 
 #define ptr_addr( ptr ) (long) (ptr) / sizeof(char*)
 
@@ -44,6 +42,9 @@
 #define next_byte( s ) *s++
 /* gcc process ++ from right to left */
 #define next_short( s ) (((*s) << 8) + *(s+1));s+=2;
+
+/* for math */
+#define max(a, b) (a) > (b) ? (a) : (b)
 
 #endif
 

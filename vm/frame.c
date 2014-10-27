@@ -60,11 +60,14 @@ tm_obj* get_constants(tm_obj mod){
 #define CASE( code, body ) case code :  body ; break;
 
 tm_obj tm_def(tm_obj mod, char* s){
-  int len = code_check( mod, s, 1);
-  tm_obj code = str_new(s , len);
-  tm_obj fnc = func_new(mod, code, tm->none, NULL);
-  get_func(fnc)->pc = s;
-  return fnc;
+	int maxlocals = 0;
+	int maxstack = 0;
+	int len = code_check( mod, s, 1, &maxlocals, &maxstack);
+	tm_obj code = str_new(s , len);
+	tm_obj fnc = func_new(mod, code, tm->none, NULL);
+	get_func(fnc)->pc = s;
+	get_func(fnc)->maxlocals = maxlocals;
+	return fnc;
 }
 
 #if PRINT_INS
@@ -131,6 +134,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   f->file = get_mod(mod)->file;
   f->globals = globals;
   f->func_name = get_func(fnc)->name;
+  f->maxlocals = get_func(fnc)->maxlocals;
   tm_obj* locals = f->locals;
   tm_obj* top = f->stack;
 
@@ -148,7 +152,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   if( ! get_mod(mod)->checked ){
-    code_check( mod, s, 0);
+    code_check( mod, s, 0, &i, &jmp);
   }
 
 //  cprintln_show_special(params);

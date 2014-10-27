@@ -40,6 +40,7 @@ LOAD_CONSTANT = 37
 # data
 LIST = 40
 DICT = 41
+LIST_APPEND = 42
 
 # jump
 JUMP = 50
@@ -93,6 +94,7 @@ codes = {
 	TM_EOP : "TM_EOP",
 	LIST : "LIST",
 	DICT : "DICT",
+        LIST_APPEND : "LIST_APPEND",
 	EQEQ : "EQEQ",
 	POP_JUMP_ON_TRUE : "POP_JUMP_ON_TRUE",
 	POP_JUMP_ON_FALSE : "POP_JUMP_ON_FALSE",
@@ -207,7 +209,7 @@ def def_global( v ):
 # opcode : op
 mode1 = [ADD, SUB, MUL, DIV, MOD, NEG, NOT, POP, GET, SET, AND, OR,
         LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,IN, NOTIN,
-	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS]
+	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS,LIST_APPEND]
 # opcode : op byte
 mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST, DICT]
 # opcode : op short
@@ -244,7 +246,7 @@ def emit_iter( lc, jmp):
 def batch_jmp( pos ):
 	out[pos][1] = code_pos() - pos
 
-def emit(ins, val = None):
+def emit(ins, val = 0):
 	# out.append([ins,val])
 	global bin
 	if ins in mode1:

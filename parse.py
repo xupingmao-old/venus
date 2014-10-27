@@ -289,12 +289,12 @@ class PreExpr:
 		else:
 			self.fnc(p)
 dot_expr = Temp(factor, ['.', '[', '('])
-pre_expr = PreExpr(dot_expr.run, ['not', '+', '-']);
-item2 = MyExpr(pre_expr.run, ['*', '/', '%'])
+item2 = MyExpr(dot_expr.run, ['*', '/', '%'])
 item = MyExpr(item2.run, ['+', '-'])
 in_expr = MyExpr(item.run, ['in', 'notin'] )
 compare = MyExpr(in_expr.run,  ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
-and_expr = MyExpr(compare.run, ['and'])
+pre_expr = PreExpr(compare.run, ['not', '+', '-']);
+and_expr = MyExpr(pre_expr.run, ['and'])
 or_expr = MyExpr(and_expr.run, ['or'])
 comma = MyExpr(or_expr.run, [','])
 assign = MyExpr(comma.run, ['=', '+=', '-=', '*=', '/=', '%='])
