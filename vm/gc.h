@@ -8,6 +8,6 @@ void gc_init();
 tm_obj gc_track(tm_obj obj);
 void gc_free();
 void gc_info();
-void gc_full();
+void gc_full(tm_obj ret);
 
 #endif

@@ -167,7 +167,7 @@ void frames_free(){
 	for(i = 0; i < FRAMES_COUNT; i++){
 		tm_frame*f = tm->frames + i ;
 #if LIGHT_DEBUG_GC
-        printf("free frame %d: %p\n", i, f);
+        // printf("free frame %d: %p\n", i, f);
 #endif
 		tm_free(f->stack, f->stacksize * sizeof(tm_obj));
 		// f->ex, f->file will handled by gc

@@ -26,13 +26,13 @@ tm_obj gc_track( tm_obj v){
 		v.value.str->marked = GC_REACHED_SIGN;
 		break;
 	case TM_LST:
-		v.value.list->marked = GC_REACHED_SIGN;
+		get_list(v)->marked = GC_REACHED_SIGN;
 		break;
 	case TM_DCT:
-		v.value.dict->marked = GC_REACHED_SIGN;
+		get_dict(v)->marked = GC_REACHED_SIGN;
 		break;
 	case TM_MOD:
-		v.value.mod->marked = GC_REACHED_SIGN;
+		get_mod(v)->marked = GC_REACHED_SIGN;
 		break;
     case TM_FNC:
         get_func(v)->marked = GC_REACHED_SIGN;
@@ -55,8 +55,10 @@ tm_obj gc_track( tm_obj v){
 void gc_mark(tm_obj o){
 	if( o.type == TM_NUM || o.type == TM_NON)
 		return;
+    /*
 	if( GC_REACHED_SIGN == o.value.gc->marked )
-		return;
+		return;*/
+    // tm_printf_only_type("mark object @\n", o);
 	switch(o.type){
 		case TM_STR:{
             if( o.value.str->marked ) return;
@@ -132,6 +134,7 @@ void gc_clean(){
         if ( GC_MARKED(nodes[i]) ){
             list_append( tm->black, nodes[i]);
         }else{
+            // tm_printf("free @\n", nodes[i]);
             obj_free(nodes[i]);
         }
 	}
@@ -140,7 +143,7 @@ void gc_clean(){
 	tm->all = temp;
 }
 
-void gc_full(){
+void gc_full(tm_obj ret){
 	int n,i;
 	// mark vm core
 	// gc_mark(tm->builtins);
@@ -157,7 +160,6 @@ void gc_full(){
 	t1 = clock();
 	n = tm->all->len;
 	tm_obj* nodes = tm->all->nodes;
-    puts("mark ...");
 	// mark all object except new , to 0
 	for(i = 0; i < n; i++){
         /*
@@ -168,18 +170,21 @@ void gc_full(){
 		}*/
         GC_MARKED(nodes[i]) = 0;
 	}
+#if LIGHT_DEBUG_GC
 	puts("full gc start ...");
 	int old = tm->allocated_mem, _new;
+#endif
 	// mark all used object 2;
     // cprintln(tm->root);
+    gc_mark(ret);
 	gc_mark(tm->root);
-    puts("mark root done!");
 	gc_mark_frames();
-    puts("mark frames done!");
 	gc_clean();
 	t2 = clock();
+#if LIGHT_DEBUG_GC
 	_new = tm->allocated_mem;
 	printf("full gc , elapsed time %ld, %d = > %d , freed %d B\n",t2-t1, old, _new, old- _new );
+#endif
 }
 
 void gc_info(){

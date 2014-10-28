@@ -142,6 +142,8 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   tm_obj* locals = f->locals;
   tm_obj* top = f->stack;
   
+  get_list(f->new_objs)->len = 0;
+  
   if( f->maxlocals > 200) {
     cprintln(fnc);
   }
@@ -392,7 +394,9 @@ if( enable_debug ){
 #endif
     if( tm_iter( x, k, &v) ){
       get_num(*top) += 1;
+      // cprintln( x );
       TM_PUSH( v );
+      // cprintln(v);
       goto start;
     }else{
       s = tags[jmp];
@@ -549,8 +553,8 @@ if( enable_debug ){
     // tm_raise("top stack leaks");
   }
     if( tm->allocated_mem > tm->gc_limit){
-        tm->gc_limit += tm->gc_limit / 2;
-        gc_full();
+        tm->gc_limit += 1024;
+        gc_full(ret);
         // int i;
         // for(i = 0; i < tm->cur; i++){
         // 	tm_frame* f = tm->frames+i;

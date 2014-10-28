@@ -157,7 +157,9 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 			if( k.type == TM_STR && strequals(get_str(k), "code")){
 				return get_func( self )->code;
 			}
+            break;
 	}
+    tm_printf_only_type("@", self);
 	cprintln(self);
 	tm_raise("tm_get: keyError @, self = @ ", k, self );
 	return obj_none;

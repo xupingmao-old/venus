@@ -28,7 +28,7 @@ void _tm_print(tm_obj o, int depth, int show_special){
 				}
 				putchar('"');
 			}else{
-                if( len >= 20) len = 20;
+                // if( len >= 20) len = 20;
                 for(i = 0; i < len; i++){
                     if( '\n' == s[i] || '\t' == s[i]) {
                         putchar(s[i]);
@@ -38,7 +38,7 @@ void _tm_print(tm_obj o, int depth, int show_special){
                         putchar(s[i]);
                     }
                 }
-                if( get_str_len(o) >= 20) printf("...");
+                // if( get_str_len(o) >= 20) printf("...");
             }
 		}
 		break;
@@ -174,6 +174,31 @@ void _tm_printf(char* fmt, va_list ap){
 			putchar(s[i]);
 		}
 	}
+}
+
+void tm_printf_only_type(char* fmt, ...){
+	va_list ap; 
+	va_start(ap,fmt);
+	int i, len = strlen(fmt);
+    char*s = fmt;
+    for(i = 0; i < len;i++){
+        if( s[i] == '@'){
+            tm_obj v = va_arg(ap, tm_obj);
+            switch( v.type ){
+                case TM_NUM:printf("<number %g>", get_num(v));break;
+                case TM_STR:printf("<string %p>", get_str(v));break;
+                case TM_LST:printf("<list %p>", get_list(v));break;
+                case TM_DCT:printf("<dict %p>", get_dict(v));break;
+                case TM_MOD:printf("<mod %p>", get_mod(v));break;
+                case TM_FNC:printf("<function %p>", get_func(v));break;
+                case TM_NON:printf("<none>");break;
+                default:printf("<unknown %d>", v.type);
+            }
+        }else{
+            putchar(s[i]);
+        }
+	va_end(ap);
+    }
 }
 
 void tm_printf(char* fmt, ...){
