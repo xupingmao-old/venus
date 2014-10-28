@@ -18,32 +18,34 @@ typedef union tm_opcode {
 
 // 一个模块的常量
 tm_obj* push_constant(tm_obj mod, tm_obj v){
-  tm_obj cs = get_mod(mod)->constants;
-  int i = list_index( get_list(cs), v);
-  if( i == -1 ){
-    list_append(get_list(cs), v);
-  }
-  return get_list(cs)->nodes;
+    tm_obj cs = get_mod(mod)->constants;
+    int i = list_index( get_list(cs), v);
+    if( i == -1 ){
+        list_append(get_list(cs), v);
+    }
+    return get_list(cs)->nodes;
 }
 
 tm_obj _tm_call( tm_obj fnc, tm_obj params){
+    // cprintln(params);
+    // cprintln(fnc);
 	if( fnc.type == TM_FNC){
-    if( get_func(fnc)->self.type != TM_NON) {
-      list_insert( get_list(params), 0, get_func(fnc)->self);
+        if( get_func(fnc)->self.type != TM_NON) {
+            list_insert( get_list(params), 0, get_func(fnc)->self);
+        }
+        if( get_func(fnc)->native_func != NULL ){
+            return get_func(fnc)->native_func(params);
+        }
+        return tm_eval(fnc, params);
+    }else if( fnc.type == TM_DCT){
+        fnc = class_new(fnc);
+        if( _tm_has(fnc, obj__init__)){
+            tm_obj f = tm_get(fnc, obj__init__);
+            list_insert( get_list(params), 0, fnc);
+            tm_eval(f , params);
+        }
+        return fnc;
     }
-    if( get_func(fnc)->native_func != NULL ){
-      return get_func(fnc)->native_func(params);
-    }
-    return tm_eval(fnc, params);
-  }else if( fnc.type == TM_DCT){
-    fnc = class_new(fnc);
-    if( _tm_has(fnc, obj__init__)){
-      tm_obj f = tm_get(fnc, obj__init__);
-      list_insert( get_list(params), 0, fnc);
-      tm_eval(f , params);
-    }
-    return fnc;
-  }
 }
 
 tm_obj* get_constants(tm_obj mod){
@@ -64,7 +66,7 @@ tm_obj tm_def(tm_obj mod, char* s){
 	int maxstack = 0;
 	int len = code_check( mod, s, 1, &maxlocals, &maxstack);
 	tm_obj code = str_new(s , len);
-	tm_obj fnc = func_new(mod, code, tm->none, NULL);
+	tm_obj fnc = func_new(mod, code, obj_none, NULL);
 	get_func(fnc)->pc = s;
 	get_func(fnc)->maxlocals = maxlocals;
   get_func(fnc)->maxstack = maxstack;
@@ -139,11 +141,15 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   f->maxstack  = get_func(fnc)->maxstack;
   tm_obj* locals = f->locals;
   tm_obj* top = f->stack;
+  
+  if( f->maxlocals > 200) {
+    cprintln(fnc);
+  }
 
   tm_obj* constants = get_constants(mod);
   tm_obj x, k, v;
   tm_obj func;
-  tm_obj ret = tm->none;
+  tm_obj ret = obj_none;
   tm_obj templist;
   
   int i, ins, jmp;
@@ -351,26 +357,6 @@ if( enable_debug ){
   case NEG:
     TM_TOP() = tm_neg(TM_TOP());
     goto start;
-
-/*  case IN: {
-#if PRINT_INS
-    puts("IN");
-#endif
-    k = TM_POP();
-    x = TM_POP();
-    TM_PUSH( tm_has(x, k));
-    goto start;
-  }
-
-  case NOTIN:
-  k = TM_POP();
-  x = TM_POP();
-#if DEBUG_INS
-  tm_printf("x = @, k = @\n", x, k);
-  puts("NOTIN");
-#endif
-  TM_PUSH( _tm_not( tm_has(x, k) ) );
-  goto start;*/
     
   case CALL: {
     i = next_byte( s );
@@ -558,10 +544,21 @@ if( enable_debug ){
   goto start;*/
 
   end:
-  tm->cur--;
   if( top != f->stack ) {
     printf("func_name = %s, count = %d\n", get_str(f->func_name) , (int)( top - f->stack));
     // tm_raise("top stack leaks");
   }
-  return ret;
+    if( tm->allocated_mem > tm->gc_limit){
+        tm->gc_limit += tm->gc_limit / 2;
+        gc_full();
+        // int i;
+        // for(i = 0; i < tm->cur; i++){
+        // 	tm_frame* f = tm->frames+i;
+        // 	printf("func_name = %s, maxstack = %d, maxlocals = %d\n", get_str(f->func_name),
+        // 	f->maxstack, f->maxlocals );
+        // }
+    }
+    tm->cur--;
+    get_list(f->new_objs)->len = 0;
+    return ret;
 }

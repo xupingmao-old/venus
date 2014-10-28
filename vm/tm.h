@@ -8,7 +8,7 @@
 #define PRINT_INS_CONST 0
 #define EVAL_DEBUG 1
 #define DEBUG_INS 1
-#define LIGHT_DEBUG_GC 0
+#define LIGHT_DEBUG_GC 1
 
 int enable_debug = 0;
 
@@ -113,6 +113,7 @@ typedef struct tm_frame
 	int maxstack;
 	tm_obj globals;
 	tm_obj constants; 
+    tm_obj new_objs; // object allocated during this frame
 	tm_obj file; // file name
 	tm_obj code; // byte code
 	tm_obj ex; // exception info
@@ -128,19 +129,10 @@ typedef struct tm_frame
 typedef struct tm_vm
 {
 	char* version;
-	tm_obj error;
-	tm_list* exception_stack;
-	
 	jmp_buf buf; // 异常栈
-	tm_obj *stack;
-	tm_obj *top;
 
 	int cur; // current frame
 	tm_frame frames[FRAMES_COUNT];
-
-	tm_obj chars[256];
-
-	tm_obj none;
 
 	tm_obj modules;
 	tm_obj builtins;

@@ -157,5 +157,6 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef, int* maxlocals, in
         }
     }
     ret:
+    //printf("maxlocals = %d, maxstack = %d \n", *maxlocals, *maxstack);
     return len;
 }

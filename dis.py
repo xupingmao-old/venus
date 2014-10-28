@@ -1,10 +1,30 @@
 from encode import *
 
 
-def dis( fname ):
+def dis( fname ,type = None):
     s = load(fname)
     i = 0; l = len(s)
     constants = [None]
+    if type == 'const':
+        while i < l:
+            ins = s[i]
+            i+=1
+            ins = ord(ins)
+            if ins == NEW_STRING:
+                ll = nextshort(s[i], s[i+1])
+                i+=2
+                val = s[i:i+ll]
+                i+=ll
+                constants.append(val)
+            elif ins == NEW_NUMBER:
+                val = 0
+                i+=8
+                constants.append(val)
+            else:
+                break
+        for i,v in enumerate(constants):
+            print(i,v)
+        return
     while i < l:
         ins = s[i]
         i+=1
@@ -46,6 +66,9 @@ def main():
         tmp = save_bin(fname, "temp")
         dis("temp")
         rm("temp")
+    elif len(ARGV) == 3 and ARGV[1] == 'const':
+        fname = ARGV[2]
+        dis(fname, 'const')
 
 if __name__ == "__main__":
     main()

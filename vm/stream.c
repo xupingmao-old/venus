@@ -4,7 +4,7 @@
 tm_obj stream_new(FILE* fp){
 	tm_stream* st = tm_alloc(sizeof(tm_stream));
 	st->fp = fp;
-	st->name = tm->none;
+	st->name = obj_none;
 	tm_obj o;
 	o.type = TM_STREAM;
 	o.value.stream = st;
@@ -47,7 +47,7 @@ tm_obj stream_close(tm_obj params){
 		tm_raise("stream_close: file is not open");
 	}
 	fclose(fp);
-	return tm->none;
+	return obj_none;
 }
 
 long _get_file_rest_len( FILE* fp){
@@ -123,5 +123,5 @@ tm_obj tm_save( tm_obj p){
 	char* txt = get_str( content );
 	int len = get_str_len( content );
 	fwrite(txt, len, 1, fp);
-	return tm->none;
+	return obj_none;
 }

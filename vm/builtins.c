@@ -8,7 +8,7 @@ void _tm_print(tm_obj o, int depth, int show_special){
 	case TM_STR:
 		{
 			int i;int len = str_len(o);
-			char *s = get_str(o);
+			unsigned char *s = get_str(o);
 			if(show_special){
 				putchar('"');
 				for(i = 0; i < len; i++){
@@ -20,13 +20,26 @@ void _tm_print(tm_obj o, int depth, int show_special){
 						printf("\\n");
 					}else if( s[i] == '\t'){
 						printf("\\t");
-					}else{
+					}else if( s[i] > 126 || s[i] < 32 ){
+                        printf("0x%X", (int)s[i]);
+                    }else{
 						putchar(s[i]);
 					}
 				}
 				putchar('"');
-			}else
-				printf("%s", s);
+			}else{
+                if( len >= 20) len = 20;
+                for(i = 0; i < len; i++){
+                    if( '\n' == s[i] || '\t' == s[i]) {
+                        putchar(s[i]);
+                    }else if( s[i] > 126 || s[i] < 32){
+                        printf("0x%X", (int)s[i]);
+                    }else{
+                        putchar(s[i]);
+                    }
+                }
+                if( get_str_len(o) >= 20) printf("...");
+            }
 		}
 		break;
 	case TM_NUM:
@@ -75,7 +88,11 @@ void _tm_print(tm_obj o, int depth, int show_special){
 		printf(">");
 		break;
 	case TM_MOD:
-		printf("<module %p>",get_mod(o));
+		printf("<module %p ",get_mod(o));
+        if( get_mod(o)->name.type != TM_NON ){
+            cprint(get_mod(o)->name);
+        }
+        printf(">");
 		break;
 	case TM_NON:
 		printf("None");break;
@@ -100,6 +117,7 @@ void cprintln(tm_obj o){
 tm_obj tm_print(tm_obj params){
 	int i = 0;
 	tm_list* list = get_list(params);
+    // cprintln(params);
 	for(i = 0; i < list->len; i++ ){
 		cprint(list->nodes[i]);
 		if( i + 1 != list->len){
@@ -107,7 +125,7 @@ tm_obj tm_print(tm_obj params){
 		}
 	}
 	putchar('\n');
-	return tm->none;
+	return obj_none;
 }
 
 tm_obj _tm_format(char* fmt, va_list ap){
@@ -174,7 +192,7 @@ tm_obj tm_sleep( tm_obj p){
 #else
 	sleep(t);
 #endif
-	return tm->none;
+	return obj_none;
 }
 
 tm_obj tm_input(tm_obj p){
@@ -197,7 +215,7 @@ tm_obj tm_int(tm_obj p){
 		return number_new( (int)atof(get_str(v)) );
 	}
 	tm_raise("tm_int: @ can not parse to int ", v);
-	return tm->none;
+	return obj_none;
 }
 
 tm_obj tm_float( tm_obj p){
@@ -208,7 +226,7 @@ tm_obj tm_float( tm_obj p){
 		return number_new( atof(get_str(v)));
 	}
 	tm_raise("tm_float: @ can not parse to float", v);
-	return tm->none;
+	return obj_none;
 }
 
 tm_obj tm_range( tm_obj p){

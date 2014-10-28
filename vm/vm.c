@@ -1,5 +1,5 @@
 #include "tm.h"
-
+/*
 void constants_init(){
 	tm->none = obj_new(TM_NON, NULL);
 	obj_none = obj_new(TM_NON, NULL);
@@ -8,9 +8,9 @@ void constants_init(){
 		char s[2] = {i, '\0'};
 		tm->chars[i] = str_new(s, 1);
 	}
-}
+}*/
 
-
+#define register_constant( v) list_append(get_list(tm->root), (v));
 void reg_builtin(char* name, tm_obj v){
 	tm_obj key = str_new(name, strlen(name));
 	tm_set( tm->builtins, key, v);
@@ -19,6 +19,7 @@ void reg_builtin(char* name, tm_obj v){
 void reg_builtins(){
 	/* constants */
 
+    tm->root = list_new(100);
     tm->builtins = dict_new();
     tm->modules = dict_new();
     obj_true = number_new(1);
@@ -30,9 +31,6 @@ void reg_builtins(){
     obj_mod_ext = str_new("_pyc", -1);
     obj_star = str_new("*", -1);
 
-    list_append( get_list(tm->root), tm->builtins);
-    list_append( get_list(tm->root), tm->modules);
-
     /* set module boot */
     tm_set( tm->modules, str_new("boot", -1), dict_new());
     // tm_set( tm->modules, str_new("tokenize_pyc", -1), dict_new());
@@ -41,8 +39,8 @@ void reg_builtins(){
     for(i = 0; i < 256; i++){
         unsigned char s[2] = {i, '\0'};
         __chars__[i] = str_new(s, 1);
+        register_constant( __chars__[i]);
     }
-	
 
     struct __builtin {
         char* name;
@@ -64,7 +62,7 @@ void reg_builtins(){
         {0, 0}
     };
     for(i = 0; builtins[i].name != 0; i++){
-        reg_builtin(builtins[i].name, func_new(obj_none, tm->none, tm->none, builtins[i].func));
+        reg_builtin(builtins[i].name, func_new(obj_none, obj_none, obj_none, builtins[i].func));
     };
     tm_set( tm->builtins, str_new("tm", -1), number_new(1));
     tm_set( tm->builtins, str_new("True", -1), number_new(1));
@@ -84,7 +82,7 @@ void reg_builtins(){
    	};
    	for(i = 0; str_class_fnc_list[i].name != 0 ; i++){
    		tm_set( str_class, str_new(str_class_fnc_list[i].name, -1), 
-   			func_new(obj_none, tm->none, tm->none, str_class_fnc_list[i].func));
+   			func_new(obj_none, obj_none, obj_none, str_class_fnc_list[i].func));
    	}
 
    	/* build list class */
@@ -98,8 +96,10 @@ void reg_builtins(){
    		{0,0}
    	};
    	for(i = 0; list_class_fnc_list[i].name != 0 ; i++){
-   		tm_set( list_class, str_new(list_class_fnc_list[i].name, -1), 
-   			func_new(obj_none, tm->none, tm->none, list_class_fnc_list[i].func));
+        tm_obj name = str_new(list_class_fnc_list[i].name, -1);
+        tm_obj fnc = func_new(obj_none, obj_none, obj_none, list_class_fnc_list[i].func);
+        get_func(fnc)->name = name;
+        tm_set( list_class, name, fnc);
    	}
 
    	/* build dict class */
@@ -110,15 +110,26 @@ void reg_builtins(){
    	};
    	for(i = 0; dict_class_fnc_list[i].name != 0 ; i++){
    		tm_set( dict_class, str_new(dict_class_fnc_list[i].name, -1), 
-   			func_new(obj_none, tm->none, tm->none, dict_class_fnc_list[i].func));
+   			func_new(obj_none, obj_none, obj_none, dict_class_fnc_list[i].func));
    	}
+    
+    register_constant( str_class);
+    register_constant( list_class);
+    register_constant( dict_class);
+    register_constant( tm->builtins);
+    register_constant( tm->modules);
+    register_constant( obj__init__);
+	register_constant( obj__main__);
+    register_constant( obj__name__);
+    register_constant( obj_mod_ext);
+    register_constant( obj_star);
 }
 
 void load_bultin_module(char* fname, unsigned char* s, int codelen){
   tm_obj mod_name = str_new(fname, strlen(fname));
   tm_obj code = str_new(s, codelen) ;
   tm_obj mod = module_new(mod_name, mod_name , code );
-  tm_obj fnc = func_new(mod, code, tm->none, NULL);
+  tm_obj fnc = func_new(mod, code, obj_none, NULL);
   get_func(fnc)->pc = get_str(code);
   get_func(fnc)->name = obj__main__;
   tm_eval( fnc , obj_none);
@@ -131,21 +142,23 @@ void frames_init(){
 		tm_frame* f = tm->frames + i;
 		f->stacksize = 1000;
 		f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
+        f->new_objs = list_new(20);
 		f->ex = obj_none;
 		f->file = obj_none;
 		f->line = obj_none;
-    f->globals = obj_none;
+        f->globals = obj_none;
 		f->func_name = obj_none;
 		f->maxlocals = 0;
 		f->jmp = 0;
 		f->maxlocals = 0;
-    int j;for(j = 0; j < f->stacksize; j++){
-      f->stack[j].type = TM_NON;
-    }
-    for(j = 0; j < 256; j++){
-      f->locals[j].type = TM_NON;
-    }
+        int j;for(j = 0; j < f->stacksize; j++){
+          f->stack[j].type = TM_NON;
+        }
+        for(j = 0; j < 256; j++){
+          f->locals[j].type = TM_NON;
+        }
 	}
+    // printf("frame init done");
 	tm->cur = 0;
 }
 
@@ -169,22 +182,24 @@ print_usage(){
 int tm_run(int argc, char* argv[]){
     int rs = setjmp(tm->buf);
 	if(  rs == 0 ){
-	// 真正要执行的代码,发生异常之后返回setjmp的地方
-		//test_dict();
+        /**
+            normal phase
+        */
+        tm->cur = -1;
 		gc_init();
-		constants_init();
-		frames_init();
+        puts("gc init done !");
 		tm_obj p = list_new(argc);
-		// init argv;
-        // first vm itself, second srcfile
 		int i;for(i = 1; i < argc; i++){
 			tm_obj arg = str_new(argv[i], strlen(argv[i]));
 			list_append( get_list(p), arg);
 		}
         
-            reg_builtins();
-            reg_builtin("ARGV", p);
-
+        reg_builtins();
+        reg_builtin("ARGV", p);
+        
+        puts("builtins init done!");
+        frames_init();
+        puts("frames init done!");
 		if( argc >= 2){
 			char* fname = argv[1];
 			if( strcmp(argv[1], "-d") == 0){
@@ -196,21 +211,21 @@ int tm_run(int argc, char* argv[]){
 			// cprintln(code);
 			tm_obj mod_name = str_new(fname, strlen(fname));
 
-       load_bultin_module("tokenize", tokenize_pyc, sizeof(tokenize_pyc));  
-       // puts("tokenize done");
-       // cprintln(tm->modules);
-       load_bultin_module("parse", parse_pyc, sizeof(parse_pyc));  
-       // cprintln(tm->modules);
-       // puts("parse done");
-       load_bultin_module("instruction", instruction_pyc, sizeof(instruction_pyc));  
-       // puts("instruction done");
-       load_bultin_module("encode", encode_pyc, sizeof(encode_pyc));  
-       // puts("encode done");
-	tm_obj mod = module_new(mod_name, obj__main__ , code );
-          tm_obj fnc = func_new(mod, code, tm->none, NULL);
+            load_bultin_module("tokenize", tokenize_pyc, sizeof(tokenize_pyc));  
+            // puts("tokenize done");
+            // cprintln(tm->modules);
+            load_bultin_module("parse", parse_pyc, sizeof(parse_pyc));  
+            // cprintln(tm->modules);
+            // puts("parse done");
+            load_bultin_module("instruction", instruction_pyc, sizeof(instruction_pyc));  
+            // puts("instruction done");
+            load_bultin_module("encode", encode_pyc, sizeof(encode_pyc));  
+            // puts("encode done");
+            tm_obj mod = module_new(mod_name, obj__main__ , code );
+            tm_obj fnc = func_new(mod, code, obj_none, NULL);
             get_func(fnc)->pc = get_str(code);
             get_func(fnc)->name = obj__main__;
-      tm_eval( fnc , obj_none);
+            tm_eval( fnc , obj_none);
 			// cprintln(mod);
             // tm_obj res = _tm_call( "token", "do_tokenize", as_list(1, str_new("print(\"hello,world\"", -1)));
             // cprintln(res);
@@ -224,7 +239,9 @@ int tm_run(int argc, char* argv[]){
 		// tm_obj v = obj_new(TM_LST, tm->all);
 		//tm_raise("tm->list = @", v);
 	}else if(rs == 1) {
-		/* catch exceptions */
+        /**
+            handle exceptions
+        */
 		int i;
 		int cur = tm->cur;
 		printf("Traceback (most recent call last):\n");
@@ -236,10 +253,9 @@ int tm_run(int argc, char* argv[]){
 			}
 		}
 		tm_printf("Exception: @", tm->frames[tm->cur].ex);
+        // print locals in the current frame
         tm_obj temp = build_list( 10, tm->frames[tm->cur].locals);
         cprintln( temp );
-        // cprintln( tm->frames[cur].globals);
-        // cprintln( tm->builtins);
 	}else if( rs == 2){
         // normal exit
     }

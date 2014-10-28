@@ -82,7 +82,7 @@ tm_obj tm_copy(tm_vm* tm, tm_obj o){
 			return list;
 		}
 	}
-	return tm->none;
+	return obj_none;
 }
 
 int _tm_len(tm_obj o){
@@ -160,7 +160,7 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 	}
 	cprintln(self);
 	tm_raise("tm_get: keyError @, self = @ ", k, self );
-	return tm->none;
+	return obj_none;
 }
 
 
@@ -205,7 +205,7 @@ tm_obj tm_add(  tm_obj a, tm_obj b){
 		}
 	}
 	tm_raise("tm_add: can not add @ and @", _obj_info(a),_obj_info(b));
-	return tm->none;
+	return obj_none;
 }
 
 
@@ -283,7 +283,7 @@ tm_obj tm_mul( tm_obj a, tm_obj b){
 		return str;
 	}
 	tm_raise("tm_mul: can not mul  @ and @", a,b );
-	return tm->none;
+	return obj_none;
 }
 
 tm_obj tm_div( tm_obj a, tm_obj b){
@@ -291,7 +291,7 @@ tm_obj tm_div( tm_obj a, tm_obj b){
 		return number_new( get_num(a) / get_num(b) );
 	}
 	tm_raise("tm_div: can not div  @ and @", a,b );
-	return tm->none;
+	return obj_none;
 }
 
 tm_obj tm_mod( tm_obj a, tm_obj b){
@@ -299,7 +299,7 @@ tm_obj tm_mod( tm_obj a, tm_obj b){
 		return number_new((long)get_num(a) %  (long)get_num(b) );
 	}
 	tm_raise("tm_mod: can not mod  @ and @", a,b );
-	return tm->none;
+	return obj_none;
 }
 
 

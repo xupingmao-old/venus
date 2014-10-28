@@ -81,7 +81,7 @@ void _list_check_cap( tm_list* list){
 	if( list->len >= list->cap )
 	{
 		int ocap = list->cap;
-		list->cap = ocap * 3 / 2 + 1;
+		list->cap += ocap / 2 + 1;
 		list->nodes = tm_realloc( list->nodes, sizeof(tm_obj) * ocap,
 			sizeof(tm_obj) * list->cap);
 #if DEBUG_GC
@@ -178,7 +178,7 @@ tm_obj blist_append( tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_LST);
 	tm_obj v = get_arg( params , 1, -1);
 	list_append( get_list(self), v);
-	return tm->none;
+	return obj_none;
 }
 
 tm_obj blist_pop(tm_obj params){

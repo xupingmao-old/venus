@@ -16,7 +16,7 @@ tm_obj get_arg(tm_obj params, int pos, int type){
 		return v;
 	}
 	if( v.type != type){
-		tm_raise("get_arg: TypeError");
+		tm_raise("get_arg: TypeError see @", _obj_info(v));
 	}
 	return v;
 }
