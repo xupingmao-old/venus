@@ -55,7 +55,7 @@ tm_obj* get_constants(tm_obj mod){
 
 
 #define read_number( v, s) v = *(double*)s; s+=sizeof(double);
-#define TM_PUSH( x ) *(++top) = (x)
+#define TM_PUSH( x ) *(++top) = (x); /*if( top >= f->stack + 100) tm_raise("stack overflow");*/
 #define TM_POP() *(top--)
 #define TM_TOP() (*top)
 
@@ -157,12 +157,13 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   int i, ins, jmp;
 
   /* will optimize later */
+  /*
   for(i = 0; i < 256; i++){
     locals[i].type = TM_NON;
   }
   for(i = 0; i < 256; i++){
     top[i].type = TM_NON;
-  }
+  }*/
 
   if( ! get_mod(mod)->checked ){
     code_check( mod, s, 0, &i, &jmp);

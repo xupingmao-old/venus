@@ -111,6 +111,7 @@ void gc_mark_frames(){
 	for(i = 0; i < FRAMES_COUNT ; i++){
 		tm_frame* f = tm->frames+i;
 		gc_mark(f->new_objs);
+        gc_mark(f->globals);
 	}
 }
 

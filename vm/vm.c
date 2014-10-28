@@ -140,8 +140,11 @@ void frames_init(){
 	int i;
 	for(i = 0; i < FRAMES_COUNT; i++){
 		tm_frame* f = tm->frames + i;
-		f->stacksize = 1000;
+		f->stacksize = 100;
 		f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
+#if DEBUG_GC_FRAME
+        printf("alloc frame %d: %p, stack = %p\n", i, f, f->stack);
+#endif
         f->new_objs = list_new(20);
 		f->ex = obj_none;
 		f->file = obj_none;
@@ -151,12 +154,13 @@ void frames_init(){
 		f->maxlocals = 0;
 		f->jmp = 0;
 		f->maxlocals = 0;
+        /*
         int j;for(j = 0; j < f->stacksize; j++){
           f->stack[j].type = TM_NON;
         }
         for(j = 0; j < 256; j++){
           f->locals[j].type = TM_NON;
-        }
+        }*/
 	}
     // printf("frame init done");
 	tm->cur = 0;
@@ -166,8 +170,8 @@ void frames_free(){
 	int i;
 	for(i = 0; i < FRAMES_COUNT; i++){
 		tm_frame*f = tm->frames + i ;
-#if LIGHT_DEBUG_GC
-        // printf("free frame %d: %p\n", i, f);
+#if DEBUG_GC_FRAME
+        printf("free frame %d: %p, stack = %p\n", i, f, f->stack);
 #endif
 		tm_free(f->stack, f->stacksize * sizeof(tm_obj));
 		// f->ex, f->file will handled by gc
@@ -226,6 +230,7 @@ int tm_run(int argc, char* argv[]){
             get_func(fnc)->pc = get_str(code);
             get_func(fnc)->name = obj__main__;
             tm_eval( fnc , obj_none);
+            getchar();
 			// cprintln(mod);
             // tm_obj res = _tm_call( "token", "do_tokenize", as_list(1, str_new("print(\"hello,world\"", -1)));
             // cprintln(res);
