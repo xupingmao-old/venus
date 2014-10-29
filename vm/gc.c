@@ -12,8 +12,8 @@ void gc_init( ){
 	int init_size = 100;
 	tm->all = _list_new(init_size);
 
-	tm->black = _list_new(init_size);
-	tm->white = _list_new(init_size);
+	// tm->black = _list_new(init_size);
+	// tm->white = _list_new(init_size);
 	// tm->strings = dict_new_();
 	// tm->strings = _dict_new();
 }
@@ -119,44 +119,29 @@ void gc_clean(){
 	int n,i;
 	n = tm->all->len;
 	tm_obj* nodes = tm->all->nodes;
-	tm->black->len = 0;
+	// tm->black->len = 0;
+    
+    tm_list* temp = _list_new( 200 );
 	for(i = 0; i < n; i++){
-    /*
-		if( -1 == nodes[i].value.gc->marked) {
-			obj_free(nodes[i]);
-		}
-		else if(2 == nodes[i].value.gc->marked){
-			list_append( tm->black, nodes[i]);
-		}else {
-			nodes[i].value.gc->marked = -1;
-			list_append( tm->black, nodes[i]);
-		}
-        */
         if ( GC_MARKED(nodes[i]) ){
-            list_append( tm->black, nodes[i]);
+            list_append( temp, nodes[i]);
         }else{
             // tm_printf("free @\n", nodes[i]);
             obj_free(nodes[i]);
         }
 	}
-	tm_list* temp = tm->black;
-	tm->black = tm->all;
-	tm->all = temp;
+    list_free( tm->all );
+    tm->all = temp;
 }
 
+/**
+* mark and sweep garbage collection
+* 
+* TODO maybe we can mark the object with different value to 
+* recognize the gc type of the object.
+*/
 void gc_full(tm_obj ret){
 	int n,i;
-	// mark vm core
-	// gc_mark(tm->builtins);
-	// gc_mark(tm->modules);
-/*	for(i = tm->cur; i >= 0; i--){
-		tm_frame* f = tm->frames + i;
-		int maxlocals = f->maxlocals;
-		int j;for(j = 0; j < maxlocals; j++){
-			gc_mark(f->locals[j]);
-		}
-	}*/
-
 	long t1,t2;
 	t1 = clock();
 	n = tm->all->len;
@@ -175,8 +160,6 @@ void gc_full(tm_obj ret){
 	puts("full gc start ...");
 	int old = tm->allocated_mem, _new;
 #endif
-	// mark all used object 2;
-    // cprintln(tm->root);
     gc_mark(ret);
 	gc_mark(tm->root);
 	gc_mark_frames();
@@ -206,9 +189,6 @@ void gc_free(){
 	puts("===================gc infomation===============");
 	printf("\nallocated_mem: %d\n", tm->allocated_mem);
 	printf("total object num: %d\n", tm->all->len);
-
-	// tm_obj b = obj_new(TM_LST, tm->all);
-	// cprint(b);
 #endif
 	tm_list* all = tm->all;
 	int i;
@@ -217,11 +197,16 @@ void gc_free(){
 	}
 
 	list_free( tm->all);
-	list_free( tm->black );
-	list_free( tm->white);
+	// list_free( tm->black );
+	// list_free( tm->white);
 	// dict_free( tm->strings);
 
 #if DEBUG_GC
 	printf("\nafter gc , allocated_mem: %d\n", tm->allocated_mem);
+#endif
+#if !PRODUCT
+    if( tm->allocated_mem != 0 ){
+        printf("\n**memory leak happens***\n");
+    }
 #endif
 }

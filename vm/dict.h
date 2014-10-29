@@ -21,9 +21,9 @@ typedef struct tm_dict
 	dict_node** nodes;
 }tm_dict;
 
-/* 公开接口
- *
- */
+/**
+* public interfaces
+*/
 tm_obj dict_new();
 tm_dict* _dict_new();
 void dict_free(tm_dict* dict);

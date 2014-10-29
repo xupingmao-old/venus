@@ -46,6 +46,17 @@
 /* for math */
 #define max(a, b) (a) > (b) ? (a) : (b)
 
+#if LIGHT_DEBUG_GC
+    #define TRACE_GC(out) ;
+#else
+    #define TRACE_GC(out) puts(out);
+#endif
+
+#if LIGHT_DEBUG_GC
+    #define CHECK_MEM_USAGE(msg) printf("%s, press enter to continue", msg);getchar();
+#else
+    #define CHECK_MEM_USAGE(msg) ;
+#endif
 #endif
 
 

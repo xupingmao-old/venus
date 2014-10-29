@@ -8,7 +8,7 @@
 #define PRINT_INS_CONST 0
 #define EVAL_DEBUG 1
 #define DEBUG_INS 1
-#define LIGHT_DEBUG_GC 1
+#define LIGHT_DEBUG_GC 0
 
 int enable_debug = 0;
 

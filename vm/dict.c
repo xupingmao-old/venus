@@ -1,26 +1,27 @@
 
 /**
-HashMap实现，采用链路分离法
-@Author xupingmao <578749341@qq.com>
-**/
+* HashMap实现，采用链路分离法
+* @Author xupingmao <578749341@qq.com>
+*/
 
 
-// private functions
-/*
-    接口暴露原则，越少越好
+/**
+* less interface is better than more,
+* because many interface with similar function will confuse the users.
 */
 
 #include "tm.h"
 
-void dict_iter_init(tm_dict* dict);
-
-// 新的映射容器, 默认size=7 , 最好跟计算机常用大小不一致,
+/** new hashdict instance, with initial allocated size set to 7.
+*   better not similar to computer binary size ( as to say 2 ), 
+*   such as 2, 10 etc.
+*/
 tm_dict* _dict_new(){
 	int size = 7;
 	tm_dict * dict = tm_alloc(sizeof( tm_dict));
 	dict->nodes = tm_alloc(sizeof(dict_node*) * size );
 	dict_node** nodes = dict->nodes;
-	// 标记对象未使用
+	// to mark that the node is not allocated.
 	int i;for(i = 0; i < size; i++){
 		nodes[i] = NULL;
 	}
@@ -37,31 +38,37 @@ tm_obj dict_new(){
 	return gc_track( o);
 }
 
-// 重置hashdict, 不需要新的内存
+// reset hashdict, do not need to allocate new block.
 void dict_set_node( tm_dict* dict, dict_node* des){
 	int hash = dict_index( des->key, dict->cap);
-	// 同一个dict中不可能有相同的key，直接向下遍历即可
-	dict_node** node = dict->nodes + hash;
+	/* in a dict, there will never be two keys with same value,
+    so we do not need to check the key value */
+	dict_node* node = dict->nodes[hash];
+    
+    /*
+    dict_node** node = dict->nodes + hash;
 	while ( (*node) != NULL ){
 		node = &((*node)->next);
 	}
 	des->next = NULL;
 	*node = des;
+    */
 
-	/*
-	dict_node* node = dict->nodes[hash];
+    /* bellow version is more readable than that one */
+    
+    /* reset next value of the node */
+    des->next = NULL;
+    /* check the node in the nodes list first */
 	if( node == NULL ){
 		dict->nodes[hash] = des;
 	}
 	else{
-		dict_node* temp = node;
-		node = node->next;
-		while( node != NULL ){
-			temp = node; node = node->next;
+        /* find a node whose next is null */
+		while( node->next != NULL ){
+			node = node->next;
 		}
-		des->next = NULL;
-		temp->next = des;
-	}*/
+		node->next = des;
+	}
 }
 
 void dict_check_size(tm_dict* dict){
@@ -71,15 +78,14 @@ void dict_check_size(tm_dict* dict){
 	int i;
 	int nsize = osize * 3 - 9;
 	dict->cap = nsize;
-	// 先临时存储之前的nodes
+	// store old nodes to rehash the table
 	dict_node** nodes = dict->nodes;
 	dict->nodes = tm_alloc( nsize * sizeof( dict_node* ));
-	// 重置新的nodes
+	// reset new nodes
 	for(i = 0; i < nsize; i++){
 		dict->nodes[i] = NULL;
 	}
-	// 重新排列hashdict的KV
-	// 按照之前的size重排
+    /* rehash nodes */
 	for(i = 0; i < osize; i++){
 		dict_node* node = nodes[i];
 		while( node != NULL ){
@@ -88,7 +94,7 @@ void dict_check_size(tm_dict* dict){
 			node = temp;
 		}
 	}
-	// 释放老的内存
+	// free old nodes.
 	tm_free(nodes, osize * sizeof(dict_node*));
 }
 
@@ -100,13 +106,13 @@ void dict_iter_init(tm_dict* dict ){
 }
 
 /**
- * 遍历dict对象
- * 如果能够遍历返回1
- * 不能遍历返回0
+ * iterate dictionary nodes
+ * returns 1 if find one, else 0
  */
 int dict_inext(tm_dict* dict, tm_obj* key, tm_obj *val){
 	dict_node** nodes = dict->nodes;
 	int cur = dict->cur;
+    /* already iterate over */
 	if( cur >= dict->len){
 		dict_iter_init(dict);
 		return 0;
@@ -117,7 +123,6 @@ int dict_inext(tm_dict* dict, tm_obj* key, tm_obj *val){
 	}else
 		node = dict->last_node->next;
 	while( node == NULL ){
-		// 当前为空，说明之前的散列格子里的对象已经遍历完了
 		dict->last_node_offset ++;
 		node = nodes[ dict->last_node_offset ];
 	}
