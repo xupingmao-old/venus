@@ -112,6 +112,7 @@ void gc_mark_frames(){
 		tm_frame* f = tm->frames+i;
 		gc_mark(f->new_objs);
         gc_mark(f->globals);
+        gc_mark(f->constants);
 	}
 }
 
@@ -135,6 +136,30 @@ void gc_clean(){
     tm->all = temp;
 }
 
+#define MARK(v) \
+    switch( v.type ){  \
+    case TM_NUM:       \
+    case TM_NON:      \
+        return v;       \
+    case TM_STR: \
+        v.value.str->marked = GC_REACHED_SIGN;\
+        break;\
+    case TM_LST:\
+        get_list(v)->marked = GC_REACHED_SIGN;\
+        break;\
+    case TM_DCT:\
+        get_dict(v)->marked = GC_REACHED_SIGN;\
+        break;\
+    case TM_MOD:\
+        get_mod(v)->marked = GC_REACHED_SIGN;\
+        break;\
+    case TM_FNC:\
+        get_func(v)->marked = GC_REACHED_SIGN;\
+        break;\
+    default:\
+        return v;\
+    }
+
 /**
 * mark and sweep garbage collection
 * 
@@ -155,7 +180,9 @@ void gc_full(tm_obj ret){
 		}else{
 			nodes[i].value.gc->marked = 0;
 		}*/
-        GC_MARKED(nodes[i]) = 0;
+        // GC_MARKED(nodes[i]) = 0;
+            MARK(nodes[i]);
+
 	}
 #if LIGHT_DEBUG_GC
 	puts("full gc start ...");

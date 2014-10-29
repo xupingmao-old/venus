@@ -146,6 +146,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   f->func_name = get_func(fnc)->name;
   f->maxlocals = get_func(fnc)->maxlocals;
   f->maxstack  = get_func(fnc)->maxstack;
+  f->constants = get_mod(mod)->constants;
   tm_obj* locals = f->locals;
   tm_obj* top = f->stack;
   
@@ -564,7 +565,7 @@ if( enable_debug ){
         tm->gc_limit += 1024;
         // tm_printf("full gc at @\n", f->func_name);
         // gc_mark(params);
-        // gc_full(ret);
+        gc_full(ret);
         // int i;
         // for(i = 0; i < tm->cur; i++){
         // 	tm_frame* f = tm->frames+i;
