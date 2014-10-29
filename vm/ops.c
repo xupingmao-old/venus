@@ -159,9 +159,9 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 			}
             break;
 	}
-    tm_printf_only_type("@", self);
-	cprintln(self);
-	tm_raise("tm_get: keyError @, self = @ ", k, self );
+    // tm_printf_only_type("@", self);
+	// cprintln(self);
+	tm_raise("tm_get: keyError @, self = @ ", k, _tm_type(self) );
 	return obj_none;
 }
 

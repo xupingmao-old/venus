@@ -152,6 +152,7 @@ def encode_item( tk ):
         in_class = False
     elif t == 'return':
         if tk.val:encode_item(tk.val)
+        else:emit_load(None);
         emit(RETURN)
     elif t == 'if':
         encode_item(tk.cond)
@@ -242,6 +243,13 @@ def encode_item( tk ):
         emit_load( tk )
     elif t == 'global':
         def_global(tk.val)
+    # elif t == 'try':
+    #     jmp = newtag()
+    #     emit(SETJUMP, jmp)
+    #     emit(tk.body)
+    #     emit(JUMP, end)
+    #     emit(tk.handler)
+    #     tag(end)
     else:
         pass
     return 1

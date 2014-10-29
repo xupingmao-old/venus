@@ -109,12 +109,14 @@ class ParserCtx:
 		return ' at ' + str(self.token.pos) + ' type = ' + self.token.type
 
 def parse(v):
-	try:
-		r = tokenize(v)
-		p = ParserCtx(r)
-		return do_prog(p)
-	except:
+	# try:
+	r = tokenize(v)
+	p = ParserCtx(r)
+	x = do_prog(p)
+	# except:
+	if x == None:
 		print(" at line " + str( p.token.pos ) + " unknown error")
+	return x
 
 # recursive desent
 
@@ -137,7 +139,7 @@ def parse(v):
 def factor(p):
 	t = p.token.type
 	token = p.token
-	if t in ('number', 'string', 'name', 'None'):
+	if t in ['number', 'string', 'name', 'None']:
 		p.next()
 		p.add(token)
 		factor_next_if(p)
@@ -321,7 +323,7 @@ def do_import(p):
 # count = 1
 def skip_nl(p):
 	# global count
-	while p.token.type in ('nl', ';'):
+	while p.token.type in ['nl', ';']:
 		p.next()
 		# count+=1
 		# print(count)
@@ -361,14 +363,14 @@ def do_stm(p):
 		do_def(p)
 	elif t == 'class':
 		do_class(p)
-	elif t in ('for', 'while'):
+	elif t in ['for', 'while']:
 		do_for_while(p, t)
 	elif t == 'if':
 		do_if(p)
-	elif t in ('return', "raise"):
+	elif t in ['return', "raise"]:
 		do_stm1(p, t)
 		#stm_next_if(p)
-	elif t in ("break", "continue", "pass"):
+	elif t in ["break", "continue", "pass"]:
 		p.next()
 		node = AstNode(t)
 		p.add( node )
@@ -398,7 +400,7 @@ def do_try(p):
 		p.error = p.token
 		p.next()
 	p.expect(':')
-	node.catch = p.enterBlock()
+	node.handler = p.enterBlock()
 	p.add( node )
 
 
@@ -421,7 +423,8 @@ def do_if(p):
 	ast.cond = p.pop()
 	p.expect(':')
 	ast.left = p.enterBlock()
-	temp = cur = ast # temp 
+	cur = ast # temp
+	temp = cur 
 	if p.token.type == 'elif':
 		while p.token.type == 'elif':
 			node = AstNode("if")
@@ -574,69 +577,82 @@ ops_list = [
 		"==", "!=", ">", "<", ">=", "<=", "and",
 		 "or", "for","while", "in", "notin"]
 
-# def show(tree):
-# 	if not istype(tree, 'list'):
-# 		return
-# 	#print(self.tree)
-# 	def f(n, v, pre = ""):
-# 		rs = ''
-# 		if v == None:
-# 			rs = 'None'
-# 		elif isinstance(v, list):
-# 			s = ''
-# 			for i in v:
-# 				s += '\n' + f(n+2, i)
-# 			rs = s
-# 		elif isinstance(v, Token):
-# 			if v.type == 'string':
-# 				rs = "'" + sp_str(v.val) + "'"
-# 			elif v.type == 'number':
-# 				rs = sp_str(v.val)
-# 			elif v.type == 'name':
-# 				rs = sp_str(v.val)
-# 			elif v.type in ['neg', 'pos', 'not', 'list']:
-# 				rs = v.type + '\n' + f(n+2, v.val)
-# 		else:
-# 			if v.type in ['neg', 'pos', 'not', 'list']:
-# 				rs = v.type + '\n' + f(n+2, v.val)
-# 			elif v.type in ops_list:
-# 				rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
-# 			elif v.type == '$':
-# 				rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
-# 			elif v.type in ['if', 'choose']:
-# 				rs = v.type+'\n' + f(n+2, v.cond, 'cond => ') + \
-# 					'\n' + f(n+2, v.left, 'body => ') + '\n' + f(n+2, v.right, 'else => ')
-# 			elif v.type == 'def':
-# 				rs = 'def\n' + f(n + 2 , v.name , 'name => ') + \
-# 					'\n' + f(n+2, v.args, 'args => ') + '\n' + f(n+2, v.body, "body => ")
-# 			elif v.type == 'class':
-# 				rs = 'class ' + f( 0, v.name, 'name => ') + \
-# 					'\n' + f(n+2, v.body, 'body => ')
-# 			elif v.type in ['varg', 'arg']:
-# 				rs = v.type + f(1 , v.name, 'name => ') + '\n'+ f(n + 2,  v.val, 'dafault => ')
-# 			elif v.type in ('return', 'global', 'raise'):
-# 				rs = v.type + '\n' + f(n+2, v.val)
-# 			elif v.type in ("break", "continue", "pass"):
-# 				rs = v.type
-# 			elif v.type == 'dict':
-# 				items = v.items
-# 				ss = ""
-# 				if items != None:
-# 					for k in items:
-# 						ss += f(n+2, k)
-# 						ss += f(1, items[k])+'\n'
-# 				rs = v.type + '\n'+ ss
-# 			else:
-# 				# print(str(type(v))+":"+str(v))
-# 				rs = sp_str(v)
-# #		else:
-# #			rs = sp_str(v)
-# 		return ' ' * n + pre + rs
-# 	for i in tree:
-# 		s = f(0, i)
-# 		print(s)
+cond_list = ["if", "choose"]
+pre_list = ['neg', 'pos', 'not', 'list']
+
+def f(n, v, pre = ""):
+	rs = ''
+	if v == None:
+		rs = 'None'
+	elif istype(v, "list"):
+		s = ''
+		for i in v:
+			s += '\n' + f(n+2, i)
+		rs = s
+	elif v.type == 'string':
+		rs = "'" + sp_str(v.val) + "'"
+	elif v.type == 'number':
+		rs = sp_str(v.val)
+	elif v.type == 'name':
+		rs = sp_str(v.val)
+	elif v.type in pre_list:
+		rs = v.type + '\n' + f(n+2, v.val)
+	elif v.type in ops_list:
+		rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
+	elif v.type == '$':
+		rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
+	elif v.type in cond_list:
+		rs = v.type+'\n' + f(n+2, v.cond, 'cond => ') + \
+			'\n' + f(n+2, v.left, 'body => ') + '\n' + f(n+2, v.right, 'else => ')
+	elif v.type == 'def':
+		rs = 'def\n' + f(n + 2 , v.name , 'name => ') + \
+			'\n' + f(n+2, v.args, 'args => ') + '\n' + f(n+2, v.body, "body => ")
+	elif v.type == 'class':
+		rs = 'class ' + f( 0, v.name, 'name => ') + \
+			'\n' + f(n+2, v.body, 'body => ')
+	elif v.type in ['varg', 'arg']:
+		rs = v.type + f(1 , v.name, 'name => ') + '\n'+ f(n + 2,  v.val, 'dafault => ')
+	elif v.type in ['return', 'global', 'raise']:
+		rs = v.type + '\n' + f(n+2, v.val)
+	elif v.type in ["break", "continue", "pass"]:
+		rs = v.type
+	elif v.type == 'dict':
+		items = v.items
+		ss = ""
+		if items != None:
+			for k in items:
+				ss += f(n+2, k)
+				ss += f(1, items[k])+'\n'
+		rs = v.type + '\n'+ ss
+	else:
+		# print(str(type(v))+":"+str(v))
+		rs = sp_str(v)
+#		else:
+#			rs = sp_str(v)
+	return ' ' * n + pre + rs
+def show(tree):
+	if not istype(tree, 'list'):
+		print("parameter is not a list")
+		print(tree)
+		return
+	#print(self.tree)
+
+	for i in tree:
+		s = f(0, i)
+		print(s)
 # tree = parse(open('parse.py').read())
 
+def simple_show(tree):
+	if not istype(tree, "list"):
+		print(tree)
+	else:
+		for i in tree:
+			simple_show(i)
+
+def _parse(f):
+	tree = parse(load(f))
+	print("parse " + f + " done");
+	show(tree)
 def main():
 	if len(ARGV) > 1:
 		f = ARGV[1]

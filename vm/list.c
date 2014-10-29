@@ -59,7 +59,7 @@ tm_obj list_get(tm_list* list, int n)
 	 n += list->len;
 	if( n >= list->len || n < 0)
 	{
-		tm_raise("list_get: index overflow, @, @", obj_new(TM_LST, list), number_new(n));
+		tm_raise("list_get: index overflow, @[@]", _tm_type(obj_new(TM_LST, list)), number_new(n));
 	}
 	return list->nodes [n];
 }
@@ -208,4 +208,17 @@ tm_obj blist_index( tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_LST);
 	tm_obj v = get_arg( params, 1, -1);
 	return number_new( list_index(get_list(self), v));
+}
+
+tm_obj blist_reverse(tm_obj params){
+	tm_obj self = get_arg(params, 0, TM_LST);
+	tm_obj nlist = list_new( list_len(self));
+	int i;for(i = 0; i < list_len(self); i++){
+		list_append(get_list(nlist), get_list(self)->nodes[i]);
+	}
+	// swap two list.
+	tm_obj* nodes = get_list(nlist)->nodes;
+	get_list(nlist)->nodes = get_list(nlist)->nodes;
+	get_list(self)->nodes = nodes;
+	return obj_none;
 }

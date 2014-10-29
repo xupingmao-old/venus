@@ -203,6 +203,12 @@ def do_comment(s,i,l):
         i += 1
     return i
 
+def _tokenize(f):
+    v = load(f)
+    r = tokenize(v)
+    for tk in r:
+        print(tk.type, tk.pos, tk.val)
+
 if __name__ == "__main__":
     if len(ARGV) < 2: pass
     else:

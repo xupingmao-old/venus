@@ -172,9 +172,13 @@ tm_obj str_split(tm_obj params){
 	int lastpos = 0;
 	tm_obj nstr = str_new("", 0);
 	tm_obj list = list_new(10);
-	while ( pos > 0 && pos < get_str_len(self)){
-		tm_obj str = _str_substring(self.value.str, lastpos, pos - 1);
-		list_append( get_list(list), str);
+	while ( pos != -1 && pos < get_str_len(self)){
+		if( pos == 0){
+			list_append(get_list(list), str_new("",-1));
+		}else{
+			tm_obj str = _str_substring(self.value.str, lastpos, pos - 1);
+			list_append( get_list(list), str);
+		}
 		lastpos = pos + get_str_len(pattern);
 		pos = _str_find(self.value.str, pattern.value.str, lastpos);
 	}
@@ -189,8 +193,15 @@ tm_obj str_split(tm_obj params){
 	printf("%s.find(%s) = %d \n", self, src, _str_find(&s0, &s1, p));
 }
 
+*/
+
+void test_split(){
+	tm_obj self = str_new("justrun\nfdlsajfd\njfdksjaf\n",-1);
+	tm_obj v = str_new("\n",-1);
+	cprintln(str_split(as_list(2, self, v)));
+}
+
+/*
 int main(){
-	find_test("wwhello", "he", 0);
-	find_test("wwhello", "he", 2);
-	return 0;
+	test_init(test_split);
 }*/

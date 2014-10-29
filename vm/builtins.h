@@ -15,5 +15,6 @@ void tm_printf_only_type(char* fmt, ...);
 tm_obj tm_int( tm_obj p);
 tm_obj tm_float(tm_obj p);
 tm_obj _obj_info(tm_obj o);
+tm_obj _tm_type(tm_obj o);
 
 #endif

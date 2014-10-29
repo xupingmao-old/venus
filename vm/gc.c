@@ -128,6 +128,7 @@ void gc_clean(){
         }else{
             // tm_printf("free @\n", nodes[i]);
             obj_free(nodes[i]);
+            // nodes[i].value.gc = NULL;
         }
 	}
     list_free( tm->all );

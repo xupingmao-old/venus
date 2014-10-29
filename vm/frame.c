@@ -48,6 +48,13 @@ tm_obj _tm_call( tm_obj fnc, tm_obj params){
     }
 }
 
+tm_obj tm_call( char* mod, char* fnc, tm_obj params){
+  tm_obj m ;
+  m = tm_get(tm->modules, str_new(mod, strlen(mod)));
+  tm_obj f = tm_get( m, str_new(fnc, strlen(fnc)));
+  return _tm_call(f, params);
+}
+
 tm_obj* get_constants(tm_obj mod){
   tm_obj constants = get_mod(mod)->constants;
   return get_list(constants)->nodes;
@@ -555,7 +562,9 @@ if( enable_debug ){
   }
     if( tm->allocated_mem > tm->gc_limit){
         tm->gc_limit += 1024;
-        gc_full(ret);
+        // tm_printf("full gc at @\n", f->func_name);
+        // gc_mark(params);
+        // gc_full(ret);
         // int i;
         // for(i = 0; i < tm->cur; i++){
         // 	tm_frame* f = tm->frames+i;

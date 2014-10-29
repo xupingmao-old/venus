@@ -310,15 +310,17 @@ tm_obj tm_globals(tm_obj p){
 
 /* get object type */
 tm_obj _tm_type( tm_obj o){
+	static char info[200];
 	switch( o.type ){
-	case TM_NUM: return str_new("number", -1);
-	case TM_STR: return str_new("string", -1);
-	case TM_DCT: return str_new("dict", -1);
-	case TM_LST: return str_new("list", -1);
-	case TM_FNC: return str_new("function", -1);
-	case TM_NON: return str_new("None", -1);
+	case TM_NUM: sprintf(info, "<number %g>", get_num(o));break;
+	case TM_STR: sprintf(info, "<string %p>", o.value.str);break;
+	case TM_DCT: sprintf(info, "<dict %p>", get_dict(o));break;
+	case TM_LST: sprintf(info, "<list %d %p>",get_list(o)->len, get_list(o));break;
+	case TM_FNC: sprintf(info, "<function %p>", get_func(o));break;
+	case TM_NON: sprintf(info, "<none>");break;
+	default: sprintf(info, "<unknown %p>", o.value);break;
 	}
-	return str_new("unknown",-1);
+	return str_new( info, strlen(info));
 }
 
 /* return the type and value of a object */
@@ -331,5 +333,39 @@ tm_obj _obj_info(tm_obj o){
 
 tm_obj tm_exit( tm_obj p){
 	longjmp(tm->buf, 2);
+	return obj_none;
+}
+
+tm_obj tm_istype( tm_obj p){
+	tm_obj arg0 = get_arg(p, 0, -1);
+	int type = arg0.type;
+	tm_obj arg1 = get_arg(p, 1, TM_STR);
+	if( tm_eq(arg1, str_new("string",-1)) ){
+		return number_new( type == TM_STR);
+	}else if( tm_eq(arg1, str_new("list", -1))){
+		return number_new( type == TM_LST);
+	}else if( tm_eq(arg1, str_new("dict", -1))){
+		return number_new( type == TM_DCT);
+	}else if( tm_eq(arg1, str_new("function", -1))){
+		return number_new( type == TM_FNC);
+	}else if( tm_eq(arg1, str_new("None", -1))){
+		return number_new( type == TM_NON);
+	}else if ( tm_eq(arg1, str_new("number", -1))){
+		return number_new( type == TM_NUM);
+	}
+	return obj_none;
+}
+
+tm_obj tm_makesure( tm_obj p){
+	tm_obj arg0 = get_arg(p, 0, -1);
+	tm_obj arg1;
+	if( list_len(p) == 1){
+		arg1 = obj_none;
+	}else{
+		arg1 = get_arg(p, 1, -1);
+	}
+	if( !_tm_bool(arg0)){
+		tm_raise("AssertException, @", arg1);
+	}
 	return obj_none;
 }

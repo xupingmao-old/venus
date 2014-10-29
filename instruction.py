@@ -51,6 +51,7 @@ JUMP_ON_TRUE = 54
 TAG = 55
 TAGSIZE = 56
 TM_FOR = 57
+SETJUMP = 58
 
 # function
 CALL = 60
@@ -106,6 +107,7 @@ codes = {
 	JUMP : "JUMP",
 	TAGSIZE : "TAGSIZE",
 	TM_FOR : "TM_FOR",
+	SETJUMP : "SETJUMP",
 	NOT : "NOT"
 }
 # instructions 
@@ -215,7 +217,7 @@ mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST, DICT]
 # opcode : op short
 mode3 = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_FILE, TAG, TAGSIZE,
 JUMP_ON_TRUE, JUMP_ON_FALSE,
-POP_JUMP_ON_TRUE, POP_JUMP_ON_FALSE, JUMP, TM_FOR, TM_DEF]
+POP_JUMP_ON_TRUE, POP_JUMP_ON_FALSE, JUMP, TM_FOR, TM_DEF, SETJUMP]
 
 def code_pos():
 	return len(out) - 1
@@ -272,6 +274,9 @@ def emit_def( v):
 	emit(TM_DEF, idx)
 
 def emit_load( v ):
+	if v == None:
+		emit(LOAD_CONSTANT, 0);
+		return;
 	t = v.type
 	if t == 'string' or t == 'number':
 		constants.load( v )
