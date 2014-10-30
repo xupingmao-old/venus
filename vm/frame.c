@@ -150,7 +150,8 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   tm_obj* locals = f->locals;
   tm_obj* top = f->stack;
   
-  get_list(f->new_objs)->len = 0;
+  top[0] = obj_none;
+  // get_list(f->new_objs)->len = 0;
   
   if( f->maxlocals > 200) {
     cprintln(fnc);
@@ -376,6 +377,7 @@ if( enable_debug ){
 #endif
     LOAD_LIST(params, i);
     func = TM_POP();
+    f->top = top;
     TM_PUSH( _tm_call(func, params));
     goto start;
   }break;
@@ -563,7 +565,7 @@ if( enable_debug ){
   }
     if( tm->allocated_mem > tm->gc_limit){
         tm->gc_limit += 1024;
-        // tm_printf("full gc at @\n", f->func_name);
+        tm_printf("full gc at @\n", f->func_name);
         // gc_mark(params);
         gc_full(ret);
         // int i;
@@ -574,6 +576,6 @@ if( enable_debug ){
         // }
     }
     tm->cur--;
-    get_list(f->new_objs)->len = 0;
+    // get_list(f->new_objs)->len = 0;
     return ret;
 }

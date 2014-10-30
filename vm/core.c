@@ -52,6 +52,7 @@ void tm_raise(char* fmt, ...)
 	longjmp(tm->buf, 1);
 }
 
+inline
 tm_obj obj_new( int type , void * value){
 	tm_obj o;
 	o.type = type;
@@ -60,6 +61,8 @@ tm_obj obj_new( int type , void * value){
 		case TM_STR: o.value.str = value;break;
 		case TM_LST: o.value.list = value;break;
 		case TM_DCT: o.value.dict = value;break;
+        case TM_MOD: get_mod(o) = value;break;
+        case TM_FNC: get_func(o) = value;break;
 		case TM_NON: break;
 	}
 	return o;

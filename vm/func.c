@@ -5,8 +5,6 @@ tm_obj func_new(tm_obj mod,
 		tm_obj code,
 		tm_obj self, 
 		tm_obj (*native_func)( tm_obj) ){
-  tm_obj func;
-  func.type = TM_FNC;
   tm_func* f= tm_alloc(sizeof(tm_func));
   f->mod = mod;
   f->code = code;
@@ -22,14 +20,14 @@ tm_obj func_new(tm_obj mod,
 	// f->fnc_type = TM_FNC;
 	}*/
   f->self = self;
-  func.value.func = f;
-  return gc_track(func);
+  return gc_track(obj_new(TM_FNC, f));
 }
 
 tm_obj method_new(tm_obj _fnc, tm_obj self){
   tm_func* fnc = get_func(_fnc);
   tm_obj nfnc = func_new( fnc->mod, fnc->code, self, fnc->native_func);
   get_func(nfnc)->name = get_func(_fnc)->name;
+  get_func(nfnc)->maxlocals = get_func(_fnc)->maxlocals;
   return nfnc;
 }
 
@@ -72,10 +70,7 @@ tm_obj module_new( tm_obj file , tm_obj name, tm_obj code){
   mod->constants = list_new(20);
   list_append( get_list(mod->constants), obj_none);
   mod->globals = dict_new();
-  tm_obj obj;
-  obj.type = TM_MOD;
-  obj.value.mod = mod;
-  tm_obj m = gc_track( obj );
+  tm_obj m = gc_track( obj_new(TM_MOD, mod) );
   /* set module */
   tm_set( tm->modules, file, mod->globals);
   tm_set(mod->globals, obj__name__, name);

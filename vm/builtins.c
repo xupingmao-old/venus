@@ -314,7 +314,7 @@ tm_obj _tm_type( tm_obj o){
 	switch( o.type ){
 	case TM_NUM: sprintf(info, "<number %g>", get_num(o));break;
 	case TM_STR: sprintf(info, "<string %p>", o.value.str);break;
-	case TM_DCT: sprintf(info, "<dict %p>", get_dict(o));break;
+	case TM_DCT: sprintf(info, "<dict %d %p>",dict_len(o), get_dict(o));break;
 	case TM_LST: sprintf(info, "<list %d %p>",get_list(o)->len, get_list(o));break;
 	case TM_FNC: sprintf(info, "<function %p>", get_func(o));break;
 	case TM_NON: sprintf(info, "<none>");break;
@@ -368,4 +368,18 @@ tm_obj tm_makesure( tm_obj p){
 		tm_raise("AssertException, @", arg1);
 	}
 	return obj_none;
+}
+
+tm_obj tm_chr(tm_obj p){
+    int n = get_num(get_arg(p, 0, TM_NUM));
+    if( n < 0 || n >= 256 ){
+        tm_raise("chr: index overflow");
+    }
+    return __chars__[n];
+}
+
+tm_obj tm_ord(tm_obj p){
+    tm_obj c = get_arg(p, 0, TM_STR);
+    TM_ASSERT( get_str_len(c) == 1, "ord() expected a character");
+    return number_new( (unsigned char) get_str(c)[0]);
 }

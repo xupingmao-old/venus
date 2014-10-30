@@ -57,6 +57,9 @@
 #else
     #define CHECK_MEM_USAGE(msg) ;
 #endif
+
+/* assert macro */
+#define TM_ASSERT(cond, msg) if( !cond ) tm_raise( msg ); 
 #endif
 
 

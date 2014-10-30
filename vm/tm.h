@@ -106,6 +106,7 @@ typedef struct tm_frame
 {
 	tm_obj locals[256];
 	tm_obj *stack;
+    tm_obj *top; // current stack top;
 	tm_obj *last_pc;
 	char* last_code;
 	int stacksize;
@@ -113,7 +114,7 @@ typedef struct tm_frame
 	int maxstack;
 	tm_obj globals;
 	tm_obj constants; 
-    tm_obj new_objs; // object allocated during this frame
+    // tm_obj new_objs; // object allocated during this frame, reject.
 	tm_obj file; // file name
 	tm_obj code; // byte code
 	tm_obj ex; // exception info

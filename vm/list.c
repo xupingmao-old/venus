@@ -212,9 +212,9 @@ tm_obj blist_index( tm_obj params){
 
 tm_obj blist_reverse(tm_obj params){
 	tm_obj self = get_arg(params, 0, TM_LST);
-	tm_obj nlist = list_new( list_len(self));
-	int i;for(i = 0; i < list_len(self); i++){
-		list_append(get_list(nlist), get_list(self)->nodes[i]);
+	tm_obj nlist = list_new( get_list(self)->cap );
+	int i;for(i = list_len(self)-1; i >= 0; i--){
+		list_append( get_list(nlist), get_list(self)->nodes[i]);
 	}
 	// swap two list.
 	tm_obj* nodes = get_list(nlist)->nodes;

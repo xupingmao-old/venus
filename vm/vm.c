@@ -61,6 +61,8 @@ void reg_builtins(){
         {"exit", tm_exit},
         {"istype", tm_istype},
         {"makesure", tm_makesure},
+        {"chr", tm_chr},
+        {"ord", tm_ord},
         {0, 0}
     };
     for(i = 0; builtins[i].name != 0; i++){
@@ -83,8 +85,10 @@ void reg_builtins(){
        {0,0}
      };
      for(i = 0; str_class_fnc_list[i].name != 0 ; i++){
-       tm_set( str_class, str_new(str_class_fnc_list[i].name, -1), 
-         func_new(obj_none, obj_none, obj_none, str_class_fnc_list[i].func));
+        tm_obj name = str_new(str_class_fnc_list[i].name, -1);
+        tm_obj fnc = func_new(obj_none, obj_none, obj_none, str_class_fnc_list[i].func);
+        get_func(fnc)->name = name;
+        tm_set( str_class, name, fnc);
      }
 
      /* build list class */
@@ -112,8 +116,10 @@ void reg_builtins(){
        {0,0}
      };
      for(i = 0; dict_class_fnc_list[i].name != 0 ; i++){
-       tm_set( dict_class, str_new(dict_class_fnc_list[i].name, -1), 
-         func_new(obj_none, obj_none, obj_none, dict_class_fnc_list[i].func));
+        tm_obj name = str_new(dict_class_fnc_list[i].name, -1);
+        tm_obj fnc = func_new(obj_none, obj_none, obj_none, dict_class_fnc_list[i].func);
+        get_func(fnc)->name = name;
+        tm_set( dict_class, name, fnc);
      }
     
     register_constant( str_class);
@@ -148,7 +154,7 @@ void frames_init(){
 #if DEBUG_GC_FRAME
         printf("alloc frame %d: %p, stack = %p\n", i, f, f->stack);
 #endif
-    f->new_objs = list_new(2);
+    // f->new_objs = list_new(2);
     f->ex = obj_none;
     f->file = obj_none;
     f->line = obj_none;
@@ -207,9 +213,9 @@ int tm_run(int argc, char* argv[]){
     int rs = setjmp(tm->buf);
     if(  rs == 0 ){
         tm->cur = -1;
-            gc_init();
+        gc_init();
         tm_obj p = list_new(argc);
-            int i;for(i = 1; i < argc; i++){
+        int i;for(i = 1; i < argc; i++){
         tm_obj arg = str_new(argv[i], strlen(argv[i]));
             list_append( get_list(p), arg);
         }
