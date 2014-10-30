@@ -41,13 +41,13 @@ tm_obj gc_track( tm_obj v){
         return v;
 	}
 	list_append(tm->all, v);
-    /*
+    
     if(tm->cur >= 0 ){
         // tm_printf("at frame @: allocate local object @\n",number_new(tm->cur), v);
         list_append( get_list(tm->frames[tm->cur].new_objs), v );
         // printf("frame new_objs len : %d\n", list_len(tm->frames[tm->cur].new_objs));
-        //cprintln(tm->frames[tm->cur].new_objs);
-    }*/
+        // cprintln(tm->frames[tm->cur].new_objs);
+    }
 	return v;
 }
 /*
@@ -108,17 +108,19 @@ void gc_mark(tm_obj o){
 
 void gc_mark_frames(){
 	int i,n;
-	for(i = 0; i < tm->cur ; i++){
+	for(i = 0; i <= FRAMES_COUNT ; i++){
 		tm_frame* f = tm->frames+i;
-		// gc_mark(f->new_objs);
+		gc_mark(f->new_objs);
         gc_mark(f->globals);
         gc_mark(f->constants);
-        tm_obj *j;for(j = f->top; j > f->stack; j--){
-            gc_mark(*j);
-        }
-        for(j = f->locals; j <= f->locals + f->maxlocals; j++){
-            gc_mark(*j);
-        }
+        // printf("stack size = %d\n", f->top - f->stack);
+        // tm_obj *j;for(j = f->top; j > f->stack; j--){
+        //     gc_mark(*j);
+        // }
+        // printf("max locals = %d\n", f->maxlocals);
+        // for(j = f->locals; j < f->locals + f->maxlocals; j++){
+        //     gc_mark(*j);
+        // }
 	}
 }
 
@@ -132,7 +134,7 @@ void gc_clean(){
         if ( GC_MARKED(tm->all->nodes[i]) ){
             list_append( temp, all->nodes[i]);
         }else{
-            tm_printf("free @\n", _tm_type(all->nodes[i]));
+            // tm_printf("free @\n", _tm_type(all->nodes[i]));
             obj_free(all->nodes[i]);
             // nodes[i].value.gc = NULL;
         }

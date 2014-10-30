@@ -149,9 +149,10 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   f->constants = get_mod(mod)->constants;
   tm_obj* locals = f->locals;
   tm_obj* top = f->stack;
+  // f->top = top;
   
   top[0] = obj_none;
-  // get_list(f->new_objs)->len = 0;
+  get_list(f->new_objs)->len = 0;
   
   if( f->maxlocals > 200) {
     cprintln(fnc);
@@ -377,7 +378,7 @@ if( enable_debug ){
 #endif
     LOAD_LIST(params, i);
     func = TM_POP();
-    f->top = top;
+    // f->top = top;
     TM_PUSH( _tm_call(func, params));
     goto start;
   }break;
@@ -386,6 +387,9 @@ if( enable_debug ){
 #if PRINT_INS_CONST
     tm_printf("LOAD_PARAMS @\n", params);
 #endif
+    if( params.type != TM_LST){
+      tm_raise("tm_eval(), expect list params");
+    }
     int len = list_len(params);
     for(i = 0; i < len; i++){
       locals[i] = get_list(params)->nodes[i];
@@ -564,10 +568,11 @@ if( enable_debug ){
     // tm_raise("top stack leaks");
   }
     if( tm->allocated_mem > tm->gc_limit){
-        tm->gc_limit += 1024;
-        tm_printf("full gc at @\n", f->func_name);
+        tm->gc_limit += 1024 * 20;
+        // tm_printf("full gc at @\n", f->func_name);
         // gc_mark(params);
         gc_full(ret);
+        // gc_full();
         // int i;
         // for(i = 0; i < tm->cur; i++){
         // 	tm_frame* f = tm->frames+i;

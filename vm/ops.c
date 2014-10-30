@@ -141,10 +141,10 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 		case TM_LST: {
 			if( k.type == TM_NUM ){
 				return list_get( self.value.list, get_num(k));
-			}else{
-				tm_obj fnc = tm_get(list_class, k);
-				return method_new( fnc, self);
+			}else if( dict_iget(get_dict(list_class), k, &v) ){
+				return method_new( v, self);
 			}
+			break;
 		}
 		case TM_DCT:
 			if( dict_iget( get_dict(self), k, &v)){

@@ -4,6 +4,7 @@
 tm_list* _list_new( int cap ){
 	tm_list* list = tm_alloc( sizeof(tm_list));
 	list->len = 0;
+	if( cap <= 0) cap = 2;
 	list->cap = cap;
 	list->nodes = tm_alloc( OBJ_SIZE * list->cap);
 	list->cur = 0;
@@ -78,7 +79,7 @@ void list_set(tm_list* list, int n, tm_obj val)
 
 inline
 void _list_check_cap( tm_list* list){
-	if( list->len >= list->cap )
+	if( list->len >= list->cap  )
 	{
 		int ocap = list->cap;
 		list->cap += ocap / 2 + 1;
@@ -218,7 +219,7 @@ tm_obj blist_reverse(tm_obj params){
 	}
 	// swap two list.
 	tm_obj* nodes = get_list(nlist)->nodes;
-	get_list(nlist)->nodes = get_list(nlist)->nodes;
+	get_list(nlist)->nodes = get_list(self)->nodes;
 	get_list(self)->nodes = nodes;
 	return obj_none;
 }

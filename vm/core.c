@@ -3,8 +3,10 @@
 
 void* tm_alloc( size_t size)
 {
-	if( size == 0)
+	if( size <=  0){
+		tm_raise("tm_alloc(), you allocate a memory block with size <= 0!");
 		return NULL;
+	}
 	void* block = malloc( size );
 #if DEBUG_GC
 	printf("%d -> %d , +%d\n", tm->allocated_mem, tm->allocated_mem + size, size);
@@ -31,6 +33,9 @@ void tm_free(void* o, size_t size){
 #if DEBUG_GC
 	printf("%d -> %d , -%d\n", tm->allocated_mem, tm->allocated_mem - size, size);
 #endif
+	// if (size == 0 ){
+	// 	tm_raise("tm_free(), you free a block of size 0!");
+	// }
 	free(o);
 	tm->allocated_mem -= size;
 }
@@ -61,9 +66,10 @@ tm_obj obj_new( int type , void * value){
 		case TM_STR: o.value.str = value;break;
 		case TM_LST: o.value.list = value;break;
 		case TM_DCT: o.value.dict = value;break;
-        case TM_MOD: get_mod(o) = value;break;
-        case TM_FNC: get_func(o) = value;break;
+		case TM_MOD: get_mod(o) = value;break;
+		case TM_FNC: get_func(o) = value;break;
 		case TM_NON: break;
+		default: tm_raise("obj_new: not supported type @", number_new(type));
 	}
 	return o;
 }

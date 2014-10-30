@@ -318,7 +318,7 @@ tm_obj _tm_type( tm_obj o){
 	case TM_LST: sprintf(info, "<list %d %p>",get_list(o)->len, get_list(o));break;
 	case TM_FNC: sprintf(info, "<function %p>", get_func(o));break;
 	case TM_NON: sprintf(info, "<none>");break;
-	default: sprintf(info, "<unknown %p>", o.value);break;
+	default: sprintf(info, "<unknown %p>", o.value.ptr);break;
 	}
 	return str_new( info, strlen(info));
 }

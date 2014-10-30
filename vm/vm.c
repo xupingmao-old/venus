@@ -154,7 +154,7 @@ void frames_init(){
 #if DEBUG_GC_FRAME
         printf("alloc frame %d: %p, stack = %p\n", i, f, f->stack);
 #endif
-    // f->new_objs = list_new(2);
+    f->new_objs = list_new(2);
     f->ex = obj_none;
     f->file = obj_none;
     f->line = obj_none;
