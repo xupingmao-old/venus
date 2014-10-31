@@ -651,7 +651,6 @@ def simple_show(tree):
 
 def _parse(f):
 	tree = parse(load(f))
-	print("parse " + f + " done");
 	show(tree)
 def main():
 	if len(ARGV) > 1:

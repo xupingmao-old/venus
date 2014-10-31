@@ -22,5 +22,5 @@ def _import(file):
     save_bin(file, file+".bin")
 
 if __name__ == "__main__":
-    py2bin(["tokenize.py", "parse.py", "instruction.py", "encode.py"], "compile.c")
+    py2bin(["type_methods.py", "tokenize.py", "parse.py", "instruction.py", "encode.py"], "compile.c")
 

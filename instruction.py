@@ -36,6 +36,7 @@ LOAD_LOCAL = 34
 LOAD_GLOBAL = 35
 POP = 36
 LOAD_CONSTANT = 37
+DICT_SET = 38
 
 # data
 LIST = 40
@@ -108,7 +109,8 @@ codes = {
 	TAGSIZE : "TAGSIZE",
 	TM_FOR : "TM_FOR",
 	SETJUMP : "SETJUMP",
-	NOT : "NOT"
+	NOT : "NOT",
+    DICT_SET: "DICT_SET"
 }
 # instructions 
 
@@ -211,7 +213,7 @@ def def_global( v ):
 # opcode : op
 mode1 = [ADD, SUB, MUL, DIV, MOD, NEG, NOT, POP, GET, SET, AND, OR,
         LT, GT, LTEQ, GTEQ, EQEQ, NOTEQ,IN, NOTIN,
-	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS,LIST_APPEND]
+	TM_EOF, TM_EOP, RETURN, LOAD_PARAMS,LIST_APPEND, DICT_SET]
 # opcode : op byte
 mode2 = [LOAD_LOCAL,STORE_LOCAL, CALL, LIST, DICT]
 # opcode : op short

@@ -30,16 +30,16 @@ tm_obj str_new(char *s , int size)
 
 void str_free( tm_str *str){
 #if DEBUG_GC
-int old = tm->allocated_mem;
-printf("free string %p...\n", str);
+    int old = tm->allocated_mem;
+    printf("free string %p...\n", str);
 #endif
 	if( str->inHeap ){
 		tm_free( str->value, str->len + 1);
 	}
 	tm_free(str, sizeof(tm_str));
 #if DEBUG_GC
-int _new = tm->allocated_mem;
-printf("free string , %d => %d, freed %d B\n", old, _new, old - _new);
+    int _new = tm->allocated_mem;
+    printf("free string , %d => %d, freed %d B\n", old, _new, old - _new);
 #endif
 }
 
@@ -185,7 +185,6 @@ tm_obj str_split(tm_obj params){
 	list_append( get_list(list), _str_substring(self.value.str, lastpos, -1));
 	return list;
 }
-
 
 /*void find_test(char*self, char* src, int p){
 	tm_str s0, s1;

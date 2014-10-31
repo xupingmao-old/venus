@@ -28,6 +28,8 @@
 #define get_vals(obj)   get_dict(obj)->values
 
 
+#define list_nodes(obj) (get_list(obj))->nodes
+
 #define list_len(obj)  get_list(obj)->len
 #define dict_len(obj)  get_dict_len(obj)
 
@@ -56,6 +58,12 @@
     #define CHECK_MEM_USAGE(msg) printf("%s, press enter to continue", msg);getchar();
 #else
     #define CHECK_MEM_USAGE(msg) ;
+#endif
+
+#if LOG_LEVEL
+    #define log(type, info, __VA_ARGS__) tm_log( type, info, __VA_ARGS__);
+#else
+    #define log(type, info, __VA_ARGS__) ;
 #endif
 
 /* assert macro */

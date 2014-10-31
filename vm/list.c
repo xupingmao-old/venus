@@ -189,7 +189,7 @@ tm_obj blist_pop(tm_obj params){
 tm_obj blist_insert(tm_obj params){
 	tm_obj self = get_arg(params, 0, TM_LST);
 	tm_obj idx = get_arg(params, 1, TM_NUM);
-	int n = idx.value.dv;
+	int n = get_num(idx) ;
 	tm_obj v = get_arg( params, 2, -1);
 	list_insert( get_list(self), n, v );
 	return self;
@@ -199,8 +199,8 @@ tm_obj blist_extend( tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_LST);
 	tm_obj des = get_arg( params, 0, TM_LST);
 	int i;
-	for(i = 0; i < get_list(des)->len; i++){
-		list_append( get_list(self), get_list(des)->nodes[i]);
+	for(i = 0; i < list_len(des) ; i++){
+		list_append( get_list(self), list_nodes(des)[i]);
 	}
 	return obj_none;
 }
@@ -213,13 +213,12 @@ tm_obj blist_index( tm_obj params){
 
 tm_obj blist_reverse(tm_obj params){
 	tm_obj self = get_arg(params, 0, TM_LST);
-	tm_obj nlist = list_new( get_list(self)->cap );
-	int i;for(i = list_len(self)-1; i >= 0; i--){
-		list_append( get_list(nlist), get_list(self)->nodes[i]);
-	}
-	// swap two list.
-	tm_obj* nodes = get_list(nlist)->nodes;
-	get_list(nlist)->nodes = get_list(self)->nodes;
-	get_list(self)->nodes = nodes;
+    int start = 0, end = list_len( self ) -1 ;
+    while ( end > start ) {
+        tm_obj temp = list_nodes(self)[start];
+        list_nodes(self)[start] = list_nodes(self)[end];
+        list_nodes(self)[end] = temp;
+        end--;start++;
+    }
 	return obj_none;
 }

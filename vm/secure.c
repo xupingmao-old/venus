@@ -62,6 +62,10 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef, int* maxlocals, in
 			len++;
 			stacksize--;
 			break;
+        case DICT_SET:
+            len++;
+            stacksize--;
+            break;
 		case NEG : case NOT:
         case LOAD_PARAMS:
             len++;

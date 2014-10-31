@@ -9,6 +9,7 @@
 #define EVAL_DEBUG 1
 #define DEBUG_INS 1
 #define LIGHT_DEBUG_GC 0
+#define LOG_LEVEL 1
 
 int enable_debug = 0;
 
@@ -17,6 +18,8 @@ int enable_debug = 0;
 #include <stdlib.h>
 #include <setjmp.h>
 #include <stdarg.h>
+
+#define tm_inline /**/
 typedef char instruction;
 
 typedef struct tm_str{
@@ -172,7 +175,7 @@ tm_obj __chars__[256];
 #include "constants.h"
 #include "object.h"
 
-inline
+tm_inline
 tm_obj tm_number(double v){
 	tm_obj o;
 	o.type = TM_NUM;
@@ -188,13 +191,12 @@ tm_obj tm_number(double v){
 #include "gc.h"
 #include "ops.h"
 #include "instruction.h"
-#include "args.h"
 
 #include "compile.c"
+#include "core.c"
 #include "string.c"
 #include "list.c"
 #include "func.c"
-#include "core.c"
 #include "builtins.c"
 #include "ops.c"
 #include "gc.c"

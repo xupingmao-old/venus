@@ -63,6 +63,9 @@ void reg_builtins(){
         {"makesure", tm_makesure},
         {"chr", tm_chr},
         {"ord", tm_ord},
+        {"dir", tm_dir},
+        /* this function is super function , it can add method to type class */
+        {"add_type_method", blt_add_type_method},
         {0, 0}
     };
     for(i = 0; builtins[i].name != 0; i++){
@@ -226,6 +229,7 @@ int tm_run(int argc, char* argv[]){
         
         frames_init();
         CHECK_MEM_USAGE("frames");
+        // tm_raise("test %c", 'x');
         if( argc >= 2){
             char* fname = argv[1];
             if( strcmp(argv[1], "-d") == 0){
@@ -235,10 +239,13 @@ int tm_run(int argc, char* argv[]){
             tm_obj code = _load(fname);
             tm_obj mod_name = str_new(fname, strlen(fname));
 
+            load_bultin_module("type_methods", type_methods_pyc, -1);
             load_bultin_module("tokenize", tokenize_pyc, -1);  
             load_bultin_module("parse", parse_pyc,-1);  
             load_bultin_module("instruction", instruction_pyc, -1);  
             load_bultin_module("encode", encode_pyc, -1);  
+            
+            // cprintln( _tm_dir( str_new("", -1) ) );
             // tm_obj mod = module_new(mod_name, obj__main__ , code );
             // tm_obj fnc = func_new(mod, code, obj_none, NULL);
             // get_func(fnc)->pc = get_str(code);

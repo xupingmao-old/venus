@@ -1,6 +1,33 @@
 
 #include "tm.h"
 
+
+tm_inline
+tm_obj get_arg(tm_obj params, int pos, int type){
+	tm_list* list = params.value.list;
+	int n = list->len;
+	if ( pos >= n ){
+		tm_raise("get_arg: index overflow");
+	}
+	tm_obj v = list->nodes[pos];
+	if ( type < 0 ){
+		return v;
+	}
+	if( v.type != type){
+		tm_raise("get_arg: TypeError see @", _obj_info(v));
+	}
+	return v;
+}
+
+
+tm_inline
+int get_int_arg(tm_obj v){
+	if( v.type != TM_NUM){
+		tm_raise( "get_int_arg:@ is not a number", v );
+	}
+	return (int)get_num(v);
+}
+
 void* tm_alloc( size_t size)
 {
 	if( size <=  0){
@@ -44,15 +71,7 @@ void tm_raise(char* fmt, ...)
 {
 	va_list a; 
 	va_start(a,fmt);
-	// 添加\n
-	int len = strlen(fmt);
-	char*s = tm_alloc(len + 2);
-	memcpy(s, fmt, len);
-	s[len] = '\n';
-	s[len+1] = '\0';
-	tm->frames[tm->cur].ex = _tm_format(s, a);
-	// 释放资源
-	tm_free(s, len + 2);
+	tm->frames[tm->cur].ex = _tm_format(fmt, a, 1);
 	va_end(a);
 	longjmp(tm->buf, 1);
 }
@@ -82,4 +101,20 @@ void obj_free( tm_obj o){
 	case TM_FNC: func_free( o.value.func);break;
 	case TM_MOD: module_free( o.value.mod );break;
 	}
+}
+
+void tm_log(char* type, char* fmt, ...){
+    static int log_open = 0;
+    static FILE *fp;
+    if( !log_open ){
+        fp = fopen("log.log", "a");
+        log_open = 1;
+    }
+    if( strcmp(type, "close") == 0){
+        log_open = 0;
+        fclose(fp);
+        fp = NULL;
+    }else {
+        fwrite(type, 1, strlen(type), fp);
+    }
 }

@@ -100,19 +100,15 @@ tm_obj tm_len(tm_obj p){
 	return number_new(_tm_len(o));
 }
 
-inline
-int tm_get_int(tm_obj v){
-	if( v.type != TM_NUM){
-		tm_raise( "tm_get_int:@ is not a number", v );
-	}
-	return (int)get_num(v);
-}
 
 void tm_set( tm_obj self, tm_obj k, tm_obj v){
 	switch( self.type ){
 	case TM_LST:
 	{
-		int n = tm_get_int( k);
+        if( TM_NUM != k.type){
+            tm_raise("tm_set(), expect a number but see @", _tm_type(k));
+        }
+		int n = get_num(k);
 		list_set( get_list(self), n, v);
 	}return;
 	case TM_DCT: dict_set( get_dict(self), k, v);return;
@@ -161,7 +157,7 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 	}
     // tm_printf_only_type("@", self);
 	// cprintln(self);
-	tm_raise("tm_get: keyError @, self = @ ", k, _tm_type(self) );
+	tm_raise("tm_get: keyError @, self = @ ", _tm_type(k), _tm_type(self) );
 	return obj_none;
 }
 
@@ -378,7 +374,7 @@ tm_obj tm_neg(tm_obj o){
 }
 
 int tm_iter( tm_obj self, tm_obj k, tm_obj *v){
-	int idx = tm_get_int(k);
+	int idx = get_int_arg(k);
 	if( idx >= _tm_len(self))  return 0;
 	if( self.type == TM_DCT ){
 		if( idx == 0) dict_iter_init(get_dict(self));

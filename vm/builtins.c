@@ -128,7 +128,7 @@ tm_obj tm_print(tm_obj params){
 	return obj_none;
 }
 
-tm_obj _tm_format(char* fmt, va_list ap){
+tm_obj _tm_format(char* fmt, va_list ap, int appendln){
 	int i;
 	int len = strlen(fmt);
 	tm_obj nstr = str_new("", 0);
@@ -144,21 +144,51 @@ tm_obj _tm_format(char* fmt, va_list ap){
 			tm_obj v = va_arg(ap, tm_obj);
 			nstr = tm_add(nstr, _tm_str(v));
 			start = fmt + i + 1;
-		}else{
-			templ++;
-		}
+		}else if( fmt[i] == '%' ){
+            i++;
+            int intval;float fval;char cval;
+            tm_obj obj;
+            char c = fmt[i];
+            switch( fmt[i] ){
+                case 'd':
+                    intval = va_arg(ap, int); 
+                    obj = number_new(intval);
+                    break;
+                case 'f':
+                    fval = va_arg(ap, float);
+                    obj = number_new(fval);
+                    break;
+                case 'c':
+                    cval = va_arg(ap, char);
+                    obj = _tm_chr(cval);
+                    break;
+                default: tm_raise("_tm_format(), unknown pattern %c", fmt[i]); break;
+            }
+            if( templ > 0) {
+                tm_obj txt = str_new(start, templ );
+                nstr = tm_add( nstr, txt );
+                templ = 0;
+            }
+            start = fmt + i + 1;
+            if( c == 'd' || c == 'f' || c == 'c' ) { 
+                nstr = tm_add(nstr, _tm_str(obj));
+            }
+		}else {
+            templ++;
+        }
 	}
 	if( templ > 0){
 		tm_obj txt = str_new(start, templ);
 		nstr = tm_add(nstr, txt);
 	}
+    if( appendln ) nstr = tm_add( nstr, str_new("\n", -1));
 	return nstr;
 }
 
 tm_obj tm_format(char* fmt, ...){
 	va_list a; 
 	va_start(a,fmt);
-	tm_obj  v = _tm_format(fmt, a);
+	tm_obj  v = _tm_format(fmt, a, 0);
 	va_end(a);
 	return v;
 }
@@ -336,6 +366,23 @@ tm_obj tm_exit( tm_obj p){
 	return obj_none;
 }
 
+tm_obj blt_add_type_method(tm_obj p){
+    tm_obj type = get_arg(p, 0, TM_STR);
+    tm_obj fname = get_arg(p, 1, TM_STR);
+    tm_obj fnc = get_arg(p, 2, TM_FNC);
+    char*s = get_str(type);
+    if( strcmp(s, "str") == 0) {
+        tm_set(str_class, fname, fnc);
+    }else if( strcmp(s, "list") == 0) {
+        tm_set(list_class, fname, fnc);
+    }else if( strcmp(s, "dict") == 0){
+        tm_set(dict_class, fname, fnc);
+    }else {
+        tm_raise("add_type_method(), expect (str, str, fnc)");
+    }
+    return obj_none;
+}
+
 tm_obj tm_istype( tm_obj p){
 	tm_obj arg0 = get_arg(p, 0, -1);
 	int type = arg0.type;
@@ -370,12 +417,32 @@ tm_obj tm_makesure( tm_obj p){
 	return obj_none;
 }
 
-tm_obj tm_chr(tm_obj p){
-    int n = get_num(get_arg(p, 0, TM_NUM));
+tm_obj _tm_dir( tm_obj o) {
+    tm_obj lst = obj_none;
+    switch( o.type ){
+        case TM_NUM:lst = list_new(2);break;
+        case TM_STR:lst = dict_keys( get_dict( str_class ) );break;
+        case TM_LST:lst = dict_keys( get_dict( list_class ) );break;
+        case TM_DCT:lst = dict_keys( get_dict( dict_class ));break;
+        default: tm_raise("dir(), not supported type %d", o.type );
+    }
+    return lst;
+}
+tm_obj tm_dir(tm_obj p){
+    return _tm_dir( get_arg(p, 0, -1));
+}
+
+tm_inline
+tm_obj _tm_chr( int n ){
     if( n < 0 || n >= 256 ){
-        tm_raise("chr: index overflow");
+        tm_raise("chr(): index overflow");
     }
     return __chars__[n];
+}
+
+tm_obj tm_chr(tm_obj p){
+    int n = get_num(get_arg(p, 0, TM_NUM));
+    return _tm_chr( n );
 }
 
 tm_obj tm_ord(tm_obj p){

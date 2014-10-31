@@ -108,7 +108,7 @@ void gc_mark(tm_obj o){
 
 void gc_mark_frames(){
 	int i,n;
-	for(i = 0; i <= FRAMES_COUNT ; i++){
+	for(i = 0; i < FRAMES_COUNT ; i++){
 		tm_frame* f = tm->frames+i;
 		gc_mark(f->new_objs);
         gc_mark(f->globals);
@@ -185,7 +185,7 @@ void gc_full(tm_obj ret){
 
 	}
 #if LIGHT_DEBUG_GC
-	puts("full gc start ...");
+	// puts("full gc start ...");
 	int old = tm->allocated_mem, _new;
 #endif
     gc_mark(ret);

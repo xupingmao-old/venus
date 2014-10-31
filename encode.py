@@ -102,10 +102,11 @@ def encode_item( tk ):
     elif tk.type == 'dict':
         items = tk.items
         l = len(items)
+        emit(DICT, 0)
         for k in items:
             encode_item(k)
             encode_item(items[k])
-        emit(DICT, l)
+            emit(DICT_SET)
     elif t == '$':
         encode_item(tk.name)
         n = encode_item(tk.args)

@@ -152,7 +152,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   // f->top = top;
   
   top[0] = obj_none;
-  get_list(f->new_objs)->len = 0;
+  list_len(f->new_objs) = 0;
   
   if( f->maxlocals > 200) {
     cprintln(fnc);
@@ -312,9 +312,22 @@ if( enable_debug ){
     v = TM_POP();
     x = TM_TOP();
     if( x.type != TM_LST){
-      tm_raise("tm_eval: LIST_APPEND expect a list but see @", x);
+      tm_raise("tm_eval: LIST_APPEND expect a list but see @", _tm_type(x));
     }
     list_append(get_list(x), v);
+    goto start;
+  
+  case DICT_SET:
+    #if PRINT_INS
+        puts("DICT_SET");
+    #endif
+    v = TM_POP();
+    k = TM_POP();
+    x = TM_TOP();
+    if( x.type != TM_DCT){
+        tm_raise("tm_eval: DICT_SET expect a dict but see @", _tm_type(x));
+    }
+    tm_set(x, k, v);
     goto start;
 
   case DICT:{
@@ -496,7 +509,6 @@ if( enable_debug ){
     // print_tags(get_mod(mod));
     i = next_short(s);
 #if PRINT_INS
-    // cprintln(TM_TOP());
     printf("JUMP_ON_FALSE %d\n", i);
 #endif
     if( !_tm_bool( TM_TOP() )){
@@ -581,6 +593,6 @@ if( enable_debug ){
         // }
     }
     tm->cur--;
-    // get_list(f->new_objs)->len = 0;
+    list_len(f->new_objs) = 0;
     return ret;
 }
