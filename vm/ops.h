@@ -31,6 +31,6 @@ tm_obj tm_len( tm_obj p);
 tm_obj tm_has(tm_obj a, tm_obj b);
 
 int tm_bool(tm_obj v);
-int tm_iter(tm_obj self, tm_obj k, tm_obj *v);
+int tm_iter(tm_obj self, tm_obj *k);
 
 #endif /* OPS_H_ */

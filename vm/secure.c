@@ -5,7 +5,7 @@
 void print_tags(tm_module *mod){
   int i;
   for(i = 0; i < mod->tagsize; i++){
-    printf("TAG %d : %p\n", i, mod->tags[i]);
+      printf("TAG %d : %p\n", i, mod->tags[i]);
   }
 }
 
@@ -24,6 +24,7 @@ void store_tag( tm_module* mod, int idx, unsigned char* pos){
 }
 
 unsigned char** init_tags(int size){
+    if( size <= 0) return NULL;
   unsigned char** tags = tm_alloc(size * sizeof(unsigned char*));
   int i = 0;for(i = 0; i < size; i++){
     tags[i] = NULL;

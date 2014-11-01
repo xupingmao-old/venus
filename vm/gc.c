@@ -38,15 +38,13 @@ tm_obj gc_track( tm_obj v){
         get_func(v)->marked = GC_REACHED_SIGN;
         break;
     default:
+        tm_raise("gc_track(), not supported type %d", v.type);
         return v;
 	}
 	list_append(tm->all, v);
     
     if(tm->cur >= 0 ){
-        // tm_printf("at frame @: allocate local object @\n",number_new(tm->cur), v);
         list_append( get_list(tm->frames[tm->cur].new_objs), v );
-        // printf("frame new_objs len : %d\n", list_len(tm->frames[tm->cur].new_objs));
-        // cprintln(tm->frames[tm->cur].new_objs);
     }
 	return v;
 }
@@ -55,7 +53,8 @@ tm_obj gc_track( tm_obj v){
 
 void gc_mark(tm_obj o){
 	if( o.type == TM_NUM || o.type == TM_NON)
-		return;
+        return;
+//    tm_log("mark", "mark object @", _tm_type(o));
     /*
 	if( GC_REACHED_SIGN == o.value.gc->marked )
 		return;*/
@@ -103,24 +102,18 @@ void gc_mark(tm_obj o){
 			gc_mark(get_mod(o)->constants);
 			gc_mark(get_mod(o)->globals);
 			break;
+         default: tm_raise("gc_mark(), unknown object type %d", o.type);
 	}
 }
 
 void gc_mark_frames(){
-	int i,n;
+    int i;
 	for(i = 0; i < FRAMES_COUNT ; i++){
 		tm_frame* f = tm->frames+i;
+//        tm_log("mark", "mark frame %d", i);
 		gc_mark(f->new_objs);
         gc_mark(f->globals);
         gc_mark(f->constants);
-        // printf("stack size = %d\n", f->top - f->stack);
-        // tm_obj *j;for(j = f->top; j > f->stack; j--){
-        //     gc_mark(*j);
-        // }
-        // printf("max locals = %d\n", f->maxlocals);
-        // for(j = f->locals; j < f->locals + f->maxlocals; j++){
-        //     gc_mark(*j);
-        // }
 	}
 }
 
@@ -169,7 +162,7 @@ void gc_clean(){
 * recognize the gc type of the object.
 */
 void gc_full(tm_obj ret){
-	int n,i;
+    int i;
 	long t1,t2;
 	t1 = clock();
 	// mark all object except new , to 0
@@ -185,17 +178,23 @@ void gc_full(tm_obj ret){
 
 	}
 #if LIGHT_DEBUG_GC
-	// puts("full gc start ...");
 	int old = tm->allocated_mem, _new;
 #endif
+
+    tm_log0("gc", "full gc start ...");
+
+    tm_log("gc", "mark ret %t", ret);
     gc_mark(ret);
+
+    tm_log0("gc", "mark root");
 	gc_mark(tm->root);
+
 	gc_mark_frames();
 	gc_clean();
 	t2 = clock();
 #if LIGHT_DEBUG_GC
 	_new = tm->allocated_mem;
-	printf("full gc , elapsed time %ld, %d = > %d , freed %d B\n",t2-t1, old, _new, old- _new );
+    tm_log("gc", "full gc , elapsed time %ld, %d = > %d , freed %d B\n",t2-t1, old, _new, old- _new );
 #endif
 }
 
@@ -209,15 +208,6 @@ void gc_info(){
 }
 
 void gc_free(){
-
-#if DEBUG_GC
-	puts("===================vm infomation===============");
-	printf("objsize=%d\n", sizeof( tm_obj ));
-
-	puts("===================gc infomation===============");
-	printf("\nallocated_mem: %d\n", tm->allocated_mem);
-	printf("total object num: %d\n", tm->all->len);
-#endif
 	tm_list* all = tm->all;
 	int i;
 	for(i = 0; i < all->len; i++){
@@ -237,4 +227,5 @@ void gc_free(){
         printf("\n**memory leak happens***\n");
     }
 #endif
+    // close_log();
 }

@@ -21,84 +21,6 @@
 }
 */
 
-tm_obj _tm_str(  tm_obj a){
-	switch( a.type ){
-	case TM_STR:
-		return a;
-	case TM_NUM:
-	{
-		char s[20];
-		sprintf(s, "%g", get_num(a));
-		return str_new(s, strlen(s));
-	}
-	case TM_LST:{
-		tm_obj str = str_new("[", -1);
-		int i, l = get_list_len(a);
-		for(i = 0; i < l ; i++){
-			tm_obj obj = get_list(a)->nodes[i];
-			if( tm_eq(a, obj)){
-				obj = str_new("[...]", -1);
-			}else{
-				obj = _tm_str(obj);
-			}
-			str= tm_add(str, obj);
-			if( i != l -1)
-				str= tm_add(str, str_new(",", -1));
-		}
-		str = tm_add(str, str_new("]", -1));
-		return str;
-	}
-	case TM_DCT:
-		return str_new("<dict>", -1);
-	case TM_FNC:
-		return tm_format("<function @>", get_func(a)->name);
-	case TM_MOD:
-		return str_new("<module>", -1);
-	}
-	return str_new("",0);
-}
-
-tm_obj btm_str( tm_obj p){
-	tm_obj a = get_arg( p, 0, -1);
-	return _tm_str(a);
-}
-
-tm_obj tm_copy(tm_vm* tm, tm_obj o){
-	switch( o.type ){
-	case TM_NUM:
-		return o;
-	case TM_STR:
-		{
-			int len = str_len(o);
-			return str_new(get_str(o), len);
-		}
-	case TM_LST:
-		{
-			tm_obj list = list_new( list_len(o));
-			int i;
-			for(i = 0; i < list_len(o); i++){
-				list_append( get_list(o), o.value.list->nodes[i]);
-			}
-			return list;
-		}
-	}
-	return obj_none;
-}
-
-int _tm_len(tm_obj o){
-	switch(o.type){
-	case TM_STR:return get_str_len(o);
-	case TM_LST:return list_len(o);
-	case TM_DCT:return dict_len(o);
-	}
-	tm_raise("tm_len: @ has no attribute len", o);
-	return 0;
-}
-
-tm_obj tm_len(tm_obj p){
-	tm_obj o = get_arg(p, 0, -1);
-	return number_new(_tm_len(o));
-}
 
 
 void tm_set( tm_obj self, tm_obj k, tm_obj v){
@@ -202,7 +124,7 @@ tm_obj tm_add(  tm_obj a, tm_obj b){
 			}
 		}
 	}
-	tm_raise("tm_add: can not add @ and @", _obj_info(a),_obj_info(b));
+    tm_raise("tm_add: can not add %t and %t", (a),(b));
 	return obj_none;
 }
 
@@ -211,7 +133,7 @@ int tm_eq(tm_obj a, tm_obj b){
 	if( a.type != b.type ) return 0;
 	switch( a.type ){
 		case TM_NUM:
-			return a.value.dv == b.value.dv;
+			return get_num(a) == get_num(b);
 		case TM_STR:
 		{
 			char* sa = get_str(a);
@@ -233,6 +155,8 @@ int tm_eq(tm_obj a, tm_obj b){
 			}
 			return 1;
 		}
+		case TM_NON:return 1;
+		default: tm_raise("tm_eq(): not supported type %d", a.type);
 	}
 	return 0;
 }
@@ -373,13 +297,14 @@ tm_obj tm_neg(tm_obj o){
 	return obj_none;
 }
 
-int tm_iter( tm_obj self, tm_obj k, tm_obj *v){
-	int idx = get_int_arg(k);
+int tm_iter( tm_obj self, tm_obj *k){
+    tm_obj v;
+    int idx = get_num( *k );
 	if( idx >= _tm_len(self))  return 0;
-	if( self.type == TM_DCT ){
+    if( self.type == TM_DCT ){
 		if( idx == 0) dict_iter_init(get_dict(self));
-		return dict_inext(get_dict(self),&k, v);
+        return dict_inext(get_dict(self), k, &v);
 	}
-	*v = tm_get(self, k);
+    *k = tm_get(self, *k);
 	return 1;
 }

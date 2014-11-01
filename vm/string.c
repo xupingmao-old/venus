@@ -186,6 +186,22 @@ tm_obj str_split(tm_obj params){
 	return list;
 }
 
+char* _str_limit(tm_obj o, int len){
+    static char buf[200];
+    if(len >= 200){
+        tm_raise("str_limit(), limit can not >= 100");
+    }
+    if( TM_NON == o.type ){
+        return "None";
+    }else if( TM_STR == o.type ){
+        memcpy(buf, get_str(o), len);
+        buf[len] = '\0';
+        return buf;
+    }
+    tm_raise("str_limit(): not support type %d", o.type);
+}
+
+
 /*void find_test(char*self, char* src, int p){
 	tm_str s0, s1;
 	s0.value = self;s1.value = src;

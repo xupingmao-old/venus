@@ -10,26 +10,57 @@ void constants_init(){
   }
 }*/
 
-#define register_constant( v) list_append(get_list(tm->root), (v));
-void reg_builtin(char* name, tm_obj v){
-  tm_obj key = str_new(name, strlen(name));
-  tm_set( tm->builtins, key, v);
+void push_const(tm_obj *des, int type , ...){
+    va_list ap;
+    va_start(ap, type);
+    switch(type){
+        case TM_STR:{
+            char*s = va_arg(ap, char*);
+            *des = str_new( s, strlen(s));
+            break;
+        }
+        case TM_NON:
+            des->type = TM_NON;
+            va_end(ap);
+            return;
+        case TM_NUM:{
+            double dval = va_arg(ap, double);
+            *des = number_new(dval);
+            va_end(ap);
+            return;
+        }
+        case TM_DCT:
+            *des = dict_new();
+            break;
+        case -1:
+            break;
+        default:
+            tm_raise("push_const(), not supported type %d", type);
+    }
+    list_append( get_list(tm->root), *des);
+    va_end(ap);
 }
 
 void reg_builtins(){
   /* constants */
 
     tm->root = list_new(100);
-    tm->builtins = dict_new();
-    tm->modules = dict_new();
-    obj_true = number_new(1);
-    obj_false = number_new(0);
-    obj_none.type = TM_NON;
-    obj__init__ = str_new("__init__", -1);
-    obj__main__ = str_new("__main__", -1);
-    obj__name__ = str_new("__name__", -1);
-    obj_mod_ext = str_new("_pyc", -1);
-    obj_star = str_new("*", -1);
+
+    push_const(&(tm->builtins), TM_DCT);
+    push_const(&(tm->modules), TM_DCT);
+    push_const(&str_class, TM_DCT);
+    push_const(&list_class, TM_DCT);
+    push_const(&dict_class, TM_DCT);
+
+    push_const(&obj_true, TM_NUM, 1.0);
+    push_const(&obj_false, TM_NUM, 0.0);
+    push_const(&obj_none, TM_NON);
+
+    push_const(&obj__init__, TM_STR, "__init__");
+    push_const(&obj_mod_ext, TM_STR, "_pyc");
+    push_const(&obj_star, TM_STR, "*");
+    push_const(&obj__name__, TM_STR, "__name__");
+    push_const(&obj__main__, TM_STR, "__main__");
 
     /* set module boot */
     tm_set( tm->modules, str_new("boot", -1), dict_new());
@@ -39,7 +70,7 @@ void reg_builtins(){
     for(i = 0; i < 256; i++){
         unsigned char s[2] = {i, '\0'};
         __chars__[i] = str_new(s, 1);
-        register_constant( __chars__[i]);
+        push_const(&__chars__[i], -1);
     }
 
     struct __builtin {
@@ -55,7 +86,8 @@ void reg_builtins(){
         {"int", tm_int},
         {"float", tm_float},
         {"range", tm_range},
-        {"import", tm_import},
+        {"load_module", load_module},
+        {"get_last_frame_globals", get_last_frame_globals},
         {"globals", tm_globals},
         {"len", tm_len},
         {"exit", tm_exit},
@@ -64,20 +96,29 @@ void reg_builtins(){
         {"chr", tm_chr},
         {"ord", tm_ord},
         {"dir", tm_dir},
+        {"_run", btm_run},
+        {"code8", tm_code8},
+        {"code16", tm_code16},
+        {"codeF", tm_codeF},
         /* this function is super function , it can add method to type class */
-        {"add_type_method", blt_add_type_method},
-        {0, 0}
+        {"add_type_method", tm_add_type_method},
+        /* add method to a module dynamicly */
+        {"def_mod_global", def_mod_global},
+        {NULL, 0}
     };
-    for(i = 0; builtins[i].name != 0; i++){
-        reg_builtin(builtins[i].name, func_new(obj_none, obj_none, obj_none, builtins[i].func));
+    for(i = 0; builtins[i].name != NULL; i++){
+        tm_obj name = str_new(builtins[i].name, -1);
+        tm_obj fnc = func_new(obj_none, obj_none,obj_none, builtins[i].func);
+        get_func(fnc)->name = name;
+        tm_set(tm->builtins, name, fnc);
     };
     tm_set( tm->builtins, str_new("tm", -1), number_new(1));
     tm_set( tm->builtins, str_new("True", -1), number_new(1));
     tm_set( tm->builtins, str_new("False",-1), number_new(0));
     tm_set( tm->builtins, str_new("__builtins__", -1), tm->builtins);
+    tm_set( tm->builtins, str_new("__modules__", -1), tm->modules);
 
     /* build str class */
-    str_class = dict_new();
      static struct __builtin str_class_fnc_list[] = {
        {"replace", str_replace},
        {"find", str_find},
@@ -95,7 +136,6 @@ void reg_builtins(){
      }
 
      /* build list class */
-     list_class = dict_new();
      static struct __builtin list_class_fnc_list[] = {
         {"append", blist_append},
         {"pop", blist_pop},
@@ -113,7 +153,6 @@ void reg_builtins(){
      }
 
      /* build dict class */
-     dict_class = dict_new();
      static struct __builtin dict_class_fnc_list[] = {
        {"keys", bdict_keys},
        {0,0}
@@ -124,17 +163,6 @@ void reg_builtins(){
         get_func(fnc)->name = name;
         tm_set( dict_class, name, fnc);
      }
-    
-    register_constant( str_class);
-    register_constant( list_class);
-    register_constant( dict_class);
-    register_constant( tm->builtins);
-    register_constant( tm->modules);
-    register_constant( obj__init__);
-    register_constant( obj__main__);
-    register_constant( obj__name__);
-    register_constant( obj_mod_ext);
-    register_constant( obj_star);
 }
 
 void load_bultin_module(char* fname, unsigned char* s, int codelen){
@@ -154,27 +182,18 @@ void frames_init(){
     tm_frame* f = tm->frames + i;
     f->stacksize = 100;
     f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
-#if DEBUG_GC_FRAME
-        printf("alloc frame %d: %p, stack = %p\n", i, f, f->stack);
-#endif
+    tm_log3("frame", "alloc frame %d: %p, stack = %p", i, f , f->stack);
     f->new_objs = list_new(2);
     f->ex = obj_none;
     f->file = obj_none;
     f->line = obj_none;
     f->globals = obj_none;
     f->func_name = obj_none;
+    f->constants = obj_none;
     f->maxlocals = 0;
     f->jmp = 0;
     f->maxlocals = 0;
-        /*
-        int j;for(j = 0; j < f->stacksize; j++){
-          f->stack[j].type = TM_NON;
-        }
-        for(j = 0; j < 256; j++){
-          f->locals[j].type = TM_NON;
-        }*/
   }
-    // printf("frame init done");
   tm->cur = 0;
 }
 
@@ -182,9 +201,7 @@ void frames_free(){
   int i;
   for(i = 0; i < FRAMES_COUNT; i++){
     tm_frame*f = tm->frames + i ;
-#if DEBUG_GC_FRAME
-        printf("free frame %d: %p, stack = %p\n", i, f, f->stack);
-#endif
+    tm_log3("frame", "free frame %d: %p, stack = %p", i, f, f->stack);
     tm_free(f->stack, f->stacksize * sizeof(tm_obj));
     // f->ex, f->file will handled by gc
   }
@@ -207,9 +224,6 @@ void traceback(){
       }
     }
     tm_printf("Exception: @", tm->frames[tm->cur].ex);
-    // print locals in the current frame
-    // tm_obj temp = build_list( 10, tm->frames[tm->cur].locals);
-    // cprintln( temp );  
 }
 
 int tm_run(int argc, char* argv[]){
@@ -224,34 +238,29 @@ int tm_run(int argc, char* argv[]){
         }
             
         reg_builtins();
-        reg_builtin("ARGV", p);
+        tm_set(tm->builtins, str_new("ARGV", -1), p);
         CHECK_MEM_USAGE("builtins");
         
         frames_init();
         CHECK_MEM_USAGE("frames");
-        // tm_raise("test %c", 'x');
         if( argc >= 2){
             char* fname = argv[1];
             if( strcmp(argv[1], "-d") == 0){
                 enable_debug = 1;
                 fname = argv[2];
             }
-            tm_obj code = _load(fname);
             tm_obj mod_name = str_new(fname, strlen(fname));
 
-            load_bultin_module("type_methods", type_methods_pyc, -1);
+            disable_log();
+            load_bultin_module("_boot", _boot_pyc, -1);
             load_bultin_module("tokenize", tokenize_pyc, -1);  
             load_bultin_module("parse", parse_pyc,-1);  
             load_bultin_module("instruction", instruction_pyc, -1);  
             load_bultin_module("encode", encode_pyc, -1);  
-            
-            // cprintln( _tm_dir( str_new("", -1) ) );
-            // tm_obj mod = module_new(mod_name, obj__main__ , code );
-            // tm_obj fnc = func_new(mod, code, obj_none, NULL);
-            // get_func(fnc)->pc = get_str(code);
-            // get_func(fnc)->name = obj__main__;
-            // tm_eval( fnc , obj_none);
-            tm_call("parse", "_parse", as_list(1, mod_name));
+            enable_log();
+            tm_log0("mod", "modules loading done");
+            tm_call("_boot", "_import", as_list(1, mod_name));
+            // tm_call("parse", "_parse", as_list(1, mod_name));
             CHECK_MEM_USAGE("after eval");
         }else {
 /*            tm_obj x;

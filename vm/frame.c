@@ -27,8 +27,6 @@ tm_obj* push_constant(tm_obj mod, tm_obj v){
 }
 
 tm_obj _tm_call( tm_obj fnc, tm_obj params){
-    // cprintln(params);
-    // cprintln(fnc);
 	if( fnc.type == TM_FNC){
         if( get_func(fnc)->self.type != TM_NON) {
             list_insert( get_list(params), 0, get_func(fnc)->self);
@@ -38,14 +36,18 @@ tm_obj _tm_call( tm_obj fnc, tm_obj params){
         }
         return tm_eval(fnc, params);
     }else if( fnc.type == TM_DCT){
+      tm_log1("stack", "new instance %t", fnc);
         fnc = class_new(fnc);
+        tm_log0("stack", "class new done");
         if( _tm_has(fnc, obj__init__)){
             tm_obj f = tm_get(fnc, obj__init__);
             list_insert( get_list(params), 0, fnc);
             tm_eval(f , params);
         }
+        tm_log1("stack", "instance %t built", fnc);
         return fnc;
     }
+    tm_raise("tm_call(), not callable , type = %d", fnc.type);
 }
 
 tm_obj tm_call( char* mod, char* fnc, tm_obj params){
@@ -80,18 +82,11 @@ tm_obj tm_def(tm_obj mod, char* s){
 	return fnc;
 }
 
-#if PRINT_INS
 #define TM_OP( OP_CODE, OP_FUNC ) case OP_CODE: x = TM_POP();\
   v = TM_TOP();\
-  puts(#OP_CODE"");  \
+  tm_log0("ins", #OP_CODE"");\
   TM_TOP() = OP_FUNC(v, x);\
   goto start;
-#else
-#define TM_OP( OP_CODE, OP_FUNC ) case OP_CODE: x = TM_POP();\
-  v = TM_TOP();\
-  TM_TOP() = OP_FUNC(v, x);\
-  goto start;
-#endif
 
 // if i == 1, j = top;
 // if i == 0, j = top + 1;
@@ -130,9 +125,11 @@ tm_obj tm_def(tm_obj mod, char* s){
 tm_obj tm_eval( tm_obj fnc, tm_obj params ){
 
     tm->cur++;
+
+    tm_log1("stack", "enter function %o", fnc);
 /* check if frame overflow */
-  if( tm->cur >= FRAMES_COUNT)
-    tm_raise("tm_eval: frame overflow");
+  // if( tm->cur >= FRAMES_COUNT)
+  //   tm_raise("tm_eval: frame overflow");
 
   tm_obj mod = get_func(fnc)->mod;
   tm_obj globals = get_mod(mod)->globals;
@@ -154,9 +151,8 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   top[0] = obj_none;
   list_len(f->new_objs) = 0;
   
-  if( f->maxlocals > 200) {
-    cprintln(fnc);
-  }
+  if( f->maxlocals > 200)
+  tm_log2("locals", "in %t, locals over %d", fnc, 200);
 
   tm_obj* constants = get_constants(mod);
   tm_obj x, k, v;
@@ -166,42 +162,15 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   
   int i, ins, jmp;
 
-  /* will optimize later */
-  /*
-  for(i = 0; i < 256; i++){
-    locals[i].type = TM_NON;
-  }
-  for(i = 0; i < 256; i++){
-    top[i].type = TM_NON;
-  }*/
-
   if( ! get_mod(mod)->checked ){
     code_check( mod, s, 0, &i, &jmp);
   }
 
-//  cprintln_show_special(params);
   unsigned char** tags = get_mod(mod)->tags;
   
 
  start:
   ins = next_byte(s);
-/*
-if( enable_debug ){
-  char c = getch();
-  if(c == 'd'){
-    cprintln( f->globals);
-    tm_printf("x = @\n", x);
-    tm_printf("v = @\n", v);
-    tm_printf("k = @\n", k);
-  }else if ( c == 'l'){
-    tm_obj temp = build_list( 10, locals);
-    cprintln( temp );
-  }else if (c == 'g'){
-    cprintln( f->globals );
-  }else if (c == 'q'){
-    tm_raise("quit");
-  }
-}*/
   switch( ins ) {
 
   case NEW_NUMBER: {
@@ -209,9 +178,7 @@ if( enable_debug ){
     read_number( d, s);
     v = tm_number(d);
     constants = push_constant( mod , v);
-#if PRINT_INS_CONST
-    printf("NEW_NUMBER %g\n", d);
-#endif
+    tm_log1("new", "NEW_NUMBER %f", d);
     goto start;
   }
 
@@ -220,29 +187,20 @@ if( enable_debug ){
     v = str_new( s, len);
     s+=len;
     constants = push_constant( mod, v);
-#if PRINT_INS_CONST
-    // tm_printf("NEW_STRING \"@\"\n", v);
-    printf("NEW_STRING [%d] ", len);
-    puts(get_str(v));
-#endif
+    tm_log2("new", "NEW_STRING [%d] @", len, v);
     goto start;
   }
 
   case LOAD_CONSTANT: {
     i = next_short( s );
     TM_PUSH( constants[ i ] );
-#if PRINT_INS 
-    tm_printf("LOAD_CONSTANT [@] ",number_new(i));
-    cprintln_show_special(constants[i]);
-#endif
+    tm_log2("ins", "LOAD_CONSTANT [%d] @", i, constants[i]);
     goto start;
   }
 
   case LOAD_LOCAL: {
     i = next_char(s);
-    #if PRINT_INS
-        printf("LOAD_LOCAL %d\n", i);
-    #endif
+    tm_log1("ins", "LOAD_LOCAL %d", i);
     TM_PUSH( locals[i] );
     goto start;
   }
@@ -250,37 +208,18 @@ if( enable_debug ){
   case STORE_LOCAL:
     i = next_char( s );
     locals[i] = TM_POP();
-    #if PRINT_INS
-        printf("STORE_LOCAL %d\n", i);
-    #endif
+    tm_log1("ins", "STORE_LOCAL %d", i);
     goto start;
 
   case LOAD_GLOBAL: {
     i = next_short(s);
-#if PRINT_INS
-    // tm_printf("LOAD_GLOBAL [@] @\n", number_new(i), constants[i]);
-#endif
-    // cprintln( get_mod(mod)->constants);
+    tm_log2("ins", "LOAD_GLOBAL [%d] @", (i), constants[i]);
     k = constants[ i ];
-    // puts("step1");
     if( dict_iget( get_dict(tm->builtins), k, &v)){
-      // already in v;
-      // puts("step2");
     }else{
-      // cprintln(globals);
-      // cprintln(k);
-      // puts("step3");
-      // cprintln(globals);
-      // cprintln(k);
       v = tm_get(globals, k);
-      // cprintln(v);
-      // puts("step4");
     }
-    // puts("step5");
     TM_PUSH( v );
-#if PRINT_INS
-    tm_printf("LOAD_GLOBAL [@] @  \n", number_new(i), k);
-#endif
     goto start;
   }
 
@@ -289,52 +228,42 @@ if( enable_debug ){
     k = constants[ i ];
     x = TM_POP();
     tm_set( globals, k, x );
-#if PRINT_INS
-    tm_printf("STORE_GLOBAL [@] @\n", number_new(i), k);
-#endif
+    tm_log2("ins", "STORE_GLOBAL [%d] @", i, k);
     goto start;
   }
 
   case LIST:{
     i = next_byte(s);
-    #if PRINT_INS
-        printf("LIST %d\n", i);
-    #endif
+    tm_log1("ins", "LIST %d", i);
     LOAD_LIST( templist, i );
     TM_PUSH( templist );
     goto start;
   }
 
   case LIST_APPEND:
-    #if PRINT_INS
-      printf("LIST_APPEND\n");
-    #endif
+    tm_log0("ins", "LIST_APPEND");
     v = TM_POP();
     x = TM_TOP();
     if( x.type != TM_LST){
-      tm_raise("tm_eval: LIST_APPEND expect a list but see @", _tm_type(x));
+      tm_raise("tm_eval: LIST_APPEND expect a list but see %t", x);
     }
     list_append(get_list(x), v);
     goto start;
   
   case DICT_SET:
-    #if PRINT_INS
-        puts("DICT_SET");
-    #endif
+    tm_log0("ins", "DICT_SET");
     v = TM_POP();
     k = TM_POP();
     x = TM_TOP();
     if( x.type != TM_DCT){
-        tm_raise("tm_eval: DICT_SET expect a dict but see @", _tm_type(x));
+        tm_raise("tm_eval(): DICT_SET expect a dict but see %t", x);
     }
     tm_set(x, k, v);
     goto start;
 
   case DICT:{
     i = next_byte(s);
-    #if PRINT_INS
-      printf("DICT %d\n", i);
-    #endif
+    tm_log1("ins", "DICT %d", i);
     tm_obj dict;
     LOAD_DICT( dict, i);
     TM_PUSH( dict );
@@ -363,16 +292,12 @@ if( enable_debug ){
     x = TM_POP();
     v = TM_POP();
     tm_set(x, k, v);
-#if PRINT_INS
-    puts("SET");
-#endif
+    tm_log0("ins", "SET");
     goto start;
 
   case POP:{
     TM_POP();
-#if PRINT_INS
-    puts("POP");
-#endif
+    tm_log0("ins", "POP");
     goto start;
   }
 
@@ -386,9 +311,7 @@ if( enable_debug ){
     
   case CALL: {
     i = next_byte( s );
-#if PRINT_INS
-    printf("CALL %d\n", i);
-#endif
+    tm_log1("ins", "CALL %d", i);
     LOAD_LIST(params, i);
     func = TM_POP();
     // f->top = top;
@@ -397,19 +320,14 @@ if( enable_debug ){
   }break;
 
   case LOAD_PARAMS:{
-#if PRINT_INS_CONST
-    tm_printf("LOAD_PARAMS @\n", params);
-#endif
     if( params.type != TM_LST){
       tm_raise("tm_eval(), expect list params");
     }
+    tm_log1("ins2", "LOAD_PARAMS %l", params);
     int len = list_len(params);
     for(i = 0; i < len; i++){
       locals[i] = get_list(params)->nodes[i];
     }
-#if PRINT_INS
-    puts("PARAMS END");
-#endif
     goto start;
   }
 
@@ -417,13 +335,11 @@ if( enable_debug ){
     jmp = next_short(s);
     k = *top;
     x = *(top-1);
-#if PRINT_INS
-    printf("TM_FOR %d\n", jmp);
-#endif
-    if( tm_iter( x, k, &v) ){
+    tm_log1("ins", "TM_FOR %d", jmp);
+    if( tm_iter( x, &k) ){
       get_num(*top) += 1;
       // cprintln( x );
-      TM_PUSH( v );
+      TM_PUSH( k );
       // cprintln(v);
       goto start;
     }else{
@@ -438,43 +354,33 @@ if( enable_debug ){
     get_func(func)->name = constants[i];
     tm_obj code = get_func(func)->code;
     s+= get_str_len(code);
-#if PRINT_INS
-    printf("TM_DEF %d\n",get_str_len(code));
-#endif
+    tm_log1("ins", "TM_DEF %d", get_str_len(code));
     TM_PUSH(func);
     goto start;
   }
 
   case RETURN:{
-#if PRINT_INS
-    puts("RETURN");
-#endif
+    tm_log0("stack", "RETURN");
     ret = TM_POP();
     goto end;
   }
 
   case TAG:{
     i = next_short(s);
-#if PRINT_INS
-    printf("TAG %d\n", i);
-#endif
+    tm_log1("info","TAG %d", i);
     // TODO store_tag(mod, i, s);
     goto start;
   }
 
   case TAGSIZE:{
     i = next_short(s);
-#if PRINT_INS
-    printf("TAGSIZE %d\n", i);
-#endif
+    tm_log1("info", "TAGSIZE %d", i);
     goto start;
   }
 
   case POP_JUMP_ON_TRUE:{
     i = next_short(s);
-#if PRINT_INS
-    printf("POP_JUMP_ON_TRUE %d\n", i);
-#endif
+    tm_log1("cond", "POP_JUMP_ON_TRUE %d", i);
     if( _tm_bool( TM_POP() )){
       s = tags[i];
     }
@@ -482,12 +388,8 @@ if( enable_debug ){
   }
 
   case POP_JUMP_ON_FALSE:{
-    // print_tags(get_mod(mod));
     i = next_short(s);
-#if PRINT_INS
-    // cprintln(TM_TOP());
-    printf("POP_JUMP_ON_FALSE %d\n", i);
-#endif
+    tm_log1("cond", "POP_JUMP_ON_FALSE %d", i);
     if( !_tm_bool( TM_POP() )){
       s = tags[i];
     }
@@ -496,9 +398,7 @@ if( enable_debug ){
 
   case JUMP_ON_TRUE:{
     i = next_short(s);
-#if PRINT_INS
-    printf("JUMP_ON_TRUE %d\n", i);
-#endif
+    tm_log1("cond", "JUMP_ON_TRUE %d", i);
     if( _tm_bool( TM_TOP() )){
       s = tags[i];
     }
@@ -506,11 +406,8 @@ if( enable_debug ){
   }
 
   case JUMP_ON_FALSE:{
-    // print_tags(get_mod(mod));
     i = next_short(s);
-#if PRINT_INS
-    printf("JUMP_ON_FALSE %d\n", i);
-#endif
+    tm_log1("cond", "JUMP_ON_FALSE %d", i);
     if( !_tm_bool( TM_TOP() )){
       s = tags[i];
     }
@@ -519,78 +416,37 @@ if( enable_debug ){
 
   case JUMP:
     i = next_short(s);
-#if PRINT_INS
-    printf("JUMP %d\n", i);
-#endif
+    tm_log1("cond", "JUMP %d", i);
     s = tags[i];
     goto start;
 
   case TM_EOF:{
-#if PRINT_INS
-    puts("TM_EOF");
-#endif
+    tm_log0("stack", "TM_EOF");
     // restore_frame();
     ret = obj_none;
     goto end;
   }
 
   case TM_EOP:{
-#if PRINT_INS
-    puts("TM_EOP");
-#endif
+    tm_log0("stack", "TM_EOP");
     // restore_frame();
     ret = obj_none;
     goto end;
   }
 
   default:
-    cprintln(f->globals);
-    tm_raise("BAD INSTRUCTION, @\n", number_new(ins));
+    tm_raise("BAD INSTRUCTION, %d\n  globals() = \n@", ins,f->globals );
   goto end;
 }
-  // cprintln(mod);
-
-/* call_func:
-
-  if( func.type == TM_DCT ){
-    ret = class_new( func );
-    if( _tm_has(ret, str_new("__init__", -1)) ){
-
-    }
-    goto func_ret;
-  }
-  if( get_func(func)->self.type != TM_NON){
-    list_insert(get_list(params),0, get_func(func)->self);
-  }
-  if( get_func(func)->native_func != NULL ){
-    ret = get_func(func)->native_func(params);
-    goto func_ret;
-  }
-  // user function
-  // save current state
-  save_frame();
-  // new frame
-  new_frame();
-  s = get_func(func)->pc;
-  goto start;*/
 
   end:
-  if( top != f->stack ) {
-    printf("func_name = %s, count = %d\n", get_str(f->func_name) , (int)( top - f->stack));
-    // tm_raise("top stack leaks");
-  }
+    tm_log1("stack", "leave function %o", fnc);
+    if( top != f->stack ) {
+        printf("func_name = %s, count = %d\n", get_str(f->func_name) , (int)( top - f->stack));
+    }
     if( tm->allocated_mem > tm->gc_limit){
-        tm->gc_limit += 1024 * 20;
-        // tm_printf("full gc at @\n", f->func_name);
-        // gc_mark(params);
+        tm->gc_limit += 1024 * 1024;
         gc_full(ret);
-        // gc_full();
-        // int i;
-        // for(i = 0; i < tm->cur; i++){
-        // 	tm_frame* f = tm->frames+i;
-        // 	printf("func_name = %s, maxstack = %d, maxlocals = %d\n", get_str(f->func_name),
-        // 	f->maxstack, f->maxlocals );
-        // }
     }
     tm->cur--;
     list_len(f->new_objs) = 0;

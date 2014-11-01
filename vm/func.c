@@ -11,14 +11,6 @@ tm_obj func_new(tm_obj mod,
   f->pc = NULL;
   f->native_func = native_func;
   f->maxlocals = 0;
-  /*	if( native_func != NULL ){
-	f->native_func = native_func;
-	// check if the func is native by f->native_func == NULL?
-	// f->fnc_type = TM_NATIVE;
-	}else{
-	f->native_func = NULL;
-	// f->fnc_type = TM_FNC;
-	}*/
   f->self = self;
   return gc_track(obj_new(TM_FNC, f));
 }
@@ -34,8 +26,8 @@ tm_obj method_new(tm_obj _fnc, tm_obj self){
 tm_obj class_new( tm_obj clazz ){
   tm_dict* cl = get_dict(clazz);
   tm_obj k,v;
-  cl->cur = 0;
   tm_obj instance = dict_new();
+  dict_iter_init( cl );
   while( dict_inext( cl, &k, &v)){
     if( v.type == TM_FNC){
       tm_obj method = method_new(v, instance);

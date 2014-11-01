@@ -59,12 +59,13 @@
 #else
     #define CHECK_MEM_USAGE(msg) ;
 #endif
-
+/*
 #if LOG_LEVEL
     #define log(type, info, __VA_ARGS__) tm_log( type, info, __VA_ARGS__);
 #else
     #define log(type, info, __VA_ARGS__) ;
 #endif
+*/
 
 /* assert macro */
 #define TM_ASSERT(cond, msg) if( !cond ) tm_raise( msg ); 
