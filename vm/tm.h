@@ -18,8 +18,10 @@ int enable_debug = 0;
 #include <stdlib.h>
 #include <setjmp.h>
 #include <stdarg.h>
+#include <time.h>
+#include <sys/stat.h>
 
-#define tm_inline /**/
+#define tm_inline inline
 typedef char instruction;
 
 typedef struct tm_str{
@@ -170,8 +172,8 @@ tm_obj obj__init__;
 tm_obj obj__main__;
 tm_obj obj__name__;
 tm_obj obj_mod_ext;
-tm_obj obj_star;
 tm_obj __chars__[256];
+tm_obj empty_argument;
 #include "constants.h"
 #include "object.h"
 

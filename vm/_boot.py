@@ -21,7 +21,8 @@ def _import(fname, tar = None):
         txt = load(fname)
         # print("src:\n"+txt)
         _code = b_compile(fname)
-        save(fname+".tmc", _code)
+        if fname != ARGV[0]:
+            save(fname+".tmc", _code)
         load_module(fname, _code)
     g = __modules__[fname]
     if tar == '*':
@@ -31,10 +32,9 @@ def _import(fname, tar = None):
 
 __builtins__['_import'] = _import
 def _execute_file(fname):
-    if not fname.endswith(".pyc"):
-        print("not python file")
-        return
-    fname = fname.substring(0,-)
+    from encode import *
+    _code = b_compile(fname)
+    load_module('__main__', _code)
 
 
 def _run_code(fname):

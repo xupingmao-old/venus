@@ -312,7 +312,10 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   case CALL: {
     i = next_byte( s );
     tm_log1("ins", "CALL %d", i);
-    LOAD_LIST(params, i);
+    /* in method call , empty_argument will be pushed a `self` object ,
+    *  so it should be reset after params are loaded */
+    if( 0 == i) { params = empty_argument; }
+    else { LOAD_LIST(params, i); }
     func = TM_POP();
     // f->top = top;
     TM_PUSH( _tm_call(func, params));
@@ -320,14 +323,14 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }break;
 
   case LOAD_PARAMS:{
-    if( params.type != TM_LST){
-      tm_raise("tm_eval(), expect list params");
+    if( TM_LST != params.type ){
+      tm_raise("tm_eval(), expect params to be list, but see %t", params);
     }
     tm_log1("ins2", "LOAD_PARAMS %l", params);
-    int len = list_len(params);
-    for(i = 0; i < len; i++){
-      locals[i] = get_list(params)->nodes[i];
+    for(i = 0; i < list_len(params); i++){
+      locals[i] = list_nodes(params)[i];
     }
+    list_len(params) = 0;
     goto start;
   }
 

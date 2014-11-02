@@ -32,6 +32,9 @@ void push_const(tm_obj *des, int type , ...){
         case TM_DCT:
             *des = dict_new();
             break;
+        case TM_LST:
+            *des = list_new(0);
+            break;
         case -1:
             break;
         default:
@@ -58,9 +61,9 @@ void reg_builtins(){
 
     push_const(&obj__init__, TM_STR, "__init__");
     push_const(&obj_mod_ext, TM_STR, "_pyc");
-    push_const(&obj_star, TM_STR, "*");
     push_const(&obj__name__, TM_STR, "__name__");
     push_const(&obj__main__, TM_STR, "__main__");
+    push_const(&empty_argument, TM_LST);
 
     /* set module boot */
     tm_set( tm->modules, str_new("boot", -1), dict_new());
@@ -96,14 +99,14 @@ void reg_builtins(){
         {"chr", tm_chr},
         {"ord", tm_ord},
         {"dir", tm_dir},
-        {"_run", btm_run},
         {"code8", tm_code8},
         {"code16", tm_code16},
         {"codeF", tm_codeF},
+        {"exists", tm_exists},
+        {"mtime", tm_mtime},
+        {"clock", tm_clock},
         /* this function is super function , it can add method to type class */
         {"add_type_method", tm_add_type_method},
-        /* add method to a module dynamicly */
-        {"def_mod_global", def_mod_global},
         {NULL, 0}
     };
     for(i = 0; builtins[i].name != NULL; i++){
@@ -125,7 +128,8 @@ void reg_builtins(){
        {"substring", str_substring},
        {"upper", str_upper},
        {"lower", str_lower},
-      {"split", str_split},
+       {"split", str_split},
+       {"join", str_join},
        {0,0}
      };
      for(i = 0; str_class_fnc_list[i].name != 0 ; i++){
@@ -259,7 +263,7 @@ int tm_run(int argc, char* argv[]){
             load_bultin_module("encode", encode_pyc, -1);  
             enable_log();
             tm_log0("mod", "modules loading done");
-            tm_call("_boot", "_import", as_list(1, mod_name));
+            tm_call("_boot", "_execute_file", as_list(1, mod_name));
             // tm_call("parse", "_parse", as_list(1, mod_name));
             CHECK_MEM_USAGE("after eval");
         }else {

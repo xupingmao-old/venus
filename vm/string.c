@@ -186,6 +186,19 @@ tm_obj str_split(tm_obj params){
 	return list;
 }
 
+tm_obj str_join(tm_obj p){
+    tm_obj self = get_arg(p, 0, TM_STR);
+    tm_obj list = get_arg(p,1,TM_LST);
+    tm_obj str = str_new("",0);
+    int i = 0;for(i = 0; i < list_len(list); i++){
+        tm_obj s = list_nodes(list)[i];
+        if( TM_STR != s.type ) tm_raise("str_join(): expect str, but see %t", s);
+        if(i != 0) str = tm_add(str, self);
+        str = tm_add(str, s);
+    }
+    return str;
+}
+
 char* _str_limit(tm_obj o, int len){
     static char buf[200];
     if(len >= 200){

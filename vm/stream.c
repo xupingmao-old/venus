@@ -127,3 +127,19 @@ tm_obj tm_save( tm_obj p){
 	tm_obj fname = get_arg(p, 0, TM_STR);
 	return _tm_save(get_str(fname), get_arg(p,1, TM_STR));
 }
+
+tm_obj tm_exists(tm_obj p){
+    tm_obj _fname = get_arg(p, 0, TM_STR);
+    char* fname = get_str(_fname);
+    FILE*fp = fopen(fname, "rb");
+    if( fp == NULL ) return obj_false;
+    fclose(fp);
+    return obj_true;
+}
+
+tm_obj tm_mtime(tm_obj p){
+    char const *s = get_str_arg(p, 0);
+    struct stat stbuf;
+    if (!stat(s,&stbuf)) { return number_new(stbuf.st_mtime); }
+    tm_raise("tm_mtime(%s)",s);
+}

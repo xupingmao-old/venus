@@ -405,15 +405,24 @@ tm_obj tm_float( tm_obj p){
 }
 
 tm_obj tm_range( tm_obj p){
-	tm_obj N = get_arg(p, 0, TM_NUM );
-	int n = (int) get_num( N );
-	if( n < 0 ){
-		tm_raise("tm_range: range size must be bigger than zero");
-	}
-
-	tm_obj list = list_new(n);
-	int i = 0;
-	for(i = 0; i < n; i++){
+    long start = 0;
+    long end = 0;
+    int inc;
+    switch( list_len(p) ){
+        case 1: start = 0; end = get_num( get_arg(p, 0, TM_NUM) ); inc = 1; break;
+        case 2: start = get_num( get_arg(p, 0, TM_NUM )); end = get_num(get_arg(p,1,TM_NUM)); inc = 1; break;
+        case 3: start = get_num( get_arg(p, 0, TM_NUM ));
+                end = get_num( get_arg(p, 1, TM_NUM ));
+                inc = get_num( get_arg(p, 2, TM_NUM ));
+                break;
+        default: tm_raise("range([n, [ n, [n]]]), but see %d arguments", list_len(p));
+    }
+    if( inc == 0) tm_raise("range(): increment can not be 0!");
+    /* eg. (1, 10, -1),  (10, 1, 1) : range can not be the same signal */
+    if( inc * ( end - start ) < 0 ) tm_raise("range(%d, %d, %d): not valid range!", start, end, inc);
+    tm_obj list = list_new( (end - start) / inc );
+	long i = 0;
+	for(i = start; i < end; i+=inc){
 		list_append( get_list(list), number_new(i));
 	}
 	return list;
@@ -622,6 +631,15 @@ tm_obj tm_codeF( tm_obj p){
     return str_new(val, sizeof(double));
 }
 
+tm_obj tm_clock( tm_obj p){
+#ifdef _WIN32
+    return number_new(clock());
+#else
+    return number_new(clock()/1000);
+#endif
+}
+
+/*
 tm_obj def_mod_global(tm_obj p){
     tm_obj mod = get_arg(p, 0, TM_STR);
     tm_obj name = get_arg(p, 1, TM_STR);
@@ -632,4 +650,4 @@ tm_obj def_mod_global(tm_obj p){
     mod = tm_get( tm->modules, mod);
     tm_set(mod, name, var);
     return obj_none;
-}
+}*/

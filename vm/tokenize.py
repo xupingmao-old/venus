@@ -4,10 +4,6 @@ class Token:
     def __init__(self,type='symbol',val=None,pos=[0,0]):
         # self.pos,self.type,self.val=pos,type,val
         self.pos=pos;self.type=type;self.val=val
-    def show(self):
-        print(self.type +' => ' + str(self.val))
-    def __str__(self):
-        return str([self.type, self.val])
 
 def u_error(ctx,s,i):
     y = i[0]

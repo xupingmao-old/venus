@@ -4,6 +4,7 @@
 
 tm_inline
 tm_obj get_arg(tm_obj params, int pos, int type){
+    if( TM_LST != params.type) tm_raise("get_arg(): expect argument to be list ,but see %t", params);
 	tm_list* list = params.value.list;
 	int n = list->len;
 	if ( pos >= n ){
@@ -17,6 +18,12 @@ tm_obj get_arg(tm_obj params, int pos, int type){
 		tm_raise("get_arg: TypeError see @", _obj_info(v));
 	}
 	return v;
+}
+
+tm_inline
+char* get_str_arg(tm_obj p, int pos){
+    tm_obj str = get_arg(p, pos, TM_STR);
+    return get_str(str);
 }
 
 
