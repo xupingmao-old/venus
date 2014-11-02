@@ -258,13 +258,15 @@ def encode(content):
     r = parse(content)
     encode_item(r)
 
-def b_compile(src):
+def b_compile(src, des = None):
     global tag_count
     tag_count = 0
     ins_init()
     encode(load(src))
     # print("encode done, start gen code")
-    return gen_code(tag_count)
+    code = gen_code(tag_count)
+    if des: save(des, code)
+    return code
 
 def main( ):
     import sys

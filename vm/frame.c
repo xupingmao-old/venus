@@ -41,8 +41,7 @@ tm_obj _tm_call( tm_obj fnc, tm_obj params){
         tm_log0("stack", "class new done");
         if( _tm_has(fnc, obj__init__)){
             tm_obj f = tm_get(fnc, obj__init__);
-            list_insert( get_list(params), 0, fnc);
-            tm_eval(f , params);
+            _tm_call(f, params);
         }
         tm_log1("stack", "instance %t built", fnc);
         return fnc;
@@ -314,23 +313,26 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     tm_log1("ins", "CALL %d", i);
     /* in method call , empty_argument will be pushed a `self` object ,
     *  so it should be reset after params are loaded */
-    if( 0 == i) { params = empty_argument; }
-    else { LOAD_LIST(params, i); }
+    list_len(g_arguments) = 0;
+    /* if( 0 == i) { params.type = TM_NON; }
+    else { LOAD_LIST(params, i); } */
+    LOAD_LIST(g_arguments, i);
     func = TM_POP();
     // f->top = top;
-    TM_PUSH( _tm_call(func, params));
+    TM_PUSH( _tm_call(func, g_arguments));
     goto start;
   }break;
 
   case LOAD_PARAMS:{
     if( TM_LST != params.type ){
-      tm_raise("tm_eval(), expect params to be list, but see %t", params);
+      // tm_raise("tm_eval(), expect params to be list, but see %t", params);
+      goto start;
     }
     tm_log1("ins2", "LOAD_PARAMS %l", params);
     for(i = 0; i < list_len(params); i++){
       locals[i] = list_nodes(params)[i];
     }
-    list_len(params) = 0;
+    // list_len(params) = 0;
     goto start;
   }
 

@@ -63,7 +63,7 @@ void reg_builtins(){
     push_const(&obj_mod_ext, TM_STR, "_pyc");
     push_const(&obj__name__, TM_STR, "__name__");
     push_const(&obj__main__, TM_STR, "__main__");
-    push_const(&empty_argument, TM_LST);
+    push_const(&g_arguments, TM_LST);
 
     /* set module boot */
     tm_set( tm->modules, str_new("boot", -1), dict_new());
@@ -264,6 +264,8 @@ int tm_run(int argc, char* argv[]){
             enable_log();
             tm_log0("mod", "modules loading done");
             tm_call("_boot", "_execute_file", as_list(1, mod_name));
+            // tm_call("_boot", "_import", as_list(1, mod_name));
+            // tm_call("encode", "b_compile", as_list(2, mod_name, str_new("test.tmc", -1)));
             // tm_call("parse", "_parse", as_list(1, mod_name));
             CHECK_MEM_USAGE("after eval");
         }else {

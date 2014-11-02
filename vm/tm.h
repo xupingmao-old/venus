@@ -173,7 +173,7 @@ tm_obj obj__main__;
 tm_obj obj__name__;
 tm_obj obj_mod_ext;
 tm_obj __chars__[256];
-tm_obj empty_argument;
+tm_obj g_arguments;
 #include "constants.h"
 #include "object.h"
 

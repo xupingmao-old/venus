@@ -107,7 +107,7 @@ void list_insert(tm_list* list, int n, tm_obj obj){
 	if( n < 0) n += list->len;
 	if( n < list->len || n < 0){
 		int i = list->len;
-		for(; i > n; i -- ){
+		for(; i > n && i >= 0; i -- ){
 			list->nodes[i] = list->nodes[i-1];
 		}
 		list->nodes[n] = obj;
