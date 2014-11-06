@@ -41,6 +41,8 @@ def test():
     print("local scope: used time = " + str(t2-t1))
 test()
 x = input("hold>>>")
+print("__objectsize__=",__objectsize__)
+print(est)
 x = Test('test',20)
 x.grow()
 x.tell()

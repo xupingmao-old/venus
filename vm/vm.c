@@ -120,6 +120,7 @@ void reg_builtins(){
     tm_set( tm->builtins, str_new("False",-1), number_new(0));
     tm_set( tm->builtins, str_new("__builtins__", -1), tm->builtins);
     tm_set( tm->builtins, str_new("__modules__", -1), tm->modules);
+    tm_set( tm->builtins, str_new("__objectsize__", -1), number_new(sizeof(tm_obj)));
 
     /* build str class */
      static struct __builtin str_class_fnc_list[] = {

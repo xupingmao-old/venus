@@ -2,7 +2,7 @@
 
 #ifndef tm_h
 #define tm_h
-#pragma pack(4)
+// #pragma pack(4)
 #define DEBUG_GC 0
 #define PRINT_INS 0
 #define PRINT_INS_CONST 0
@@ -66,7 +66,7 @@ typedef union tm_value
 
 typedef struct tm_obj
 {
-	int type; // marked, type, others
+    int type; // marked, type, others
 	tm_value value;
 }tm_obj;
 
@@ -80,7 +80,7 @@ typedef struct tm_module
 	tm_obj constants;
 	tm_obj code;
 	tm_obj file;
-	tm_obj name;
+	// tm_obj name;
 }tm_module;
 
 typedef struct tm_stream

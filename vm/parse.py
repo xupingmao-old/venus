@@ -308,10 +308,11 @@ def do_class(p):
     clazz.body = p.enterBlock()
     p.add(clazz)
 
+stm_end_list = ['nl', 'dedent']
 def do_stm1(p, type):
     p.next()
     node = AstNode(type)
-    if p.token.type in ['nl', 'dedent']:
+    if p.token.type in stm_end_list:
         node.val = None
     else:
         expr(p)

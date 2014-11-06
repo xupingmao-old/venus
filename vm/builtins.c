@@ -174,8 +174,8 @@ void _tm_print(tm_obj o, int depth, int show_special){
 		break;
 	case TM_MOD:
 		printf("<module %p ",get_mod(o));
-        if( get_mod(o)->name.type != TM_NON ){
-            cprint(get_mod(o)->name);
+        if( get_mod(o)->file.type != TM_NON ){
+            cprint(get_mod(o)->file);
         }
         printf(">");
 		break;
@@ -461,7 +461,12 @@ tm_obj tm_import( tm_obj p){
 tm_obj load_module( tm_obj p){
     tm_obj name = get_arg(p, 0, TM_STR);
     tm_obj code = get_arg(p, 1, TM_STR);
-    tm_obj mod = module_new(name, name , code );
+    tm_obj mod;
+    if( list_len(p) == 3){
+        mod = module_new(name, get_arg(p, 2, TM_STR) , code );
+    }else{
+        mod = module_new(name, name , code );
+    }
     tm_obj fnc = func_new(mod, obj_none, NULL);
     get_func(fnc)->pc = get_str(code);
     get_func(fnc)->name = obj__main__;

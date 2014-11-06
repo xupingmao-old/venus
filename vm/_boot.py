@@ -30,7 +30,7 @@ __builtins__['_import'] = _import
 def _execute_file(fname):
     from encode import *
     _code = b_compile(fname)
-    load_module('__main__', _code)
+    load_module(fname, _code, '__main__')
 
 
 def _run_code(fname):

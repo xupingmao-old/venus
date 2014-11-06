@@ -97,7 +97,7 @@ void gc_mark(tm_obj o){
             if( get_mod(o)->marked ) return;
 			get_mod(o)->marked = GC_REACHED_SIGN;
 			gc_mark(get_mod(o)->code);
-			gc_mark(get_mod(o)->name);
+			//gc_mark(get_mod(o)->name);
 			gc_mark(get_mod(o)->file);
 			gc_mark(get_mod(o)->constants);
 			gc_mark(get_mod(o)->globals);

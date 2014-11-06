@@ -53,7 +53,6 @@ int _new = tm->allocated_mem;
 tm_obj module_new( tm_obj file , tm_obj name, tm_obj code){
   tm_module *mod = tm_alloc( sizeof(tm_module));
   mod->file = file;
-  mod->name = name;
   mod->code = code;
   mod->tags = NULL;
   mod->tagsize = 0;
