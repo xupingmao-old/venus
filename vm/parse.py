@@ -21,10 +21,6 @@ class ParserCtx:
             self.i+=1
         else:
             self.token = self.eof
-    def nextis(self, v):
-        if self.i < self.l:
-            return self.r[self.i].val == v
-        return False
     def back(self):
         if self.i != 0:
             self.i -= 1
@@ -61,28 +57,6 @@ class ParserCtx:
             self.tree.append(v)
         else:
             self.tree.append(['list', v])
-    def setArgs(self, n):
-        if n == 0:
-            self.tree.append(['setArgs', None])
-            return
-        args = []
-        while n > 0:
-            v = self.tree.pop()
-            args.append(v)
-            n-=1
-        self.tree.append(['setArgs', args])
-    def makeFunc(self, name, args):
-        body = []
-        v = self.tree.pop()
-        while v != 'func_start':
-            body.append(v)
-            v = self.tree.pop()
-        self.tree.append(['def', name, args, body])
-    def setReturn(self, return_val = None):
-        if not return_val:
-            self.tree.append(['return', None])
-        else:
-            self.tree.append(['return', self.tree.pop()])
     def enterBlock(self):
         self.tree.append('block')
         do_block(self)
@@ -380,7 +354,7 @@ ops_list = [
         'from', '+', '-', '*', '/', '%', ',' ,'=', 
         '+=', '-=', '/=', '*=', 'get',
         "==", "!=", ">", "<", ">=", "<=", "and",
-         "or", "for","while", "in", "notin"]
+         "or", "for","while", "in", "notin", "import"]
 
 cond_list = ["if", "choose"]
 pre_list = ['neg', 'pos', 'not', 'list']
@@ -468,8 +442,7 @@ def main():
         return
     tree = parse( load(f) )
     show(tree)
-
+    
 if __name__ == "__main__":
     main()
-
     

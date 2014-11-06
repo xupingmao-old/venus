@@ -23,7 +23,8 @@ def _import(fname, tar = None):
     if tar == '*':
         lg = get_last_frame_globals()
         for k in g:
-            lg[k] = g[k]
+            if k != '__name__':
+                lg[k] = g[k]
 
 __builtins__['_import'] = _import
 def _execute_file(fname):

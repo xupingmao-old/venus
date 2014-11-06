@@ -271,10 +271,10 @@ def b_compile(src, des = None):
 def main( ):
     import sys
     name = 'test1.py'
-    if len( argv ) == 2:
-        name = argv[1]
-    elif len(argv) == 3 and argv[1] == '-save':
-        name = argv[2]
+    if len( ARGV ) == 2:
+        name = ARGV[1]
+    elif len(ARGV) == 3 and ARGV[1] == '-save':
+        name = ARGV[2]
     ins_init()
     encode( load(name) )
     code = gen_code(tag_count)
