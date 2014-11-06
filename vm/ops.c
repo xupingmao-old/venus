@@ -72,9 +72,10 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 			}
 			break;
 		case TM_FNC:
+            /*
 			if( k.type == TM_STR && strequals(get_str(k), "code")){
 				return get_func( self )->code;
-			}
+			}*/
             break;
 	}
     // tm_printf_only_type("@", self);
@@ -172,11 +173,11 @@ tm_obj tm_not_equals( tm_obj a, tm_obj b){
 
 #define tm_comp( fnc_name, op) tm_obj fnc_name(tm_obj a, tm_obj b) {      \
 	if( a.type != b.type )                             \
-		tm_raise( #fnc_name": can not compare [@] and [@]", _obj_info(a), _obj_info(b));                 \
+		tm_raise( #fnc_name"(): can not compare [@] and [@]", _obj_info(a), _obj_info(b));                 \
 	switch(a.type){                      \
 		case TM_NUM: return number_new( get_num(a) op get_num(b) ); \
 		case TM_STR: return  number_new(strcmp( get_str(a) , get_str(b)) op 0); \
-		default : tm_raise(#fnc_name" not support yet"); \
+		default : tm_raise(#fnc_name"() not support yet"); \
 	}                           \
 }
 

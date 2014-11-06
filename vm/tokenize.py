@@ -2,7 +2,6 @@ from boot import *
 
 class Token:
     def __init__(self,type='symbol',val=None,pos=[0,0]):
-        # self.pos,self.type,self.val=pos,type,val
         self.pos=pos;self.type=type;self.val=val
 
 def u_error(ctx,s,i):

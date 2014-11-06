@@ -10,8 +10,9 @@ def load( name ):
     fp.close()
     return t
 
-def makesure( v , e = None):
-    assert v,e
+def makesure( v , expect = None, cur = None):
+    if not v and cur:
+        print('error at ' + str( cur.pos ) + ' expect ' + expect + ' but see ' + cur.val)
 
 def save( name, content):
     fp = open(name, 'wb')
@@ -20,6 +21,8 @@ def save( name, content):
 
 def rm(fname):
     os.remove(fname)
+def _and(a,b):
+    return a and b
 
 def istype(val,  type):
     if type == 'string':

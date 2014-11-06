@@ -1,8 +1,7 @@
 from tokenize import *
+from expression import *
 
-class AstNode:
-    def __init__(self, type=None):
-        self.type = type
+
 
 class ParserCtx:
     def __init__(self, r):
@@ -32,11 +31,7 @@ class ParserCtx:
     def pop(self):
         return self.tree.pop()
     def expect(self, v):
-        # print("cur=" + str(self.i))
-        # print("curtoken="+ str(self.r[self.i-1].val))
-        # print("p.token="+str(self.token.val))
-        # print("expect="+v)
-        makesure(self.token.type == v, 'error at ' + str(self.token.pos) + " expect " +str(v) +" but see "+str(self.token.val))
+        makesure(self.token.type == v, v, self.token)
         self.next()
     def nextName(self):
         self.next()
@@ -118,180 +113,6 @@ def parse(v):
         print(" at line " + str( p.token.pos ) + " unknown error")
     return x
 
-# recursive desent
-
-#def factor(p):
-#    if p.token.type in ['+', '-', 'not']:
-#        t = p.token.type
-#        p.next()
-#        if t == '+':
-#            t='pos'
-#        elif t == '-':
-#            t='neg'
-#        factor(p)
-#        node = AstNode()
-#        node.type = t
-#        node.val = p.pop()
-#        p.add(node)
-#    else:
-#        factor_(p)
-
-factor_op_list = ['number', 'string', 'name', 'None']
-
-def factor(p):
-    t = p.token.type
-    token = p.token
-    if t in factor_op_list:
-        p.next()
-        p.add(token)
-        factor_next_if(p)
-    elif t == '[':
-        p.next()
-        node = AstNode()
-        node.type = 'list'
-        if p.token.type == ']':
-            p.next()
-            node.val = None
-        else:
-            expr(p)
-            p.expect(']')
-            node.val = p.pop()
-        p.add( node )
-    elif t == '(':
-        p.next()
-        expr(p)
-        p.expect(')')
-    elif t == '{':
-        p.next()
-        node = AstNode('dict')
-        if p.token.type == '}':
-            p.next()
-            node.items = None
-            p.add(node)
-        else:
-            items = []
-            while p.token.type != '}':
-                factor(p)
-                p.expect(':')
-                factor(p)
-                v = p.pop()
-                k = p.pop()
-                items.append([k,v])
-                if p.token.type == '}':
-                    break
-                p.expect(',')
-            p.expect('}')
-            node.items = items
-            p.add(node)
-
-
-
-# def _expr2(func, val):
-#     def f(p):
-#         func(p)
-#         while p.token.type in val:
-#             t = p.token.type
-#             p.next()
-#             func(p)
-#             p.addOp(t)
-#     return f
-
-class MyExpr:
-    def __init__(self, fnc, range):
-        self.fnc = fnc
-        self.range = range
-
-    def run(self, p):
-        range = self.range
-        self.fnc(p)
-        while p.token.type in range:
-            t = p.token.type
-            # print(p.token.pos)
-            p.next()
-            self.fnc(p)
-            p.addOp(t)
-
-class Temp:
-    def __init__(self,fnc, range):
-        self.fnc = fnc
-        self.range = range
-    def run(self, p):
-        if p.token.type == '-':
-            p.next()
-            self.run(p)
-            node = AstNode("neg")
-            node.val = p.pop()
-            p.add(node)
-            return
-        self.fnc(p)
-        while p.token.type in self.range:
-            t = p.token.type
-            p.next()
-            if t == '[':
-                expr(p)
-                p.expect(']')
-                p.addOp('get')
-            elif t == '(':
-                node = AstNode()
-                node.type = '$'
-                node.name = p.pop()
-                if p.token.type == ')':
-                    p.next()
-                    node.args = None
-                    p.add( node )
-                else:
-                    expr(p)
-                    p.expect(')')
-                    node.args = p.pop()
-                    p.add( node )
-            # handler dot (.)
-            else:
-                self.fnc(p)
-                b = p.pop()
-                b.type = 'string'
-                a = p.pop()
-                node = AstNode('get')
-                node.a = a
-                node.b = b
-                p.add(node)
-class PreExpr:
-    def __init__(self, fnc, range):
-        self.fnc = fnc
-        self.range = range
-    def run(self, p):
-        if p.token.type in self.range:
-            # print(p.token.pos)
-            p.next()
-            self.run(p)
-            node = AstNode("not")
-            node.val = p.pop()
-            p.add(node)
-        else:
-            self.fnc(p)
-
-dot_expr = Temp(factor, ['.', '[', '('])
-item2 = MyExpr(dot_expr.run, ['*', '/', '%'])
-item = MyExpr(item2.run, ['+', '-'])
-in_expr = MyExpr(item.run, ['in', 'notin'] )
-compare = MyExpr(in_expr.run,  ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
-pre_expr = PreExpr(compare.run, ['not']);
-and_expr = MyExpr(pre_expr.run, ['and'])
-or_expr = MyExpr(and_expr.run, ['or'])
-comma = MyExpr(or_expr.run, [','])
-assign = MyExpr(comma.run, ['=', '+=', '-=', '*=', '/=', '%='])
-
-# dot_expr = _expr4(factor)
-# item2 = _expr2(dot_expr, ['*', '/', '%'])
-# item = _expr2(item2, ['+', '-'])
-# in_expr = _expr2(item, ['in', 'notin'])
-# compare = _expr2(in_expr, ['>', '<', '>=', '<=', '==', '!=', 'is', 'isnot'])
-# and_expr = _expr2(compare, ['and'])
-# or_expr = _expr2(and_expr, ['or'])
-# comma = _expr2(or_expr, [','])
-# assign = _expr2(comma, ['=', '+=', '-=', '*=', '/='])
-
-expr = assign.run
-
 def name2str(obj):
     if obj.type == 'name':
         obj.type = 'string'
@@ -323,9 +144,10 @@ def do_import(p):
     p.addOp("import")
 
 # count = 1
+skip_op = ['nl', ';']
 def skip_nl(p):
     # global count
-    while p.token.type in ['nl', ';']:
+    while p.token.type in skip_op:
         p.next()
         # count+=1
         # print(count)
@@ -339,19 +161,6 @@ def do_raise(p):
         expr(p)
         node.val = p.pop()
     p.add(node)
-
-def factor_next_if(p):
-    if p.token.type == 'if':
-        p.next()
-        node = AstNode()
-        node.type = 'choose'
-        expr(p)
-        node.cond = p.pop()
-        node.left = p.pop()
-        p.expect('else')
-        expr(p)
-        node.right = p.pop()
-        p.add(node)
 
 
 def do_stm(p):
@@ -456,12 +265,6 @@ def do_for_while(p, type):
     ast.b = p.enterBlock()
     p.add(ast)
 
-def do_makesure(p):
-    p.next()
-    expr(p)
-    p.add(None)
-    p.addOp("makesure")
-
 def do_arg(p):
     p.expect('(')
     if p.token.type == ')':
@@ -533,8 +336,7 @@ def do_class(p):
 
 def do_stm1(p, type):
     p.next()
-    node = AstNode()
-    node.type = type
+    node = AstNode(type)
     if p.token.type in ['nl', 'dedent']:
         node.val = None
     else:
@@ -669,6 +471,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-    input("hold");
 
     

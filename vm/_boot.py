@@ -13,16 +13,11 @@ add_type_method('str', 'rjust', str_rjust)
 
 def _import(fname, tar = None):
     if fname in __modules__:
-        # print("module "+fname+" already loaded");
         pass
     else:
-        # print("load module "+fname)
         from encode import *
-        txt = load(fname)
-        # print("src:\n"+txt)
-        _code = b_compile(fname)
-        if fname != ARGV[0]:
-            save(fname+".tmc", _code)
+        _code = b_compile(fname + '.py' )
+        save(fname+".tmc", _code)
         load_module(fname, _code)
     g = __modules__[fname]
     if tar == '*':

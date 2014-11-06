@@ -1,10 +1,13 @@
 if str(1.0) != '1':
     import time
     clock = time.time
-for i in range(1, 10):
-	print("now is "+str(i))
-	i+=1
+#for i in range(1, 10):
+	#print("now is "+str(i))
+	#i+=1
 
+if not True:
+    print('www')
+    
 def add(a,b):
     return a + b
 
@@ -14,18 +17,36 @@ class Test:
     def __init__(self, name, age):
         self.name = name
         self.age = age
-        self.tell(self)
+        self.tell()
     def grow(self):
         self.age += 1
     
     def tell(self):
         print('name is '+ self.name, 'age is ' + str(self.age))
-
+i = 0
+j = 0
+t1 = clock()
+while i < 1000000:
+    j = i * 34
+    i += 1
+t2 = clock()
+print("global scope: used time = " + str(t2-t1))
+def test():
+    i = 0;j = 0
+    t1 = clock()
+    while i < 1000000:
+        j = i * 34
+        i +=1
+    t2 = clock()
+    print("local scope: used time = " + str(t2-t1))
+test()
+x = input("hold>>>")
 x = Test('test',20)
 x.grow()
 x.tell()
 print("'-'.join(['1','2','3'])", '-'.join(['1','2','3']))
 print("'-'.join('hello,world,yeah').split(',')", '-'.join( 'hello,world,yeah'.split(',') ))
+print(x)
 
 print("test list ")
 print([3,4,5])

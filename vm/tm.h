@@ -100,7 +100,7 @@ typedef struct tm_func
 	instruction* pc;
 	tm_obj self;
 	tm_obj mod; // module, includes global, constants, etc.
-	tm_obj code; // string
+	// tm_obj code; // string
 	tm_obj name;
 	tm_obj (*native_func)( tm_obj);
 }tm_func;

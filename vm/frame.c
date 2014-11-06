@@ -63,22 +63,28 @@ tm_obj* get_constants(tm_obj mod){
 
 
 #define read_number( v, s) v = *(double*)s; s+=sizeof(double);
-#define TM_PUSH( x ) *(++top) = (x); /*if( top >= f->stack + 100) tm_raise("stack overflow");*/
+#define TM_PUSH( x ) *(++top) = (x); /*if( top - f->stack >= 50) tm_raise("stack overflow");*/
 #define TM_POP() *(top--)
 #define TM_TOP() (*top)
 
 #define CASE( code, body ) case code :  body ; break;
 
-tm_obj tm_def(tm_obj mod, char* s){
+struct tm_def_st{
+    tm_obj fnc;
+    int len;
+};
+struct tm_def_st tm_def(tm_obj mod, char* s){
 	int maxlocals = 0;
 	int maxstack = 0;
 	int len = code_check( mod, s, 1, &maxlocals, &maxstack);
-	tm_obj code = str_new(s , len);
-	tm_obj fnc = func_new(mod, code, obj_none, NULL);
+	tm_obj fnc = func_new(mod, obj_none, NULL);
 	get_func(fnc)->pc = s;
 	get_func(fnc)->maxlocals = maxlocals;
-  get_func(fnc)->maxstack = maxstack;
-	return fnc;
+    get_func(fnc)->maxstack = maxstack;
+	struct tm_def_st def ;
+    def.fnc = fnc;
+    def.len = len;
+    return def;
 }
 
 #define TM_OP( OP_CODE, OP_FUNC ) case OP_CODE: x = TM_POP();\
@@ -89,7 +95,7 @@ tm_obj tm_def(tm_obj mod, char* s){
 
 // if i == 1, j = top;
 // if i == 0, j = top + 1;
-#define LOAD_LIST(params, i)  params = list_new(i); \
+#define LOAD_LIST(params, i)  params = list_new(i);\
     tm_list* _p = get_list(params); \
     tm_obj* j; \
     for(j = top - i + 1; j <= top; j++){  \
@@ -234,8 +240,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   case LIST:{
     i = next_byte(s);
     tm_log1("ins", "LIST %d", i);
-    LOAD_LIST( templist, i );
-    TM_PUSH( templist );
+    TM_PUSH( list_new(i) );
     goto start;
   }
 
@@ -311,15 +316,14 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   case CALL: {
     i = next_byte( s );
     tm_log1("ins", "CALL %d", i);
-    /* in method call , empty_argument will be pushed a `self` object ,
-    *  so it should be reset after params are loaded */
-    list_len(g_arguments) = 0;
+    /* set a global `arguments to store arguments */
+    // list_len(g_arguments) = 0;
     /* if( 0 == i) { params.type = TM_NON; }
     else { LOAD_LIST(params, i); } */
-    LOAD_LIST(g_arguments, i);
+    LOAD_LIST(params, i);
     func = TM_POP();
     // f->top = top;
-    TM_PUSH( _tm_call(func, g_arguments));
+    TM_PUSH( _tm_call(func, params));
     goto start;
   }break;
 
@@ -355,12 +359,11 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
 
   case TM_DEF:{
     i = next_short(s);
-    func = tm_def(mod, s);
-    get_func(func)->name = constants[i];
-    tm_obj code = get_func(func)->code;
-    s+= get_str_len(code);
-    tm_log1("ins", "TM_DEF %d", get_str_len(code));
-    TM_PUSH(func);
+    struct tm_def_st def = tm_def(mod, s);
+    get_func(def.fnc)->name = constants[i];
+    s+= def.len;
+    tm_log1("ins", "TM_DEF %d", def.len);
+    TM_PUSH(def.fnc);
     goto start;
   }
 
@@ -450,7 +453,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
         printf("func_name = %s, count = %d\n", get_str(f->func_name) , (int)( top - f->stack));
     }
     if( tm->allocated_mem > tm->gc_limit){
-        tm->gc_limit += 1024 * 1024;
+        tm->gc_limit += 1024 * 1024; // increase 1M
         gc_full(ret);
     }
     tm->cur--;

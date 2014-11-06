@@ -462,7 +462,7 @@ tm_obj load_module( tm_obj p){
     tm_obj name = get_arg(p, 0, TM_STR);
     tm_obj code = get_arg(p, 1, TM_STR);
     tm_obj mod = module_new(name, name , code );
-    tm_obj fnc = func_new(mod, code, obj_none, NULL);
+    tm_obj fnc = func_new(mod, obj_none, NULL);
     get_func(fnc)->pc = get_str(code);
     get_func(fnc)->name = obj__main__;
     tm_eval( fnc , obj_none);
@@ -602,7 +602,7 @@ tm_obj tm_ord(tm_obj p){
 tm_obj btm_run(tm_obj p){
     tm_obj code = get_arg(p, 0, TM_STR);
     tm_obj mod = module_new(str_new("<shell>", -1), obj__main__ , code );
-    tm_obj fnc = func_new(mod, code, obj_none, NULL);
+    tm_obj fnc = func_new(mod, obj_none, NULL);
     get_func(fnc)->pc = get_str(code);
     get_func(fnc)->name = obj__main__;
     return tm_eval( fnc , obj_none);

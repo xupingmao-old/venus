@@ -20,5 +20,5 @@ def b_import(file):
     save( file.replace('.py', '.pyc'), code)
 
 if __name__ == "__main__":
-    py2bin(["_boot.py", "tokenize.py", "parse.py", "instruction.py", "encode.py"], "compile.c")
+    py2bin(["_boot.py", "tokenize.py", "expression.py", "parse.py", "instruction.py", "encode.py"], "compile.c")
 

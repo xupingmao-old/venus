@@ -2,13 +2,12 @@
 
 
 tm_obj func_new(tm_obj mod,
-		tm_obj code,
 		tm_obj self, 
 		tm_obj (*native_func)( tm_obj) ){
   tm_func* f= tm_alloc(sizeof(tm_func));
   f->mod = mod;
-  f->code = code;
-  f->pc = NULL;
+  // f->code = code;
+  f->pc = NULL;  
   f->native_func = native_func;
   f->maxlocals = 0;
   f->self = self;
@@ -17,7 +16,7 @@ tm_obj func_new(tm_obj mod,
 
 tm_obj method_new(tm_obj _fnc, tm_obj self){
   tm_func* fnc = get_func(_fnc);
-  tm_obj nfnc = func_new( fnc->mod, fnc->code, self, fnc->native_func);
+  tm_obj nfnc = func_new( fnc->mod, self, fnc->native_func);
   get_func(nfnc)->name = get_func(_fnc)->name;
   get_func(nfnc)->maxlocals = get_func(_fnc)->maxlocals;
   return nfnc;
