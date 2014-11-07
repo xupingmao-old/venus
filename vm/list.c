@@ -18,8 +18,49 @@ tm_obj list_new(int cap){
 	return gc_track(v);
 }
 
+/*
+tm_arguments arguments_list(int n, tm_obj* arguments){
+    tm_arguments args;
+    args.len = n;
+    args.nodes = arguments;
+    return args;
+}*/
+tm_arguments arguments_list(int n, tm_obj* arguments){
+    tm_obj list = list_new(n);
+    int i;for(i = 0; i < n; i++){
+        list_append( get_list(list), arguments[i]);
+    }
+    return list;
+}
+
+/*
+void arguments_insert(tm_arguments *args, int n, tm_obj obj){
+    if( args->nodes == NULL ){
+        tm_raise("arguments_insert(): can not insert into empty arguments");
+    }else if( n < 0 ){
+        tm_raise("arguments_insert(): can not insert before 0");
+    }
+    int i; for(i = args->len; i > n; i--){
+        args->nodes[i] = args->nodes[i-1];
+    }
+    args->nodes[n] = obj;
+    args->len+=1;
+}*/
+
+/*
+tm_arguments empty_arguments(){
+    tm_arguments arg;
+    arg.len = 0;
+    arg.nodes = NULL;
+    return arg;
+}*/
+
+// #define arguments_len(p) p.len
+tm_arguments empty_arguments(){
+    return list_new(1);
+}
 /* build list of length n from object list */
-tm_obj as_list(int n, ...){
+tm_arguments as_list(int n, ...){
 	tm_obj list = list_new(n);
 	va_list a; va_start(a,n);
 	int i;
@@ -165,7 +206,7 @@ tm_obj list_join(tm_list* list1, tm_list*list2){
 // belows are builtin methods
 //
 
-tm_obj blt_list_join(tm_obj params)
+tm_obj blt_list_join(tm_arguments params)
 {
 	tm_obj l1 = get_arg(params, 0, TM_LST);
 	tm_obj l2 = get_arg(params, 1, TM_LST);
@@ -175,18 +216,18 @@ tm_obj blt_list_join(tm_obj params)
 }
 
 
-tm_obj blist_append( tm_obj params){
+tm_obj blist_append( tm_arguments params){
 	tm_obj self = get_arg( params, 0, TM_LST);
 	tm_obj v = get_arg( params , 1, -1);
 	list_append( get_list(self), v);
 	return obj_none;
 }
 
-tm_obj blist_pop(tm_obj params){
+tm_obj blist_pop(tm_arguments params){
 	tm_obj self = get_arg(params, 0, TM_LST);
 	return list_pop(get_list(self));
 }
-tm_obj blist_insert(tm_obj params){
+tm_obj blist_insert(tm_arguments params){
 	tm_obj self = get_arg(params, 0, TM_LST);
 	tm_obj idx = get_arg(params, 1, TM_NUM);
 	int n = get_num(idx) ;
@@ -195,7 +236,7 @@ tm_obj blist_insert(tm_obj params){
 	return self;
 }
 
-tm_obj blist_extend( tm_obj params){
+tm_obj blist_extend( tm_arguments params){
 	tm_obj self = get_arg( params, 0, TM_LST);
 	tm_obj des = get_arg( params, 0, TM_LST);
 	int i;
@@ -205,13 +246,13 @@ tm_obj blist_extend( tm_obj params){
 	return obj_none;
 }
 
-tm_obj blist_index( tm_obj params){
+tm_obj blist_index( tm_arguments params){
 	tm_obj self = get_arg( params, 0, TM_LST);
 	tm_obj v = get_arg( params, 1, -1);
 	return number_new( list_index(get_list(self), v));
 }
 
-tm_obj blist_reverse(tm_obj params){
+tm_obj blist_reverse(tm_arguments params){
 	tm_obj self = get_arg(params, 0, TM_LST);
     int start = 0, end = list_len( self ) -1 ;
     while ( end > start ) {

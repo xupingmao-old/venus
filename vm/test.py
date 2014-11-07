@@ -11,7 +11,7 @@ if not True:
 def add(a,b):
     return a + b
 
-print( add( 10, 20 ))
+#print( add( 10, 20 ))
 
 class Test:
     def __init__(self, name, age):
@@ -40,9 +40,9 @@ def test():
     t2 = clock()
     print("local scope: used time = " + str(t2-t1))
 test()
-x = input("hold>>>")
-print("__objectsize__=",__objectsize__)
-print(est)
+# x = input("hold>>>")
+# print("__objectsize__=",__objectsize__)
+# print(est)
 x = Test('test',20)
 x.grow()
 x.tell()
@@ -52,10 +52,19 @@ print(x)
 
 print("test list ")
 print([3,4,5])
-print(mtime('object.h'))
+# print(mtime('object.h'))
 
 omap = {"test": "4","age":"3434"}
 print(omap)
 print("hello,world")
-print(ARGV)
+#print(ARGV)
 print(__name__)
+
+def fib(n):
+    if n == 0 or n == 1: return 1
+    return fib(n-1) + fib(n-2)
+t1 = clock()
+#fib(30)
+t2 = clock()
+print("cursive call test : " , t2-t1)
+

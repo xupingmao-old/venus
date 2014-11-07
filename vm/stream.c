@@ -18,8 +18,8 @@ void stream_free(tm_stream* st){
 	tm_free( st, sizeof(st));
 }
 
-tm_obj stream_open(tm_obj params){
-	int len = list_len( params );
+tm_obj stream_open(tm_arguments params){
+	int len = arguments_len( params );
 	tm_obj fname, mode;
 	char* fname_s, *mode_s;
 	if( len == 1){
@@ -40,7 +40,7 @@ tm_obj stream_open(tm_obj params){
 	return stream_new( fp);
 }
 
-tm_obj stream_close(tm_obj params){
+tm_obj stream_close(tm_arguments params){
 	tm_obj fp_ = get_arg( params, 0, TM_STREAM);
 	FILE* fp = get_stream(fp_);
 	if( fp == NULL ){
@@ -64,8 +64,8 @@ long _get_file_rest_len( FILE* fp){
     return file_size;
 }
 
-tm_obj stream_read( tm_vm* tm, tm_obj params){
-	int len = list_len( params );
+tm_obj stream_read( tm_vm* tm, tm_arguments params){
+	int len = arguments_len( params );
 	tm_obj fp_ = get_arg( params, 0, TM_STREAM);
 	int rest_len = 0;
 	FILE* fp = get_file(fp_);
@@ -107,7 +107,7 @@ tm_obj _load(char* fname){
 }
 
 
-tm_obj tm_load( tm_obj p){
+tm_obj tm_load( tm_arguments p){
 	tm_obj fname = get_arg( p, 0, TM_STR);
 	return _load( get_str(fname) );
 }
@@ -123,12 +123,12 @@ tm_obj _tm_save(char*fname, tm_obj content){
     fclose(fp);
 }
 
-tm_obj tm_save( tm_obj p){
+tm_obj tm_save( tm_arguments p){
 	tm_obj fname = get_arg(p, 0, TM_STR);
 	return _tm_save(get_str(fname), get_arg(p,1, TM_STR));
 }
 
-tm_obj tm_exists(tm_obj p){
+tm_obj tm_exists(tm_arguments p){
     tm_obj _fname = get_arg(p, 0, TM_STR);
     char* fname = get_str(_fname);
     FILE*fp = fopen(fname, "rb");
@@ -137,7 +137,7 @@ tm_obj tm_exists(tm_obj p){
     return obj_true;
 }
 
-tm_obj tm_mtime(tm_obj p){
+tm_obj tm_mtime(tm_arguments p){
     char const *s = get_str_arg(p, 0);
     struct stat stbuf;
     if (!stat(s,&stbuf)) { return number_new(stbuf.st_mtime); }

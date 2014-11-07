@@ -90,6 +90,14 @@ typedef struct tm_stream
 	FILE* fp;
 }tm_stream;
 
+/*
+typedef struct tm_arguments{
+    int len;
+    tm_obj *nodes;
+}tm_arguments;
+*/
+
+typedef tm_obj tm_arguments;
 typedef struct tm_vm tm_vm;
 typedef struct tm_func
 {
@@ -102,9 +110,8 @@ typedef struct tm_func
 	tm_obj mod; // module, includes global, constants, etc.
 	// tm_obj code; // string
 	tm_obj name;
-	tm_obj (*native_func)( tm_obj);
+	tm_obj (*native_func)( tm_arguments);
 }tm_func;
-
 
 #define OBJ_SIZE sizeof( tm_obj )
 
@@ -176,18 +183,18 @@ tm_obj __chars__[256];
 tm_obj g_arguments;
 #include "constants.h"
 #include "object.h"
+#include "macros.h"
 
 tm_inline
 tm_obj tm_number(double v){
 	tm_obj o;
 	o.type = TM_NUM;
-	o.value.dv = v;
+	get_num(o) = v;
 	return o;
 }
 
 #define number_new tm_number
 
-#include "macros.h"
 #include "core.h"
 #include "builtins.h"
 #include "gc.h"

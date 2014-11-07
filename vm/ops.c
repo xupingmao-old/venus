@@ -93,7 +93,6 @@ tm_obj tm_sub( tm_obj a, tm_obj b){
 	}
 	tm_raise("tm_sub: can not sub @ and @", a, b);
 }
-
 tm_obj tm_add(  tm_obj a, tm_obj b){
 	if( a.type == b.type ){
 		switch( a.type ){
@@ -185,7 +184,6 @@ tm_comp( tm_lt, < );
 tm_comp( tm_gt, >);
 tm_comp( tm_lteq, <=);
 tm_comp( tm_gteq, >=);
-
 
 tm_obj tm_mul( tm_obj a, tm_obj b){
 	if( a.type == b.type && a.type == TM_NUM){

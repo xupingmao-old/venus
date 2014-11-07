@@ -42,7 +42,7 @@ tm_obj _tm_str(  tm_obj a){
     return str_new("",0);
 }
 
-tm_obj btm_str( tm_obj p){
+tm_obj btm_str( tm_arguments p){
     tm_obj a = get_arg( p, 0, -1);
     return _tm_str(a);
 }
@@ -79,7 +79,7 @@ int _tm_len(tm_obj o){
     return 0;
 }
 
-tm_obj tm_len(tm_obj p){
+tm_obj tm_len(tm_arguments p){
     tm_obj o = get_arg(p, 0, -1);
     return number_new(_tm_len(o));
 }
@@ -198,18 +198,20 @@ void cprintln(tm_obj o){
 	puts("");
 }
 
-
-tm_obj tm_print(tm_obj params){
-	int i = 0;
-	tm_list* list = get_list(params);
+tm_obj tm_print0( tm_arguments params, int printnl){
+    int i = 0;
     // cprintln(params);
-	for(i = 0; i < list->len; i++ ){
-		cprint(list->nodes[i]);
-		if( i + 1 != list->len){
+	for(i = 0; i < arguments_len(params); i++ ){
+		cprint(arguments_nodes(params)[i]);
+		if( i + 1 != arguments_len(params)){
 			putchar(' ');
 		}
 	}
-	putchar('\n');
+	if( printnl) putchar('\n');
+}
+
+tm_obj tm_print(tm_arguments params){
+    tm_print0(params, 1);
 	return obj_none;
 }
 
@@ -358,7 +360,7 @@ void tm_printf(char* fmt, ...){
 	va_end(a);
 }
 
-tm_obj tm_sleep( tm_obj p){
+tm_obj tm_sleep( tm_arguments p){
 	int i = 0;
 	tm_obj time = get_arg(p, 0, TM_NUM);
 	int t = get_num(time);
@@ -370,19 +372,15 @@ tm_obj tm_sleep( tm_obj p){
 	return obj_none;
 }
 
-tm_obj tm_input(tm_obj p){
+tm_obj tm_input(tm_arguments p){
 	int i = 0;
-	if( list_len(p) > 0){
-		for(i = 0; i < list_len(p); i++){
-			cprint(get_list(p)->nodes[i]);
-		}
-	}
+	tm_print0(p, 0);
 	char buf[2048];
 	fgets(buf, 2048, stdin);
 	return str_new(buf, strlen(buf));
 }
 
-tm_obj tm_int(tm_obj p){
+tm_obj tm_int(tm_arguments p){
 	tm_obj v = get_arg(p, 0, -1);
 	if( v.type == TM_NUM ){
 		return number_new( (int) get_num(v) );
@@ -393,7 +391,7 @@ tm_obj tm_int(tm_obj p){
 	return obj_none;
 }
 
-tm_obj tm_float( tm_obj p){
+tm_obj tm_float( tm_arguments p){
 	tm_obj v = get_arg(p, 0, -1);
 	if( v.type == TM_NUM ){
 		return v;
@@ -404,18 +402,18 @@ tm_obj tm_float( tm_obj p){
 	return obj_none;
 }
 
-tm_obj tm_range( tm_obj p){
+tm_obj tm_range( tm_arguments p){
     long start = 0;
     long end = 0;
     int inc;
-    switch( list_len(p) ){
+    switch( arguments_len(p) ){
         case 1: start = 0; end = get_num( get_arg(p, 0, TM_NUM) ); inc = 1; break;
         case 2: start = get_num( get_arg(p, 0, TM_NUM )); end = get_num(get_arg(p,1,TM_NUM)); inc = 1; break;
         case 3: start = get_num( get_arg(p, 0, TM_NUM ));
                 end = get_num( get_arg(p, 1, TM_NUM ));
                 inc = get_num( get_arg(p, 2, TM_NUM ));
                 break;
-        default: tm_raise("range([n, [ n, [n]]]), but see %d arguments", list_len(p));
+        default: tm_raise("range([n, [ n, [n]]]), but see %d arguments", arguments_len(p));
     }
     if( inc == 0) tm_raise("range(): increment can not be 0!");
     /* eg. (1, 10, -1),  (10, 1, 1) : range can not be the same signal */
@@ -440,7 +438,7 @@ tm_obj _merge(tm_obj des, tm_obj src){
 }
 
 /* import file */
-tm_obj tm_import( tm_obj p){
+tm_obj tm_import( tm_arguments p){
 	tm_obj name = get_arg(p, 0, TM_STR);
 	tm_obj arg1 = get_arg(p, 1, TM_STR);
 	tm_obj mod;
@@ -458,11 +456,11 @@ tm_obj tm_import( tm_obj p){
 	return obj_none;
 }
 
-tm_obj load_module( tm_obj p){
+tm_obj load_module( tm_arguments p){
     tm_obj name = get_arg(p, 0, TM_STR);
     tm_obj code = get_arg(p, 1, TM_STR);
     tm_obj mod;
-    if( list_len(p) == 3){
+    if( arguments_len(p) == 3){
         mod = module_new(name, get_arg(p, 2, TM_STR) , code );
     }else{
         mod = module_new(name, name , code );
@@ -470,17 +468,17 @@ tm_obj load_module( tm_obj p){
     tm_obj fnc = func_new(mod, obj_none, NULL);
     get_func(fnc)->pc = get_str(code);
     get_func(fnc)->name = obj__main__;
-    tm_eval( fnc , obj_none);
+    tm_eval( fnc , empty_arguments());
     return obj_none;
 }
 
-tm_obj get_last_frame_globals(tm_obj p){
+tm_obj get_last_frame_globals(tm_arguments p){
     return tm->frames[tm->cur-1].globals;
 }
 
 
 /* get globals */
-tm_obj tm_globals(tm_obj p){
+tm_obj tm_globals(tm_arguments p){
 	return tm->frames[tm->cur].globals;
 }
 
@@ -512,12 +510,12 @@ tm_obj _obj_info(tm_obj o){
 	return tm_add(str, _tm_str(o));
 }
 
-tm_obj tm_exit( tm_obj p){
+tm_obj tm_exit( tm_arguments p){
 	longjmp(tm->buf, 2);
 	return obj_none;
 }
 
-tm_obj tm_add_type_method(tm_obj p){
+tm_obj tm_add_type_method(tm_arguments p){
     tm_obj type = get_arg(p, 0, TM_STR);
     tm_obj fname = get_arg(p, 1, TM_STR);
     tm_obj fnc = get_arg(p, 2, TM_FNC);
@@ -534,7 +532,7 @@ tm_obj tm_add_type_method(tm_obj p){
     return obj_none;
 }
 
-tm_obj tm_istype( tm_obj p){
+tm_obj tm_istype( tm_arguments p){
 	tm_obj arg0 = get_arg(p, 0, -1);
 	int type = arg0.type;
 	tm_obj arg1 = get_arg(p, 1, TM_STR);
@@ -555,10 +553,10 @@ tm_obj tm_istype( tm_obj p){
 	return obj_none;
 }
 
-tm_obj tm_makesure( tm_obj p){
+tm_obj tm_makesure( tm_arguments p){
 	tm_obj arg0 = get_arg(p, 0, -1);
 	tm_obj arg1;
-	if( list_len(p) == 1){
+	if( arguments_len(p) == 1){
 		arg1 = obj_none;
 	}else{
 		arg1 = get_arg(p, 1, -1);
@@ -580,7 +578,7 @@ tm_obj _tm_dir( tm_obj o) {
     }
     return lst;
 }
-tm_obj tm_dir(tm_obj p){
+tm_obj tm_dir(tm_arguments p){
     return _tm_dir( get_arg(p, 0, -1));
 }
 
@@ -592,34 +590,35 @@ tm_obj _tm_chr( int n ){
     return __chars__[n];
 }
 
-tm_obj tm_chr(tm_obj p){
+tm_obj tm_chr(tm_arguments p){
     int n = get_num(get_arg(p, 0, TM_NUM));
     return _tm_chr( n );
 }
 
-tm_obj tm_ord(tm_obj p){
+tm_obj tm_ord(tm_arguments p){
     tm_obj c = get_arg(p, 0, TM_STR);
     TM_ASSERT( get_str_len(c) == 1, "ord() expected a character");
     return number_new( (unsigned char) get_str(c)[0]);
 }
 
 /* create a temporary module and run it */
-tm_obj btm_run(tm_obj p){
+/*
+tm_obj btm_run(tm_arguments p){
     tm_obj code = get_arg(p, 0, TM_STR);
     tm_obj mod = module_new(str_new("<shell>", -1), obj__main__ , code );
     tm_obj fnc = func_new(mod, obj_none, NULL);
     get_func(fnc)->pc = get_str(code);
     get_func(fnc)->name = obj__main__;
     return tm_eval( fnc , obj_none);
-}
+}*/
 
-tm_obj tm_code8(tm_obj p) {
+tm_obj tm_code8(tm_arguments p) {
     int n = get_num( get_arg(p, 0, TM_NUM) );
     if( n < 0 || n > 255 ) tm_raise("code8(): expect number 0-255, but see %d", n);
     return __chars__[n];
 }
 
-tm_obj tm_code16(tm_obj p){
+tm_obj tm_code16(tm_arguments p){
     int n = get_num( get_arg(p, 0, TM_NUM));
     if( n < 0 || n > 0xffff) tm_raise("tm_code16(): expect number 0-0xffff, but see %x", n);
     tm_obj nchar = str_new(NULL, 2);
@@ -628,7 +627,7 @@ tm_obj tm_code16(tm_obj p){
     return nchar;
 }
 
-tm_obj tm_codeF( tm_obj p){
+tm_obj tm_codeF( tm_arguments p){
     static double d = 0;
     d = get_num( get_arg(p, 0, TM_NUM) );
     char* val;
@@ -636,7 +635,7 @@ tm_obj tm_codeF( tm_obj p){
     return str_new(val, sizeof(double));
 }
 
-tm_obj tm_clock( tm_obj p){
+tm_obj tm_clock( tm_arguments p){
 #ifdef _WIN32
     return number_new(clock());
 #else

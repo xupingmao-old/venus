@@ -3,7 +3,7 @@
 
 tm_obj func_new(tm_obj mod,
 		tm_obj self, 
-		tm_obj (*native_func)( tm_obj) ){
+		tm_obj (*native_func)( tm_arguments) ){
   tm_func* f= tm_alloc(sizeof(tm_func));
   f->mod = mod;
   // f->code = code;

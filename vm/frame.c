@@ -26,9 +26,10 @@ tm_obj* push_constant(tm_obj mod, tm_obj v){
     return get_list(cs)->nodes;
 }
 
-tm_obj _tm_call( tm_obj fnc, tm_obj params){
+tm_obj _tm_call( tm_obj fnc, tm_arguments params){
 	if( fnc.type == TM_FNC){
         if( get_func(fnc)->self.type != TM_NON) {
+            // arguments_insert(&params, 0, get_func(fnc)->self);
             list_insert( get_list(params), 0, get_func(fnc)->self);
         }
         if( get_func(fnc)->native_func != NULL ){
@@ -49,7 +50,7 @@ tm_obj _tm_call( tm_obj fnc, tm_obj params){
     tm_raise("tm_call(), not callable , type = %d", fnc.type);
 }
 
-tm_obj tm_call( char* mod, char* fnc, tm_obj params){
+tm_obj tm_call( char* mod, char* fnc, tm_arguments params){
   tm_obj m ;
   m = tm_get(tm->modules, str_new(mod, strlen(mod)));
   tm_obj f = tm_get( m, str_new(fnc, strlen(fnc)));
@@ -127,7 +128,7 @@ struct tm_def_st tm_def(tm_obj mod, char* s){
   top = f->stack;                   \
   locals = f->locals;
 
-tm_obj tm_eval( tm_obj fnc, tm_obj params ){
+tm_obj tm_eval( tm_obj fnc, tm_arguments params ){
 
     tm->cur++;
 
@@ -163,7 +164,6 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   tm_obj x, k, v;
   tm_obj func;
   tm_obj ret = obj_none;
-  tm_obj templist;
   
   int i, ins, jmp;
 
@@ -320,21 +320,24 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     // list_len(g_arguments) = 0;
     /* if( 0 == i) { params.type = TM_NON; }
     else { LOAD_LIST(params, i); } */
+    //tm_arguments args = arguments_list(i, top + 1);
+    //top-=i;
     LOAD_LIST(params, i);
     func = TM_POP();
     // f->top = top;
-    TM_PUSH( _tm_call(func, params));
+    TM_PUSH( _tm_call(func, params) );
     goto start;
   }break;
 
   case LOAD_PARAMS:{
+    /*
     if( TM_LST != params.type ){
       // tm_raise("tm_eval(), expect params to be list, but see %t", params);
       goto start;
-    }
+    }*/
     tm_log1("ins2", "LOAD_PARAMS %l", params);
-    for(i = 0; i < list_len(params); i++){
-      locals[i] = list_nodes(params)[i];
+    for(i = 0; i < arguments_len(params); i++){
+      locals[i] = arguments_nodes(params)[i];
     }
     // list_len(params) = 0;
     goto start;
@@ -449,12 +452,14 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
 
   end:
     tm_log1("stack", "leave function %o", fnc);
+    /*
     if( top != f->stack ) {
         printf("func_name = %s, count = %d\n", get_str(f->func_name) , (int)( top - f->stack));
-    }
+    }*/
     if( tm->allocated_mem > tm->gc_limit){
-        tm->gc_limit += 1024 * 1024; // increase 1M
+        // tm->gc_limit += 1024 * 1024; // increase 1M
         gc_full(ret);
+        tm->gc_limit = tm->allocated_mem * 3 / 2;
     }
     tm->cur--;
     list_len(f->new_objs) = 0;

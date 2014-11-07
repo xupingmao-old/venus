@@ -78,7 +78,7 @@ void reg_builtins(){
 
     struct __builtin {
         char* name;
-        tm_obj (*func) ( tm_obj );
+        tm_obj (*func) ( tm_arguments );
     };
     static struct __builtin builtins[] = {
         {"load", tm_load},
@@ -177,7 +177,7 @@ void load_bultin_module(char* fname, unsigned char* s, int codelen){
   tm_obj fnc = func_new(mod, obj_none, NULL);
   get_func(fnc)->pc = get_str(code);
   get_func(fnc)->name = obj__main__;
-  tm_eval( fnc , obj_none);
+  tm_eval( fnc , empty_arguments());
   // tm_set( tm->modules, mod_name, get_mod(mod)->globals);
 }
 

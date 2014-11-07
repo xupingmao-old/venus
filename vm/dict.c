@@ -248,7 +248,7 @@ tm_obj dict_keys( tm_dict* dict){
 	return list;
 }
 
-tm_obj bdict_keys( tm_obj p){
+tm_obj bdict_keys( tm_arguments p){
 	tm_obj dict = get_arg(p, 0, TM_DCT);
 	return dict_keys(get_dict(dict));
 }
