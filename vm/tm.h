@@ -10,6 +10,7 @@
 #define DEBUG_INS 1
 #define LIGHT_DEBUG_GC 0
 #define LOG_LEVEL 1
+#define USE_NON_PARAM 1
 
 int enable_debug = 0;
 
@@ -20,6 +21,7 @@ int enable_debug = 0;
 #include <stdarg.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <math.h>
 
 #define tm_inline inline
 typedef char instruction;
@@ -90,14 +92,6 @@ typedef struct tm_stream
 	FILE* fp;
 }tm_stream;
 
-/*
-typedef struct tm_arguments{
-    int len;
-    tm_obj *nodes;
-}tm_arguments;
-*/
-
-typedef tm_obj tm_arguments;
 typedef struct tm_vm tm_vm;
 typedef struct tm_func
 {
@@ -110,8 +104,9 @@ typedef struct tm_func
 	tm_obj mod; // module, includes global, constants, etc.
 	// tm_obj code; // string
 	tm_obj name;
-	tm_obj (*native_func)( tm_arguments);
+	tm_obj (*native_func)( tm_obj);
 }tm_func;
+
 
 #define OBJ_SIZE sizeof( tm_obj )
 
@@ -180,21 +175,22 @@ tm_obj obj__main__;
 tm_obj obj__name__;
 tm_obj obj_mod_ext;
 tm_obj __chars__[256];
+//tm_obj empty_list;
 tm_obj g_arguments;
 #include "constants.h"
 #include "object.h"
-#include "macros.h"
 
 tm_inline
 tm_obj tm_number(double v){
 	tm_obj o;
 	o.type = TM_NUM;
-	get_num(o) = v;
+	o.value.dv = v;
 	return o;
 }
 
 #define number_new tm_number
 
+#include "macros.h"
 #include "core.h"
 #include "builtins.h"
 #include "gc.h"

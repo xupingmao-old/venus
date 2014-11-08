@@ -1,6 +1,9 @@
-if str(1.0) != '1':
+def _clock():
+    return time.time() * 1000
+
+if str(1.0) == '1.0':
     import time
-    clock = time.time
+    clock = _clock
 #for i in range(1, 10):
 	#print("now is "+str(i))
 	#i+=1
@@ -40,31 +43,31 @@ def test():
     t2 = clock()
     print("local scope: used time = " + str(t2-t1))
 test()
-# x = input("hold>>>")
-# print("__objectsize__=",__objectsize__)
-# print(est)
+#x = input("hold>>>")
+#print("__objectsize__=",__objectsize__)
+#print(est)
 x = Test('test',20)
 x.grow()
 x.tell()
-print("'-'.join(['1','2','3'])", '-'.join(['1','2','3']))
-print("'-'.join('hello,world,yeah').split(',')", '-'.join( 'hello,world,yeah'.split(',') ))
-print(x)
+#print("'-'.join(['1','2','3'])", '-'.join(['1','2','3']))
+#print("'-'.join('hello,world,yeah').split(',')", '-'.join( 'hello,world,yeah'.split(',') ))
+#print(x)
 
-print("test list ")
-print([3,4,5])
-# print(mtime('object.h'))
-
-omap = {"test": "4","age":"3434"}
-print(omap)
-print("hello,world")
-#print(ARGV)
-print(__name__)
+#print("test list ")
+#print([3,4,5])
+#print(mtime('object.h'))
 
 def fib(n):
     if n == 0 or n == 1: return 1
     return fib(n-1) + fib(n-2)
 t1 = clock()
-#fib(30)
+print(fib(34))
 t2 = clock()
-print("cursive call test : " , t2-t1)
+print(t2-t1)
+#print("'test'.endswith('st')", 'test'.endswith('st'))
 
+#omap = {"test": "4","age":"3434"}
+#print(omap)
+#print("hello,world")
+#print(ARGV)
+print(__name__)

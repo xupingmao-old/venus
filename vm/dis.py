@@ -45,7 +45,7 @@ def dis( fname ,type = None):
             v = ord(s[i])
             print(codes[ins]+ ' ' + str(v))
             i+=1
-        elif ins in ( LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT):
+        elif ins in ( LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF):
             ll = nextshort(s[i], s[i+1])
             print(codes[ins] + ' ' + str(constants[ll]))
             i+=2

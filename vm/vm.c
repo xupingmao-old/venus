@@ -36,6 +36,7 @@ void push_const(tm_obj *des, int type , ...){
             *des = list_new(0);
             break;
         case -1:
+            *des = va_arg(ap, tm_obj);
             break;
         default:
             tm_raise("push_const(), not supported type %d", type);
@@ -63,6 +64,7 @@ void reg_builtins(){
     push_const(&obj_mod_ext, TM_STR, "_pyc");
     push_const(&obj__name__, TM_STR, "__name__");
     push_const(&obj__main__, TM_STR, "__main__");
+    // push_const(&empty_list, -1, list_new(1));
     // push_const(&g_arguments, TM_LST);
 
     /* set module boot */
@@ -72,13 +74,12 @@ void reg_builtins(){
     int i;
     for(i = 0; i < 256; i++){
         unsigned char s[2] = {i, '\0'};
-        __chars__[i] = str_new(s, 1);
-        push_const(&__chars__[i], -1);
+        push_const(&__chars__[i], -1, str_new(s, 1));
     }
 
     struct __builtin {
         char* name;
-        tm_obj (*func) ( tm_arguments );
+        tm_obj (*func) ( tm_obj );
     };
     static struct __builtin builtins[] = {
         {"load", tm_load},
@@ -177,7 +178,7 @@ void load_bultin_module(char* fname, unsigned char* s, int codelen){
   tm_obj fnc = func_new(mod, obj_none, NULL);
   get_func(fnc)->pc = get_str(code);
   get_func(fnc)->name = obj__main__;
-  tm_eval( fnc , empty_arguments());
+  tm_eval( fnc , obj_none);
   // tm_set( tm->modules, mod_name, get_mod(mod)->globals);
 }
 

@@ -53,7 +53,7 @@ int _str_find( tm_str* s1, tm_str* s2, int start){
 }
 
 
-tm_obj str_find( tm_arguments params){
+tm_obj str_find( tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_STR);
 	tm_obj str  = get_arg( params, 1, TM_STR);
 	return number_new( _str_find(self.value.str, str.value.str, 0));
@@ -75,14 +75,14 @@ tm_obj _str_substring( tm_str* str, int start, int end){
 	return new_str;
 }
 
-tm_obj str_substring(tm_arguments params){
+tm_obj str_substring(tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_STR);
 	tm_obj start = get_arg(params, 1, TM_NUM);
 	tm_obj end = get_arg( params, 2, TM_NUM);
 	return _str_substring(self.value.str, get_num(start), get_num(end) );
 }
 
-tm_obj str_upper(tm_arguments params){
+tm_obj str_upper(tm_obj params){
 	tm_obj self = get_arg(params, 0, TM_STR);
 	int i;
 	char*s = get_str(self);
@@ -99,7 +99,7 @@ tm_obj str_upper(tm_arguments params){
 	return nstr;
 }
 
-tm_obj str_isupper(tm_arguments params){
+tm_obj str_isupper(tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_STR);
 	int i;
 	for(i = 0; i < get_str_len(self); i++){
@@ -113,7 +113,7 @@ tm_obj str_isupper(tm_arguments params){
 	return obj_true;
 }
 
-tm_obj str_lower( tm_arguments params){
+tm_obj str_lower( tm_obj params){
 	tm_obj self = get_arg(params, 0, TM_STR);
 	int i;
 	char*s = get_str(self);
@@ -131,7 +131,7 @@ tm_obj str_lower( tm_arguments params){
 }
 
 
-tm_obj str_replace(tm_arguments params){
+tm_obj str_replace(tm_obj params){
 	tm_obj self = get_arg(  params, 0, TM_STR);
 	tm_obj src = get_arg( params, 1, TM_STR);
 	tm_obj des = get_arg( params, 2, TM_STR);
@@ -161,7 +161,7 @@ tm_obj str_replace(tm_arguments params){
 	return nstr;
 }
 
-tm_obj str_split(tm_arguments params){
+tm_obj str_split(tm_obj params){
 	tm_obj self = get_arg( params, 0, TM_STR);
 	tm_obj pattern = get_arg(params, 1, TM_STR);
 	if( get_str_len(pattern) == 0){
@@ -186,7 +186,7 @@ tm_obj str_split(tm_arguments params){
 	return list;
 }
 
-tm_obj str_join(tm_arguments p){
+tm_obj str_join(tm_obj p){
     tm_obj self = get_arg(p, 0, TM_STR);
     tm_obj list = get_arg(p,1,TM_LST);
     tm_obj str = str_new("",0);

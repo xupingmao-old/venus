@@ -16,19 +16,17 @@ void str_free( tm_str* );
 void list_append( tm_list* list, tm_obj v);
 void list_set( tm_list* list, int n, tm_obj v);
 void list_free( tm_list* );
-tm_arguments as_list(int n, ...);
-tm_arguments arguments_list( int n, tm_obj*items);
-void arguments_insert( tm_arguments *args, int n, tm_obj v);
+tm_obj as_list(int n, ...);
 
 tm_obj dict_keys( tm_dict* );
 
-tm_obj tm_eval(tm_obj fnc, tm_arguments params);
-tm_obj tm_call(char* mod, char* fnc, tm_arguments params);
+tm_obj tm_eval(tm_obj fnc, tm_obj params);
+tm_obj tm_call(char* mod, char* fnc, tm_obj params);
 
 // stream
 tm_obj _load(char* fname);
-tm_obj tm_load( tm_arguments p);
-tm_obj tm_save(tm_arguments);
+tm_obj tm_load( tm_obj p);
+tm_obj tm_save( tm_obj p);
 void func_free( tm_func* );
 
 tm_obj module_new(tm_obj file, tm_obj name, tm_obj code);

@@ -67,8 +67,7 @@
     #define log(type, info, __VA_ARGS__) ;
 #endif
 */
-#define arguments_nodes(p) list_nodes(p)
-#define arguments_len(p) list_len(p)
+
 /* assert macro */
 #define TM_ASSERT(cond, msg) if( !cond ) tm_raise( msg ); 
 #endif
