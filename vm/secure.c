@@ -14,10 +14,10 @@ void print_tags(tm_module *mod){
 **/
 void store_tag( tm_module* mod, int idx, unsigned char* pos){
   if( mod->tags == NULL ){
-    tm_raise("code_check: invalid code, miss TAGSIZE information");
+    tm_raise("code_check(): invalid code, miss TAGSIZE information");
   }else if( idx >= mod->tagsize ){
-    tm_raise("code_check: invalid code, error with TAG value @ , but tagsize = @, s0 = @, s1 = @", 
-      number_new(idx), number_new(mod->tagsize), number_new(*(pos-2)), number_new(*(pos-1)) );
+    tm_raise("code_check(): invalid code, error with TAG value %d , but tagsize = %d, s0 = %d, s1 = %d", 
+      idx, mod->tagsize, *(pos-2), *(pos-1) );
   }
   // printf("tags:%d -> %s\n", idx, pos);
   mod->tags[idx] = pos;

@@ -68,6 +68,10 @@
 #endif
 */
 
+#define get_fnc_file( fnc) get_mod( get_func(fnc)->mod )->file
+#define get_fnc_name( fnc ) get_func(fnc)->name
+#define get_fnc_globals(fnc) get_mod( get_func(fnc)->mod )->globals
+
 /* assert macro */
 #define TM_ASSERT(cond, msg) if( !cond ) tm_raise( msg ); 
 #endif

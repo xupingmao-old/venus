@@ -120,14 +120,14 @@ typedef struct tm_frame
 	int stacksize;
 	int maxlocals;
 	int maxstack;
-	tm_obj globals;
+	// tm_obj globals;
 	tm_obj constants; 
     tm_obj new_objs; // object allocated during this frame, reject.
-	tm_obj file; // file name
-	tm_obj code; // byte code
+	// tm_obj file; // file name
+	// tm_obj code; // byte code
 	tm_obj ex; // exception info
 	tm_obj line; // current line
-	tm_obj func_name;
+	tm_obj fnc;
 	int jmp; // catch/except position
 }tm_frame;
 
@@ -149,9 +149,9 @@ typedef struct tm_vm
 	int steps;
 
 	tm_list* all;
-	tm_list* black;
+	/* tm_list* black;
 	tm_list* white;
-	tm_dict* strings;
+	tm_dict* strings; */
 
 	int allocated_mem;
 	int gc_limit;
@@ -207,7 +207,6 @@ tm_obj tm_number(double v){
 #include "gc.c"
 #include "stream.c"
 #include "dict.c"
-#include "test.c"
 #include "secure.c"
 #include "frame.c"
 

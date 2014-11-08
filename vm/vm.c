@@ -96,7 +96,7 @@ void reg_builtins(){
         {"len", tm_len},
         {"exit", tm_exit},
         {"istype", tm_istype},
-        {"makesure", tm_makesure},
+        // {"makesure", tm_makesure},
         {"chr", tm_chr},
         {"ord", tm_ord},
         {"dir", tm_dir},
@@ -108,6 +108,7 @@ void reg_builtins(){
         {"clock", tm_clock},
         /* this function is super function , it can add method to type class */
         {"add_type_method", tm_add_type_method},
+        {"_raise", btm_raise},
         {NULL, 0}
     };
     for(i = 0; builtins[i].name != NULL; i++){
@@ -191,11 +192,11 @@ void frames_init(){
     tm_log3("frame", "alloc frame %d: %p, stack = %p", i, f , f->stack);
     f->new_objs = list_new(2);
     f->ex = obj_none;
-    f->file = obj_none;
+    // f->file = obj_none;
     f->line = obj_none;
-    f->globals = obj_none;
-    f->func_name = obj_none;
-    f->constants = obj_none;
+    // f->globals = obj_none;
+    f->fnc = obj_none;
+    // f->constants = obj_none;
     f->maxlocals = 0;
     f->jmp = 0;
     f->maxlocals = 0;
@@ -225,8 +226,10 @@ void traceback(){
     // 返回上一帧
     for(i = cur; i >= 0; i-- ){
       tm_frame* f = tm->frames + i;
-      if( f->jmp == 0 && TM_NON != f->file.type){
-        tm_printf("  File \"@\": in @ , @\n", f->file, f->func_name, f->line);
+      if( f->jmp == 0 && TM_NON != f->fnc.type){
+        tm_obj file = get_fnc_file(f->fnc);
+        tm_obj fnc_name = get_fnc_name(f->fnc);
+        tm_printf("  File \"@\": in @ , @\n", file, fnc_name, f->line);
       }
     }
     tm_printf("Exception: @", tm->frames[tm->cur].ex);

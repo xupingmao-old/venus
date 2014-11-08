@@ -112,8 +112,9 @@ void gc_mark_frames(){
 		tm_frame* f = tm->frames+i;
         tm_log("mark", "mark frame %d", i);
 		gc_mark(f->new_objs);
-        gc_mark(f->globals);
-        gc_mark(f->constants);
+        // gc_mark(f->globals);
+        // gc_mark(f->constants);
+        gc_mark(f->fnc);
 	}
 }
 

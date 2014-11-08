@@ -51,9 +51,8 @@ tm_obj tm_get(tm_obj self, tm_obj k){
 				unsigned char c = get_str(self)[n];
                 //printf("c = %d\n", c);
 				return __chars__[c];
-			}else{
-				tm_obj fnc = tm_get(str_class, k);
-				return method_new(fnc, self);
+			}else if( dict_iget( get_dict(str_class), k , &v) ){
+				return method_new(v, self);
 			}
 		}
 		case TM_LST: {

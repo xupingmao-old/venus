@@ -31,7 +31,17 @@ def _execute_file(fname):
     from encode import *
     _code = b_compile(fname)
     load_module(fname, _code, '__main__')
-
+    
+def makesure( v , expect = None, cur = None):
+    if not v and cur:
+        _raise('error at ' + str( cur.pos ) + ' expect ' + expect + ' but see ' + cur.val)
+__builtins__['makesure'] = makesure    
+def _trace_execute_file(fname):
+    from encode import *
+    _code = b_compile(fname)
+    from dis import *
+    dis(_code)
+    load_module(fname, _code, '__main__')
 
 def _run_code(fname):
     txt = load(fname)

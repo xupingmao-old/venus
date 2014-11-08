@@ -39,7 +39,7 @@ tm_obj _tm_call( tm_obj fnc, tm_obj params){
         }
         return tm_eval(fnc, params);
     }else if( fnc.type == TM_DCT){
-      tm_log1("stack", "new instance %t", fnc);
+        tm_log1("stack", "new instance %t", fnc);
         fnc = class_new(fnc);
         tm_log0("stack", "class new done");
         if( _tm_has(fnc, obj__init__)){
@@ -146,9 +146,10 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   // constants will be built in modules.
   // get constants from function object.
   tm_frame* f = tm->frames + tm->cur;
-  f->file = get_mod(mod)->file;
-  f->globals = globals;
-  f->func_name = get_func(fnc)->name;
+  // f->file = get_mod(mod)->file;
+  f->fnc = fnc;
+  // f->globals = globals;
+  // f->func_name = get_func(fnc)->name;
   f->maxlocals = get_func(fnc)->maxlocals;
   f->maxstack  = get_func(fnc)->maxstack;
   f->constants = get_mod(mod)->constants;
@@ -159,8 +160,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   top[0] = obj_none;
   list_len(f->new_objs) = 0;
   
-  if( f->maxlocals > 200)
-  tm_log2("locals", "in %t, locals over %d", fnc, 200);
+  tm_log2("locals", "in %t, locals = %d", fnc, 200);
 
   tm_obj* constants = get_constants(mod);
   tm_obj x, k, v;
@@ -450,16 +450,15 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   default:
-    tm_raise("BAD INSTRUCTION, %d\n  globals() = \n@", ins,f->globals );
+    tm_raise("BAD INSTRUCTION, %d\n  globals() = \n@", ins,get_fnc_globals(f->fnc));
   goto end;
 }
 
   end:
     tm_log1("stack", "leave function %o", fnc);
-    /*
     if( top != f->stack ) {
-        printf("func_name = %s, count = %d\n", get_str(f->func_name) , (int)( top - f->stack));
-    }*/
+        printf("func_name = %s, count = %d\n", get_fnc_name(f->fnc) , (int)( top - f->stack));
+    }
     if( tm->allocated_mem > tm->gc_limit){
         // printf("gc full[before] , allocate = %d, limit = %d\n", tm->allocated_mem, tm->gc_limit);
         // tm->gc_limit += 1024 * 1024; // increase 1M

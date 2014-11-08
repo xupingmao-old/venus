@@ -7,7 +7,7 @@ if str(1.0) == '1.0':
 #for i in range(1, 10):
 	#print("now is "+str(i))
 	#i+=1
-
+#print("justtest".substring(0,2))
 if not True:
     print('www')
     
@@ -61,7 +61,7 @@ def fib(n):
     if n == 0 or n == 1: return 1
     return fib(n-1) + fib(n-2)
 t1 = clock()
-print(fib(34))
+print(fib(20))
 t2 = clock()
 print(t2-t1)
 #print("'test'.endswith('st')", 'test'.endswith('st'))

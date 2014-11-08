@@ -446,6 +446,7 @@ tm_obj _merge(tm_obj des, tm_obj src){
 }
 
 /* import file */
+/*
 tm_obj tm_import( tm_obj p){
 	tm_obj name = get_arg(p, 0, TM_STR);
 	tm_obj arg1 = get_arg(p, 1, TM_STR);
@@ -459,10 +460,11 @@ tm_obj tm_import( tm_obj p){
 		// printf("new a module with empty value\n");
 	}
 	if( strcmp(get_str(arg1), "*") == 0 ){
-		_merge(tm->frames[tm->cur].globals,  mod);
+		_merge( get_fnc_globals( tm->frames[tm->cur].fnc) ,  mod);
 	}
 	return obj_none;
 }
+*/
 
 tm_obj load_module( tm_obj p){
     tm_obj name = get_arg(p, 0, TM_STR);
@@ -481,13 +483,13 @@ tm_obj load_module( tm_obj p){
 }
 
 tm_obj get_last_frame_globals(tm_obj p){
-    return tm->frames[tm->cur-1].globals;
+    return get_fnc_globals( tm->frames[tm->cur-1].fnc ) ;
 }
 
 
 /* get globals */
 tm_obj tm_globals(tm_obj p){
-	return tm->frames[tm->cur].globals;
+	return get_fnc_globals( tm->frames[tm->cur].fnc );
 }
 
 /* get object type */
@@ -648,6 +650,11 @@ tm_obj tm_clock( tm_obj p){
 #else
     return number_new(clock()/1000);
 #endif
+}
+
+tm_obj btm_raise(tm_obj p){
+    tm_raise("%o", get_arg(p,0,-1));
+    return obj_none;
 }
 
 /*

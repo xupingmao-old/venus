@@ -1,6 +1,6 @@
 from encode import *
 
-
+global_mod_list = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF]
 def dis( fname ,type = None):
     s = load(fname)
     i = 0; l = len(s)
@@ -22,8 +22,8 @@ def dis( fname ,type = None):
                 constants.append(val)
             else:
                 break
-        for i,v in enumerate(constants):
-            print(i,v)
+        for v in constants:
+            print(v)
         return
     while i < l:
         ins = s[i]
@@ -45,7 +45,7 @@ def dis( fname ,type = None):
             v = ord(s[i])
             print(codes[ins]+ ' ' + str(v))
             i+=1
-        elif ins in ( LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF):
+        elif ins in global_mod_list:
             ll = nextshort(s[i], s[i+1])
             print(codes[ins] + ' ' + str(constants[ll]))
             i+=2
