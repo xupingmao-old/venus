@@ -180,7 +180,7 @@ void load_bultin_module(char* fname, unsigned char* s, int codelen){
   tm_obj fnc = func_new(mod, obj_none, NULL);
   get_func(fnc)->pc = get_str(code);
   get_func(fnc)->name = obj__main__;
-  tm_eval( fnc , obj_none);
+  protected_run( fnc , obj_none);
   // tm_set( tm->modules, mod_name, get_mod(mod)->globals);
 }
 
@@ -193,11 +193,8 @@ void frames_init(){
     tm_log3("frame", "alloc frame %d: %p, stack = %p", i, f , f->stack);
     f->new_objs = list_new(2);
     f->ex = obj_none;
-    // f->file = obj_none;
     f->line = obj_none;
-    // f->globals = obj_none;
     f->fnc = obj_none;
-    // f->constants = obj_none;
     f->maxlocals = 0;
     f->jmp = NULL;
     f->maxlocals = 0;
@@ -269,55 +266,60 @@ int protected_run( tm_obj fnc, tm_obj params ){
     return 0;
 }
 
-int tm_run(int argc, char* argv[]){
-    int rs = setjmp(tm->buf);
-    if(  rs == 0 ){
-        tm->cur = -1;
-        gc_init();
-        tm_obj p = list_new(argc);
-        int i;for(i = 1; i < argc; i++){
-        tm_obj arg = str_new(argv[i], strlen(argv[i]));
-            list_append( get_list(p), arg);
-        }
-            
-        reg_builtins();
-        tm_set(tm->builtins, str_new("ARGV", -1), p);
-        CHECK_MEM_USAGE("builtins");
-        
-        frames_init();
-        CHECK_MEM_USAGE("frames");
-        
-        disable_log();
-        load_bultin_module("_boot", _boot_pyc, -1);
-        load_bultin_module("tokenize", tokenize_pyc, -1);  
-        load_bultin_module("expression", expression_pyc, -1);  
-        load_bultin_module("parse", parse_pyc,-1);  
-        load_bultin_module("instruction", instruction_pyc, -1);  
-        load_bultin_module("encode", encode_pyc, -1);  
-        enable_log();
-        tm_log0("mod", "modules loading done");
-        
-        if( argc >= 2){
-            char* fname = argv[1];
-            if( strcmp(argv[1], "-d") == 0){
-                enable_debug = 1;
-                fname = argv[2];
-            }
-            tm_obj mod_name = str_new(fname, strlen(fname));
-            tm_call("_boot", "_execute_file", as_list(1, mod_name));
-            // tm_call("_boot", "_import", as_list(1, mod_name));
-            // tm_call("encode", "b_compile", as_list(2, mod_name, str_new("test.tmc", -1)));
-            // tm_call("parse", "_parse", as_list(1, mod_name));
-            // tm_call("tokenize", "_tokenize", as_list(1, mod_name));
-            CHECK_MEM_USAGE("after eval");
-        }else {
-            tm_call("_boot", "_repl", obj_none);
-        }
-    }else if(rs == 1) {
+int protected_call( char* mod, char* fnc, tm_obj params){
+    jmp_buf buf;
+    int rs = setjmp(buf);
+    if( rs == 0) {
+        tm_call(mod, fnc, params);
+    }else if( rs == 1){
         traceback();
-    }else if( rs == 2){
-        // normal exit
     }
+    return 0;
+}
+
+int tm_run(int argc, char* argv[]){
+    tm->cur = -1;
+    gc_init();
+    tm_obj p = list_new(argc);
+    int i;for(i = 1; i < argc; i++){
+        tm_obj arg = str_new(argv[i], strlen(argv[i]));
+        list_append( get_list(p), arg);
+    }
+        
+    reg_builtins();
+    tm_set(tm->builtins, str_new("ARGV", -1), p);
+    CHECK_MEM_USAGE("builtins");
+    
+    frames_init();
+    CHECK_MEM_USAGE("frames");
+    
+    disable_log();
+    load_bultin_module("_boot", _boot_pyc, -1);
+    load_bultin_module("tokenize", tokenize_pyc, -1);  
+    load_bultin_module("expression", expression_pyc, -1);  
+    load_bultin_module("parse", parse_pyc,-1);  
+    load_bultin_module("instruction", instruction_pyc, -1);  
+    load_bultin_module("encode", encode_pyc, -1);  
+    enable_log();
+    tm_log0("mod", "modules loading done");
+    
+    if( argc >= 2){
+        char* fname = argv[1];
+        if( strcmp(argv[1], "-d") == 0){
+            enable_debug = 1;
+            fname = argv[2];
+        }
+        tm_obj mod_name = str_new(fname, strlen(fname));
+        protected_call("_boot", "_execute_file", as_list(1, mod_name));
+        // tm_call("_boot", "_import", as_list(1, mod_name));
+        // tm_call("encode", "b_compile", as_list(2, mod_name, str_new("test.tmc", -1)));
+        // tm_call("parse", "_parse", as_list(1, mod_name));
+        // tm_call("tokenize", "_tokenize", as_list(1, mod_name));
+        CHECK_MEM_USAGE("after eval");
+    }else {
+        protected_call("_boot", "_repl", obj_none);
+    }
+    return 0;
 }
 
 int test_init(void (*func)()){

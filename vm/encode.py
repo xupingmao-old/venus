@@ -55,13 +55,6 @@ end_tag_list = [-1]
 
 in_class = False
 
-def print_tok_pos( tk ):
-    if isinstance(tk, Token):
-        print(tk.pos)
-    elif hasattr(tk, 'a'):
-        print_tok_pos(tk.a)
-    elif hasattr(tk, 'val'):
-        print_tok_pos(tk.val)
 
 def build_set(self, key, val):
     node = AstNode('=')
@@ -271,11 +264,6 @@ encode_map = {
     'or':encode_or,
     'for':encode_for,
     'global':encode_global,
-    '+=':encode_op_ext,
-    '-=':encode_op_ext,
-    '*=':encode_op_ext,
-    '/=':encode_op_ext,
-    '%=':encode_op_ext,
     'name':emit_load,
     'number':emit_load,
     'string':emit_load,
@@ -288,6 +276,8 @@ encode_map = {
 
 for k in op_map:
     encode_map[k] = encode_op
+for k in op_ext_map:
+    encode_map[k] = encode_op_ext
 
 def encode_item( tk ):
     global in_class
@@ -300,13 +290,6 @@ def encode_item( tk ):
     r = encode_map[tk.type](tk)
     if r:return r
     return 1
-    # elif t == 'try':
-    #     jmp = newtag()
-    #     emit(SETJUMP, jmp)
-    #     emit(tk.body)
-    #     emit(JUMP, end)
-    #     emit(tk.handler)
-    #     tag(end)
 
 load_type_list = ['number', 'name', "string", 'None']
 
@@ -315,14 +298,7 @@ def encode(content):
     encode_item(r)
 
 def b_compile(src, des = None):
-    global tag_count
-    tag_count = 0
-    ins_init()
-    encode(load(src))
-    # print("encode done, start gen code")
-    code = gen_code(tag_count)
-    if des: save(des, code)
-    return code
+    return _compile(load(src), des)
 
 def _compile(txt, des = None):
     global tag_count
@@ -335,15 +311,11 @@ def _compile(txt, des = None):
     
 def main( ):
     # import sys
-    name = 'test1.py'
-    if len( ARGV ) == 2:
-        name = ARGV[1]
-    elif len(ARGV) == 3 and ARGV[1] == '-save':
-        name = ARGV[2]
-    ins_init()
-    encode( load(name) )
-    code = gen_code(tag_count)
-    save('bin', code)
+    if len(ARGV) < 2:pass
+    elif len(ARGV) == 2:
+        b_compile(ARGV[1], 'bin')
+    elif len(ARGV) == 3:
+        b_compile(ARGV[1], ARGV[2])
     # print('\n\n==========constants=============')
     # print_constants()
     # input("pause")

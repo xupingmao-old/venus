@@ -29,12 +29,6 @@ class ParserCtx:
     def expect(self, v):
         makesure(self.token.type == v, v, self.token)
         self.next()
-    def nextName(self):
-        self.next()
-        makesure (self.token.type == 'name')
-    def nextSymbol(self):
-        self.next()
-        makesure (self.token.type == 'symbol')
     def add(self, v):
         self.tree.append(v)
     def addOp(self,v):
@@ -44,19 +38,6 @@ class ParserCtx:
         node.a = l
         node.b = r
         self.tree.append( node )
-    def addOp2(self, t):
-        v = self.tree.pop()
-        self.tree.append([t, v, None])
-    def addOp1(self, t):
-        self.tree.append([t, None])
-    def addList(self):
-        v = self.tree.pop()
-        if isinstance(v, list):
-            if v[0] == ',':
-                v[0] = 'list'
-            self.tree.append(v)
-        else:
-            self.tree.append(['list', v])
     def enterBlock(self):
         self.tree.append('block')
         do_block(self)
@@ -145,8 +126,6 @@ def do_stm(p):
         do_from(p)
     elif t == 'import':
         do_import(p)
-    # elif t == "makesure":
-    #     do_makesure(p)
     elif t == 'def':
         do_def(p)
     elif t == 'class':
