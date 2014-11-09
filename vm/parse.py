@@ -76,10 +76,7 @@ class ParserCtx:
         return ' at ' + str(self.token.pos) + ' type = ' + self.token.type
 
 def parse(v):
-    # try:
-    # print(tokenize)
     r = tokenize(v)
-    # print(r)
     p = ParserCtx(r)
     x = do_prog(p)
     # except:
@@ -125,16 +122,21 @@ def skip_nl(p):
         p.next()
         # count+=1
         # print(count)
-
+def call_node( fnc, args ):
+    node = AstNode('$')
+    node.name = fnc
+    node.args = args
+    return node
 def do_raise(p):
+    fnc = p.token
+    fnc.type = 'name'
     p.next()
-    node = AstNode("raise")
-    if p.tolen.type == 'nl':
-        node.val = None
+    if p.token.type == 'nl':
+        args = None
     else:
         expr(p)
-        node.val = p.pop()
-    p.add(node)
+        args = p.pop()
+    p.add( call_node(fnc, args))
 
 
 def do_stm(p):
@@ -153,9 +155,11 @@ def do_stm(p):
         do_for_while(p, t)
     elif t == 'if':
         do_if(p)
-    elif t == 'return' or t == 'raise':
+    elif t == 'return':
         do_stm1(p, t)
         #stm_next_if(p)
+    elif t == 'raise':
+        do_raise(p)
     elif t == 'break' or t == 'continue' or t == 'pass':
         p.next()
         node = AstNode(t)
@@ -180,13 +184,13 @@ def do_try(p):
     p.next()
     p.expect(':')
     node = AstNode("try")
-    node.body = p.enterBlock()
+    node.first = p.enterBlock()
     p.expect('except')
     if p.token.type == 'name':
         p.error = p.token
         p.next()
     p.expect(':')
-    node.handler = p.enterBlock()
+    node.second = p.enterBlock()
     p.add( node )
 
 
@@ -392,6 +396,8 @@ def f(n, v, pre = ""):
     elif v.type == 'class':
         rs = 'class ' + f( 0, v.name, 'name => ') + \
             '\n' + f(n+2, v.body, 'body => ')
+    elif v.type == 'try':
+        rs = f(n, v.first, 'try:') + '\n' + f(n, v.second,'except:')
     elif v.type in ['varg', 'arg']:
         rs = v.type + f(1 , v.name, 'name => ') + '\n'+ f(n + 2,  v.val, 'dafault => ')
     elif v.type in ['return', 'global', 'raise']:

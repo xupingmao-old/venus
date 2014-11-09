@@ -22,7 +22,7 @@ tm_obj dict_keys( tm_dict* );
 
 tm_obj tm_eval(tm_obj fnc, tm_obj params);
 tm_obj tm_call(char* mod, char* fnc, tm_obj params);
-
+int protected_run(tm_obj fnc, tm_obj params);
 // stream
 tm_obj _load(char* fname);
 tm_obj tm_load( tm_obj p);

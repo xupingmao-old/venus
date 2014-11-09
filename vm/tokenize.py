@@ -13,9 +13,7 @@ def u_error(ctx,s,i):
     if y < 100: p += '  '
     r = p + str(y) + ": " + line + "\n"
     r += "     "+" "*x+"^" +'\n'
-    # raise 'error: '+ctx+'\n'+r
-    print("error: " + ctx + '\n' + r)
-    exit(0)
+    raise 'error: '+ctx+'\n'+r
 
 ISYMBOLS = '`-=[];,./~!@$%^&*()+{}:<>?'
 SYMBOLS = [
@@ -54,9 +52,9 @@ def clean(s):
 def tokenize(s):
     s = clean(s)
     # return do_tokenize(s)
-    # try: return do_tokenize(s)
-    # except: u_error('tokenize',s,T.f)
-    return do_tokenize(s)
+    try: return do_tokenize(s)
+    except: u_error('tokenize',s,T.f)
+    #return do_tokenize(s)
 
 def do_tokenize(s):
     global T

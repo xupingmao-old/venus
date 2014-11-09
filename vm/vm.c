@@ -198,7 +198,7 @@ void frames_init(){
     f->fnc = obj_none;
     // f->constants = obj_none;
     f->maxlocals = 0;
-    f->jmp = 0;
+    f->jmp = NULL;
     f->maxlocals = 0;
   }
   tm->cur = 0;
@@ -219,20 +219,49 @@ print_usage(){
   puts("usage tmvm [file]");
 }
 
+
 void traceback(){
     int i;
     int cur = tm->cur;
-    printf("Traceback (most recent call last):\n");
+    int hasHandler = 0;
     // 返回上一帧
+    tm_frame* f = NULL;
+    tm_obj exlist = list_new(10);
     for(i = cur; i >= 0; i-- ){
-      tm_frame* f = tm->frames + i;
-      if( f->jmp == 0 && TM_NON != f->fnc.type){
+      f = tm->frames + i;
+      if( f->jmp == NULL && TM_NON != f->fnc.type){
         tm_obj file = get_fnc_file(f->fnc);
         tm_obj fnc_name = get_fnc_name(f->fnc);
-        tm_printf("  File \"@\": in @ , @\n", file, fnc_name, f->line);
+        tm_obj ex = tm_format("  File \"@\": in @ , @\n", file, fnc_name, f->line);
+        list_append( get_list(exlist), ex );
+      }else{
+        hasHandler = 1;
+        break;
       }
     }
-    tm_printf("Exception: @", tm->frames[tm->cur].ex);
+    if( hasHandler ){
+        tm_func* fnc = get_func(f->fnc);
+        tm_obj newobj = method_new(f->fnc, fnc->self);
+        get_func(newobj)->pc = f->jmp;
+        protected_run(newobj , obj_none);
+    }else{
+        printf("Traceback (most recent call last):\n");
+        int i;for(i = 0; i < list_len(exlist); i++){
+            cprintln(list_nodes(exlist)[i]);
+        }
+        tm_printf("Exception: @", tm->frames[tm->cur].ex);
+    }
+}
+
+int protected_run( tm_obj fnc, tm_obj params ){
+    jmp_buf buf;
+    int rs = setjmp( buf );
+    if( rs == 0){
+        tm_eval(fnc, params);
+    }else if(rs == 1){
+        traceback();
+    }
+    return 0;
 }
 
 int tm_run(int argc, char* argv[]){
@@ -252,6 +281,17 @@ int tm_run(int argc, char* argv[]){
         
         frames_init();
         CHECK_MEM_USAGE("frames");
+        
+        disable_log();
+        load_bultin_module("_boot", _boot_pyc, -1);
+        load_bultin_module("tokenize", tokenize_pyc, -1);  
+        load_bultin_module("expression", expression_pyc, -1);  
+        load_bultin_module("parse", parse_pyc,-1);  
+        load_bultin_module("instruction", instruction_pyc, -1);  
+        load_bultin_module("encode", encode_pyc, -1);  
+        enable_log();
+        tm_log0("mod", "modules loading done");
+        
         if( argc >= 2){
             char* fname = argv[1];
             if( strcmp(argv[1], "-d") == 0){
@@ -259,16 +299,6 @@ int tm_run(int argc, char* argv[]){
                 fname = argv[2];
             }
             tm_obj mod_name = str_new(fname, strlen(fname));
-
-            disable_log();
-            load_bultin_module("_boot", _boot_pyc, -1);
-            load_bultin_module("tokenize", tokenize_pyc, -1);  
-            load_bultin_module("expression", expression_pyc, -1);  
-            load_bultin_module("parse", parse_pyc,-1);  
-            load_bultin_module("instruction", instruction_pyc, -1);  
-            load_bultin_module("encode", encode_pyc, -1);  
-            enable_log();
-            tm_log0("mod", "modules loading done");
             tm_call("_boot", "_execute_file", as_list(1, mod_name));
             // tm_call("_boot", "_import", as_list(1, mod_name));
             // tm_call("encode", "b_compile", as_list(2, mod_name, str_new("test.tmc", -1)));
@@ -276,22 +306,7 @@ int tm_run(int argc, char* argv[]){
             // tm_call("tokenize", "_tokenize", as_list(1, mod_name));
             CHECK_MEM_USAGE("after eval");
         }else {
-/*            tm_obj x;
-            tm_obj y = str_new("\r\ntest\r\nfdlakjfdklas\r\n\r\n\r\nfdjlaksjfld\r\n", -1);
-            x = str_replace( as_list(3, y, str_new("\r\n", 2), str_new("\n", 1)));
-            cprintln(x);
-            x = str_split( as_list(2, x, str_new("\n", 1)));
-            cprintln(x);
-            x = _load("core.c");
-            printf("%d\n", _tm_len(x));
-            tm_obj s = str_new("\r\n", 2);
-            tm_obj n = str_new("\n",1);
-            x = str_replace( as_list(3, x, s, n));
-            // cprintln(x);
-            printf("%d\n", _tm_len(x));
-            s = str_new("\n",1);
-            x = str_split(as_list(2, x, s));
-            cprintln(x);*/
+            tm_call("_boot", "_repl", obj_none);
         }
     }else if(rs == 1) {
         traceback();

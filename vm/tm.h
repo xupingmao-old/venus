@@ -128,7 +128,7 @@ typedef struct tm_frame
 	tm_obj ex; // exception info
 	tm_obj line; // current line
 	tm_obj fnc;
-	int jmp; // catch/except position
+	unsigned char* jmp; // catch/except position
 }tm_frame;
 
 #include "dict.h"
@@ -197,6 +197,7 @@ tm_obj tm_number(double v){
 #include "ops.h"
 #include "instruction.h"
 
+#ifndef TM_TEST
 #include "compile.c"
 #include "core.c"
 #include "string.c"
@@ -209,6 +210,7 @@ tm_obj tm_number(double v){
 #include "dict.c"
 #include "secure.c"
 #include "frame.c"
+#endif
 
 #endif
 

@@ -478,8 +478,7 @@ tm_obj load_module( tm_obj p){
     tm_obj fnc = func_new(mod, obj_none, NULL);
     get_func(fnc)->pc = get_str(code);
     get_func(fnc)->name = obj__main__;
-    tm_eval( fnc , obj_none);
-    return obj_none;
+    return tm_eval( fnc , obj_none);
 }
 
 tm_obj get_last_frame_globals(tm_obj p){

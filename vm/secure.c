@@ -129,6 +129,7 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef, int* maxlocals, in
         case JUMP_ON_TRUE:
         case JUMP:
         case TM_FOR:
+        case SETJUMP:
             idx = next_short(s);
             len+=3;
             break;

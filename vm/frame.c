@@ -448,6 +448,12 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     ret = obj_none;
     goto end;
   }
+  
+  case SETJUMP:{
+    i = next_short(s);
+    f->jmp = tags[i];
+    goto start;
+  }
 
   default:
     tm_raise("BAD INSTRUCTION, %d\n  globals() = \n@", ins,get_fnc_globals(f->fnc));

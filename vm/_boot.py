@@ -42,7 +42,16 @@ def _trace_execute_file(fname):
     from dis import *
     dis(_code)
     load_module(fname, _code, '__main__')
-
+def _repl():
+    from encode import *
+    print("welcome to tinymatrix!")
+    while 1:
+        x = input(">>> ")
+        if x != '':
+            _code = _compile(x)
+            v = load_module('shell', _code, '__main__')
+            print(v)
+            
 def _run_code(fname):
     txt = load(fname)
     _run(txt)
