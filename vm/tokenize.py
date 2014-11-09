@@ -7,6 +7,7 @@ class Token:
 def u_error(ctx,s,i):
     y = i[0]
     x = i[1]
+    s = s.replace('\t', ' ')
     line = s.split('\n')[y-1]
     p = ''
     if y < 10: p += ' '
@@ -205,9 +206,5 @@ def _tokenize(f):
 if __name__ == "__main__":
     if len(ARGV) < 2: pass
     else:
-        f = ARGV[1]
-        v = load(f)
-        r = tokenize(v)
-        for tk in r:
-            print(tk.type, tk.pos, tk.val)
+        _tokenize(ARGV[1])
 

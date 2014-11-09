@@ -334,7 +334,7 @@ def _compile(txt, des = None):
     return code
     
 def main( ):
-    import sys
+    # import sys
     name = 'test1.py'
     if len( ARGV ) == 2:
         name = ARGV[1]

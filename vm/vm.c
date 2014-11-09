@@ -109,6 +109,7 @@ void reg_builtins(){
         /* this function is super function , it can add method to type class */
         {"add_type_method", tm_add_type_method},
         {"_raise", btm_raise},
+        {"raise", btm_raise},
         {NULL, 0}
     };
     for(i = 0; builtins[i].name != NULL; i++){
@@ -224,6 +225,7 @@ void traceback(){
     int i;
     int cur = tm->cur;
     int hasHandler = 0;
+    int handlerFrame = 0;
     // 返回上一帧
     tm_frame* f = NULL;
     tm_obj exlist = list_new(10);
@@ -232,10 +234,11 @@ void traceback(){
       if( f->jmp == NULL && TM_NON != f->fnc.type){
         tm_obj file = get_fnc_file(f->fnc);
         tm_obj fnc_name = get_fnc_name(f->fnc);
-        tm_obj ex = tm_format("  File \"@\": in @ , @\n", file, fnc_name, f->line);
+        tm_obj ex = tm_format("  File \"@\": in @ , @", file, fnc_name, f->line);
         list_append( get_list(exlist), ex );
-      }else{
+      }else if( f->jmp != NULL ){
         hasHandler = 1;
+        handlerFrame = i;
         break;
       }
     }
@@ -243,10 +246,12 @@ void traceback(){
         tm_func* fnc = get_func(f->fnc);
         tm_obj newobj = method_new(f->fnc, fnc->self);
         get_func(newobj)->pc = f->jmp;
+        tm->cur = handlerFrame - 1 ; // will use the locals of last frame
+        f->jmp = NULL;
         protected_run(newobj , obj_none);
     }else{
         printf("Traceback (most recent call last):\n");
-        int i;for(i = 0; i < list_len(exlist); i++){
+        int i;for(i = list_len(exlist) - 1; i >= 0; i--){
             cprintln(list_nodes(exlist)[i]);
         }
         tm_printf("Exception: @", tm->frames[tm->cur].ex);
