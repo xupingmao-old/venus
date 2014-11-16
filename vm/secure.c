@@ -33,13 +33,17 @@ unsigned char** init_tags(int size){
 }
 
 /** check code, compute stacksize, tags **/
-int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef, int* maxlocals, int *maxstack){
+struct tm_check_result_st code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
+    struct tm_check_result_st st;
     int len = 0;
     int idx;
     int stacksize = 1;
     int curstack = 0;
     int temp = 0;
     int def_count = 0;
+    int maxlocals = 0;
+    int maxstack = 0;
+    st.pc = s;
     if( isFuncDef )
       def_count = 1;
     tm_module* mod = get_mod(_mod);
@@ -84,9 +88,9 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef, int* maxlocals, in
 			}else{
 				stacksize--;
 			}
-			*maxstack = max( *maxstack, stacksize);
+			maxstack = max( maxstack, stacksize);
 			if( isFuncDef){
-				*maxlocals = max(*maxlocals, idx);
+				maxlocals = max(maxlocals, idx);
 			}
 			break;
         case CALL:
@@ -108,12 +112,12 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef, int* maxlocals, in
 			}else{
 				stacksize++;
 			}
-			*maxstack = max(*maxstack, stacksize);
+			maxstack = max(maxstack, stacksize);
 			len+=3;
 			break;
         case TM_DEF:
 			stacksize++;
-			*maxstack = max( *maxstack, stacksize);
+			maxstack = max( maxstack, stacksize);
             next_short(s);
             len+=3;
             if( isFuncDef )
@@ -163,6 +167,9 @@ int code_check(tm_obj _mod,  unsigned char*s , int isFuncDef, int* maxlocals, in
         }
     }
     ret:
-    //printf("maxlocals = %d, maxstack = %d \n", *maxlocals, *maxstack);
-    return len;
+    //printf("maxlocals = %d, maxstack = %d \n", *maxlocals, maxstack);
+    st.len = len;
+    st.maxlocals = maxlocals;
+    st.maxstack = maxstack;
+    return st;
 }

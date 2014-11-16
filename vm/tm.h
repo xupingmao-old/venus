@@ -188,6 +188,13 @@ tm_obj tm_number(double v){
 	return o;
 }
 
+struct tm_check_result_st{
+    int len;
+    int maxlocals;
+    int maxstack;
+    unsigned char* pc;
+};
+
 #define number_new tm_number
 
 #include "macros.h"

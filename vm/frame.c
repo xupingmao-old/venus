@@ -76,17 +76,18 @@ struct tm_def_st{
     tm_obj fnc;
     int len;
 };
+
+
+
 struct tm_def_st tm_def(tm_obj mod, char* s){
-	int maxlocals = 0;
-	int maxstack = 0;
-	int len = code_check( mod, s, 1, &maxlocals, &maxstack);
+	struct tm_check_result_st rs = code_check( mod, s, 1 );
 	tm_obj fnc = func_new(mod, obj_none, NULL);
-	get_func(fnc)->pc = s;
-	get_func(fnc)->maxlocals = maxlocals;
-    get_func(fnc)->maxstack = maxstack;
+	get_func(fnc)->pc = rs.pc;
+	get_func(fnc)->maxlocals = rs.maxlocals;
+    get_func(fnc)->maxstack = rs.maxstack;
 	struct tm_def_st def ;
     def.fnc = fnc;
-    def.len = len;
+    def.len = rs.len;
     return def;
 }
 
@@ -131,50 +132,48 @@ struct tm_def_st tm_def(tm_obj mod, char* s){
   locals = f->locals;
 
 tm_obj tm_eval( tm_obj fnc, tm_obj params ){
-
     tm->cur++;
-
+    
     tm_log1("stack", "enter function %o", fnc);
-/* check if frame overflow */
-  // if( tm->cur >= FRAMES_COUNT)
-  //   tm_raise("tm_eval: frame overflow");
+    
+    /* check if frame overflow */
+    if( tm->cur >= FRAMES_COUNT)
+        tm_raise("tm_eval: frame overflow");
 
-  tm_obj mod = get_func(fnc)->mod;
-  tm_obj globals = get_mod(mod)->globals;
-  tm_obj code = get_mod(mod)->code;
-  unsigned char* s = get_func(fnc)->pc;
-  // constants will be built in modules.
-  // get constants from function object.
-  tm_frame* f = tm->frames + tm->cur;
-  // f->file = get_mod(mod)->file;
-  f->fnc = fnc;
-  // f->globals = globals;
-  // f->func_name = get_func(fnc)->name;
-  f->maxlocals = get_func(fnc)->maxlocals;
-  f->maxstack  = get_func(fnc)->maxstack;
-  f->constants = get_mod(mod)->constants;
-  tm_obj* locals = f->locals;
-  tm_obj* top = f->stack;
-  // f->top = top;
+    tm_obj mod = get_func(fnc)->mod;
+    tm_obj globals = get_mod(mod)->globals;
+    tm_obj code = get_mod(mod)->code;
+    unsigned char* s = get_func(fnc)->pc;
+    // constants will be built in modules.
+    // get constants from function object.
+    tm_frame* f = tm->frames + tm->cur;
+    // f->file = get_mod(mod)->file;
+    f->fnc = fnc;
+    // f->globals = globals;
+    // f->func_name = get_func(fnc)->name;
+    // f->constants = get_mod(mod)->constants;
+    tm_obj* locals = f->locals;
+    tm_obj* top = f->stack;
+    // f->top = top;
   
-  top[0] = obj_none;
-  list_len(f->new_objs) = 0;
+    top[0] = obj_none;
+    list_len(f->new_objs) = 0;
   
-  tm_log2("locals", "in %t, locals = %d", fnc, 200);
+    tm_log2("locals", "in %t, locals = %d", fnc, 200);
 
-  tm_obj* constants = get_constants(mod);
-  tm_obj x, k, v;
-  tm_obj func;
-  tm_obj ret = obj_none;
-  tm_obj templist;
+    tm_obj* constants = get_constants(mod);
+    tm_obj x, k, v;
+    tm_obj func;
+    tm_obj ret = obj_none;
+    tm_obj templist;
   
-  int i, ins, jmp;
+    int i, ins, jmp;
 
-  if( ! get_mod(mod)->checked ){
-    code_check( mod, s, 0, &i, &jmp);
-  }
+    if( ! get_mod(mod)->checked ){
+        code_check( mod, s, 0);
+    }
 
-  unsigned char** tags = get_mod(mod)->tags;
+    unsigned char** tags = get_mod(mod)->tags;
   
 
  start:
