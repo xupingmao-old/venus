@@ -256,6 +256,9 @@ def emit_iter( lc, jmp):
 def batch_jmp( pos ):
     out[pos][1] = code_pos() - pos
 
+def emit2(ins, val = 0):
+    bin.append(ins, val)
+    
 def emit(ins, val = 0):
     # out.append([ins,val])
     global bin

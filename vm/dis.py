@@ -1,6 +1,8 @@
 from encode import *
+from boot import *
 
 global_mod_list = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF]
+
 def dis( fname ,type = None):
     s = load(fname)
     i = 0; l = len(s)
@@ -13,11 +15,11 @@ def dis( fname ,type = None):
             if ins == NEW_STRING:
                 ll = nextshort(s[i], s[i+1])
                 i+=2
-                val = s[i:i+ll]
+                val = _slice(s,i,i+ll)
                 i+=ll
                 constants.append(val)
             elif ins == NEW_NUMBER:
-                val = 0
+                val = unpack('f', _slice(s,i,i+8))
                 i+=8
                 constants.append(val)
             else:

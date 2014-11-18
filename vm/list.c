@@ -223,3 +223,5 @@ tm_obj blist_reverse(tm_obj params){
 	return obj_none;
 }
 
+#define tm_append( list, v) list_append( get_list(list), v);
+

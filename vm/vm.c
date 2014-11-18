@@ -103,6 +103,8 @@ void reg_builtins(){
         {"code8", tm_code8},
         {"code16", tm_code16},
         {"codeF", tm_codeF},
+        {"unpack", tm_unpack},
+        {"_slice", tm_slice},
         {"exists", tm_exists},
         {"mtime", tm_mtime},
         {"clock", tm_clock},
@@ -195,6 +197,8 @@ void frames_init(){
     f->ex = obj_none;
     f->line = obj_none;
     f->fnc = obj_none;
+    f->code = NULL;
+    f->tags = NULL;
     f->maxlocals = 0;
     f->jmp = NULL;
     f->maxlocals = 0;

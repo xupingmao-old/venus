@@ -18,7 +18,8 @@ typedef struct tm_dict
 	int cur; // next 函数记录当前处理的node个数
 	int last_node_offset; // next 函数 ， 上一个node对应的nodes偏移量
 	dict_node* last_node; // next 函数中记录上一个node
-	dict_node** nodes;
+	dict_node* _nodes[7];
+    dict_node** nodes;
 }tm_dict;
 
 /**

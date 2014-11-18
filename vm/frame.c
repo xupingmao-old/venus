@@ -17,7 +17,7 @@ typedef union tm_opcode {
 
 
 // 一个模块的常量
-tm_obj* push_constant(tm_obj mod, tm_obj v){
+tm_obj* define_constant(tm_obj mod, tm_obj v){
     tm_obj cs = get_mod(mod)->constants;
     int i = list_index( get_list(cs), v);
     if( i == -1 ){
@@ -58,12 +58,6 @@ tm_obj tm_call( char* mod, char* fnc, tm_obj params){
   tm_obj f = tm_get( m, str_new(fnc, strlen(fnc)));
   return _tm_call(f, params);
 }
-
-tm_obj* get_constants(tm_obj mod){
-  tm_obj constants = get_mod(mod)->constants;
-  return get_list(constants)->nodes;
-}
-
 
 #define read_number( v, s) v = *(double*)s; s+=sizeof(double);
 #define TM_PUSH( x ) *(++top) = (x); /*if( top - f->stack >= 50) tm_raise("stack overflow");*/
@@ -130,9 +124,10 @@ struct tm_def_st tm_def(tm_obj mod, char* s){
   f = tm->frames + tm->cur;\
   top = f->stack;                   \
   locals = f->locals;
-
-tm_obj tm_eval( tm_obj fnc, tm_obj params ){
+  
+tm_frame* build_frame(tm_obj fnc){
     tm->cur++;
+    tm_frame* f = tm->frames+tm->cur;
     
     tm_log1("stack", "enter function %o", fnc);
     
@@ -141,39 +136,35 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
         tm_raise("tm_eval: frame overflow");
 
     tm_obj mod = get_func(fnc)->mod;
-    tm_obj globals = get_mod(mod)->globals;
-    tm_obj code = get_mod(mod)->code;
-    unsigned char* s = get_func(fnc)->pc;
+    f->code = get_func(fnc)->pc;
+    if( ! get_mod(mod)->checked ){
+        code_check( mod, f->code, 0);
+    }
     // constants will be built in modules.
     // get constants from function object.
-    tm_frame* f = tm->frames + tm->cur;
     // f->file = get_mod(mod)->file;
     f->fnc = fnc;
-    // f->globals = globals;
-    // f->func_name = get_func(fnc)->name;
-    // f->constants = get_mod(mod)->constants;
+    f->tags = get_fnc_mod_ptr(fnc)->tags;
+    list_len(f->new_objs) = 0;
+    return f;
+}
+
+tm_obj tm_eval( tm_obj fnc, tm_obj params ){
+    tm_frame* f = build_frame(fnc);
     tm_obj* locals = f->locals;
     tm_obj* top = f->stack;
+    tm_obj* constants = get_fnc_constants_nodes(fnc);
+    tm_obj globals = get_fnc_globals(fnc);
+    unsigned char* s = f->code;
+    unsigned char** tags = f->tags;
     // f->top = top;
   
     top[0] = obj_none;
-    list_len(f->new_objs) = 0;
   
-    tm_log2("locals", "in %t, locals = %d", fnc, 200);
-
-    tm_obj* constants = get_constants(mod);
     tm_obj x, k, v;
-    tm_obj func;
     tm_obj ret = obj_none;
-    tm_obj templist;
   
     int i, ins, jmp;
-
-    if( ! get_mod(mod)->checked ){
-        code_check( mod, s, 0);
-    }
-
-    unsigned char** tags = get_mod(mod)->tags;
   
 
  start:
@@ -184,7 +175,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     double d;
     read_number( d, s);
     v = tm_number(d);
-    constants = push_constant( mod , v);
+    constants = define_constant( get_fnc_mod(fnc), v);
     tm_log1("new", "NEW_NUMBER %f", d);
     goto start;
   }
@@ -193,7 +184,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     int len = next_short( s );
     v = str_new( s, len);
     s+=len;
-    constants = push_constant( mod, v);
+    constants = define_constant(get_fnc_mod(fnc), v);
     tm_log2("new", "NEW_STRING [%d] @", len, v);
     goto start;
   }
@@ -290,8 +281,8 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   TM_OP( GTEQ, tm_gteq);
   TM_OP( IN, tm_in);
   TM_OP( NOTIN, tm_notin);
-  TM_OP(AND, tm_and);
-  TM_OP(OR, tm_or);
+  TM_OP( AND, tm_and);
+  TM_OP( OR, tm_or);
   
   case SET:
     k = TM_POP();
@@ -327,7 +318,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
 #else
     LOAD_LIST(p, i);
 #endif
-    func = TM_POP();
+    tm_obj func = TM_POP();
     // f->top = top;
     TM_PUSH( _tm_call(func, p));
     goto start;
@@ -365,7 +356,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
 
   case TM_DEF:{
     i = next_short(s);
-    struct tm_def_st def = tm_def(mod, s);
+    struct tm_def_st def = tm_def(get_fnc_mod(fnc), s);
     get_func(def.fnc)->name = constants[i];
     s+= def.len;
     tm_log1("ins", "TM_DEF %d", def.len);
@@ -465,13 +456,11 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
         printf("func_name = %s, count = %d\n", get_fnc_name(f->fnc) , (int)( top - f->stack));
     }
     if( tm->allocated_mem > tm->gc_limit){
-        // printf("gc full[before] , allocate = %d, limit = %d\n", tm->allocated_mem, tm->gc_limit);
-        // tm->gc_limit += 1024 * 1024; // increase 1M
+        list_len(f->new_objs) = 0;
         gc_full(ret);
         tm->gc_limit = tm->allocated_mem * 2;
-        // printf("gc full[after] , allocate = %d, limit = %d\n", tm->allocated_mem, tm->gc_limit);
     }
     tm->cur--;
-    list_len(f->new_objs) = 0;
+
     return ret;
 }

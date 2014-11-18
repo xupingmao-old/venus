@@ -16,10 +16,14 @@
 *   better not similar to computer binary size ( as to say 2 ), 
 *   such as 2, 10 etc.
 */
+
+
+
+
 tm_dict* _dict_new(){
 	int size = 7;
 	tm_dict * dict = tm_alloc(sizeof( tm_dict));
-	dict->nodes = tm_alloc(sizeof(dict_node*) * size );
+	dict->nodes = dict->_nodes;
 	dict_node** nodes = dict->nodes;
 	// to mark that the node is not allocated.
 	int i;for(i = 0; i < size; i++){
@@ -95,7 +99,9 @@ void dict_check_size(tm_dict* dict){
 		}
 	}
 	// free old nodes.
-	tm_free(nodes, osize * sizeof(dict_node*));
+    if( nodes != dict->_nodes ){
+        tm_free(nodes, osize * sizeof(dict_node*));
+    }
 }
 
 
@@ -170,7 +176,9 @@ void dict_free(tm_dict* dict){
 	for(i = 0; i < cap; i++){
 		dict_free_node( dict->nodes[i]);
 	}
-	tm_free(dict->nodes, sizeof(dict_node*) * cap);
+    if( dict->nodes != dict->_nodes){
+        tm_free(dict->nodes, sizeof(dict_node*) * cap);
+    }
 	tm_free(dict, sizeof(tm_dict));
 #if DEBUG_GC
     int _new = tm->allocated_mem;

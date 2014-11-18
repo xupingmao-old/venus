@@ -87,4 +87,9 @@ printf("free module, from %d => %d, free %d B\n", old, _new, old - _new);
 #endif
 }
 
+#define get_fnc_mod(fnc) get_func(fnc)->mod
+#define get_fnc_mod_ptr(fnc) get_mod( get_fnc_mod(fnc) )
+#define get_fnc_constants(fnc) get_fnc_mod_ptr(fnc)->constants
+#define get_fnc_constants_nodes(fnc) list_nodes( get_fnc_constants(fnc) )
+
 

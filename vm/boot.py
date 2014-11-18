@@ -23,7 +23,9 @@ def rm(fname):
     os.remove(fname)
 def _and(a,b):
     return a and b
-
+def _slice(self, start, end):
+    return self[start:end]
+    
 def istype(val,  type):
     if type == 'string':
         return isinstance(val, str)

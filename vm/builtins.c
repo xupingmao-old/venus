@@ -656,6 +656,29 @@ tm_obj btm_raise(tm_obj p){
     return obj_none;
 }
 
+tm_obj tm_unpack(tm_obj p){
+    tm_obj t = get_arg(p,0,TM_STR);
+    char* s = get_str(t);
+    if( strcmp(s, "f") == 0) {
+        return number_new( *(double*) s);
+    }else if( strcmp(s, "d") == 0) {
+    
+    }
+    tm_raise("tm_unpack():unknown type");
+    return obj_none;
+}
+
+tm_obj tm_slice( tm_obj p){
+    tm_obj self = get_arg(p, 0, -1);
+    if( self.type == TM_STR ){
+        return str_substring( p );
+    }else if( self.type == TM_LST){
+    
+    }
+    tm_raise("tm_slice():unknown type");
+    return obj_none;
+}
+
 /*
 tm_obj def_mod_global(tm_obj p){
     tm_obj mod = get_arg(p, 0, TM_STR);

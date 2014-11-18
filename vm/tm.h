@@ -117,12 +117,16 @@ typedef struct tm_frame
 	tm_obj *top; // current stack top;
 	tm_obj *last_pc;
 	char* last_code;
+    unsigned char* code;
+    unsigned char** tags;
 	int stacksize;
 	int maxlocals;
 	int maxstack;
 	// tm_obj globals;
-	tm_obj constants; 
-    tm_obj new_objs; // object allocated during this frame, reject.
+    /* object allocated during this frame, 
+    during gc, new objects in current frame will marked not used,
+    but new objects ahead current frame will be marked as used.*/
+    tm_obj new_objs; 
 	// tm_obj file; // file name
 	// tm_obj code; // byte code
 	tm_obj ex; // exception info

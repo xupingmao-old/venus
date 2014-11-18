@@ -18,7 +18,7 @@ void list_set( tm_list* list, int n, tm_obj v);
 void list_free( tm_list* );
 tm_obj as_list(int n, ...);
 
-tm_obj dict_keys( tm_dict* );
+tm_obj dict_keys(tm_dict* );
 
 tm_obj tm_eval(tm_obj fnc, tm_obj params);
 tm_obj tm_call(char* mod, char* fnc, tm_obj params);
