@@ -96,7 +96,7 @@ codes = {
     TM_EOP : "TM_EOP",
     LIST : "LIST",
     DICT : "DICT",
-        LIST_APPEND : "LIST_APPEND",
+    LIST_APPEND : "LIST_APPEND",
     EQEQ : "EQEQ",
     POP_JUMP_ON_TRUE : "POP_JUMP_ON_TRUE",
     POP_JUMP_ON_FALSE : "POP_JUMP_ON_FALSE",
@@ -113,12 +113,6 @@ codes = {
     DICT_SET: "DICT_SET"
 }
 # instructions 
-
-def code(type, val):
-    if istype(val, "string"):
-        return chr(type) + code16(len(val))+ val
-    elif istype(val, "number"):
-        return chr(type) + codeF(val)
 
 # constants as list
 class Constants:
@@ -199,8 +193,7 @@ class Names:
 
 constants = None
 names = None
-bin = None
-out = None
+out = []
 
 def ins_init():
     global constants
@@ -210,7 +203,6 @@ def ins_init():
 
     constants = Constants()
     names = Names()
-    bin = "" # binary code
     out = []
 
 ins_init()
@@ -256,10 +248,10 @@ def emit_iter( lc, jmp):
 def batch_jmp( pos ):
     out[pos][1] = code_pos() - pos
 
-def emit2(ins, val = 0):
-    bin.append(ins, val)
-    
 def emit(ins, val = 0):
+    out.append([ins, val])
+    
+def emit2(ins, val = 0):
     # out.append([ins,val])
     global bin
     if ins in mode1:
@@ -307,18 +299,31 @@ def emit_load_str(v):
 def emit_load_None():
     emit(LOAD_CONSTANT, 0)
 
+def ins_print(lst):
+    for _ins in lst:
+        print(codes[_ins[0]], _ins[1])
+
+def ins_save_bin( lst ):
+    #ins_print(lst)
+    bin = ''
+    for _ins in lst:
+        ins = _ins[0]
+        val = _ins[1]
+        if ins == NEW_NUMBER or ins == NEW_STRING:
+            bin += code8(ins) + code16(len(val)) + val
+        else:
+            bin += code8(ins) + code16(val)
+    return bin
+
 def gen_code(tagsize):
     emit(TM_EOP)
-    global bin
-    code = bin
-    bin = ""
+    temp = [[TAGSIZE, tagsize]]
     for i in constants.values:
         if istype(i, "string"):
-            emit(NEW_STRING, i)
+            temp.append([NEW_STRING, i])
         elif istype(i, "number"):
-            emit( NEW_NUMBER, i)
-    emit( TAGSIZE, tagsize)
-    return bin + code
+            temp.append([NEW_NUMBER, str(i)])
+    return ins_save_bin( temp + out)
 
 def inlocal():
     return len(names.scopes) > 1

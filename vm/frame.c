@@ -164,16 +164,18 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     tm_obj x, k, v;
     tm_obj ret = obj_none;
   
-    int i, ins, jmp;
+    int i, ins;
   
 
  start:
   ins = next_byte(s);
+  i = next_short(s);
+  // printf("%d %d\n", ins, i);
   switch( ins ) {
 
   case NEW_NUMBER: {
-    double d;
-    read_number( d, s);
+    double d = atof(s);
+    s+=i;
     v = tm_number(d);
     constants = define_constant( get_fnc_mod(fnc), v);
     tm_log1("new", "NEW_NUMBER %f", d);
@@ -181,36 +183,31 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   case NEW_STRING: {
-    int len = next_short( s );
-    v = str_new( s, len);
-    s+=len;
+    v = str_new( s, i);
+    s+=i;
     constants = define_constant(get_fnc_mod(fnc), v);
-    tm_log2("new", "NEW_STRING [%d] @", len, v);
+    tm_log2("new", "NEW_STRING [%d] @", i, v);
     goto start;
   }
 
   case LOAD_CONSTANT: {
-    i = next_short( s );
     TM_PUSH( constants[ i ] );
     tm_log2("ins", "LOAD_CONSTANT [%d] @", i, constants[i]);
     goto start;
   }
 
   case LOAD_LOCAL: {
-    i = next_char(s);
     tm_log1("ins", "LOAD_LOCAL %d", i);
     TM_PUSH( locals[i] );
     goto start;
   }
 
   case STORE_LOCAL:
-    i = next_char( s );
     locals[i] = TM_POP();
     tm_log1("ins", "STORE_LOCAL %d", i);
     goto start;
 
   case LOAD_GLOBAL: {
-    i = next_short(s);
     tm_log2("ins", "LOAD_GLOBAL [%d] @", (i), constants[i]);
     k = constants[ i ];
     if( dict_iget( get_dict(tm->builtins), k, &v)){
@@ -222,7 +219,6 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   case STORE_GLOBAL:{
-    i = next_short( s );
     k = constants[ i ];
     x = TM_POP();
     tm_set( globals, k, x );
@@ -231,7 +227,6 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   case LIST:{
-    i = next_byte(s);
     tm_log1("ins", "LIST %d", i);
     TM_PUSH( list_new(i) );
     goto start;
@@ -259,7 +254,6 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     goto start;
 
   case DICT:{
-    i = next_byte(s);
     tm_log1("ins", "DICT %d", i);
     tm_obj dict;
     LOAD_DICT( dict, i);
@@ -307,7 +301,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     goto start;
     
   case CALL: {
-    i = next_byte( s );
+    // i = next_byte( s );
     tm_log1("ins", "CALL %d", i);
     /* set a global `arguments to store arguments */
     // list_len(g_arguments) = 0;
@@ -338,10 +332,10 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   case TM_FOR:{
-    jmp = next_short(s);
+    // jmp = next_short(s);
     k = *top;
     x = *(top-1);
-    tm_log1("ins", "TM_FOR %d", jmp);
+    tm_log1("ins", "TM_FOR %d", i);
     if( tm_iter( x, &k) ){
       get_num(*top) += 1;
       // cprintln( x );
@@ -349,13 +343,12 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
       // cprintln(v);
       goto start;
     }else{
-      s = tags[jmp];
+      s = tags[i];
     }
     goto start;
   }
 
   case TM_DEF:{
-    i = next_short(s);
     struct tm_def_st def = tm_def(get_fnc_mod(fnc), s);
     get_func(def.fnc)->name = constants[i];
     s+= def.len;
@@ -371,20 +364,17 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   case TAG:{
-    i = next_short(s);
     tm_log1("info","TAG %d", i);
     // TODO store_tag(mod, i, s);
     goto start;
   }
 
   case TAGSIZE:{
-    i = next_short(s);
     tm_log1("info", "TAGSIZE %d", i);
     goto start;
   }
 
   case POP_JUMP_ON_TRUE:{
-    i = next_short(s);
     tm_log1("cond", "POP_JUMP_ON_TRUE %d", i);
     if( _tm_bool( TM_POP() )){
       s = tags[i];
@@ -393,7 +383,6 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   case POP_JUMP_ON_FALSE:{
-    i = next_short(s);
     tm_log1("cond", "POP_JUMP_ON_FALSE %d", i);
     if( !_tm_bool( TM_POP() )){
       s = tags[i];
@@ -402,7 +391,6 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   case JUMP_ON_TRUE:{
-    i = next_short(s);
     tm_log1("cond", "JUMP_ON_TRUE %d", i);
     if( _tm_bool( TM_TOP() )){
       s = tags[i];
@@ -411,7 +399,6 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   case JUMP_ON_FALSE:{
-    i = next_short(s);
     tm_log1("cond", "JUMP_ON_FALSE %d", i);
     if( !_tm_bool( TM_TOP() )){
       s = tags[i];
@@ -420,7 +407,6 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
 
   case JUMP:
-    i = next_short(s);
     tm_log1("cond", "JUMP %d", i);
     s = tags[i];
     goto start;
@@ -440,7 +426,6 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   }
   
   case SETJUMP:{
-    i = next_short(s);
     f->jmp = tags[i];
     goto start;
   }

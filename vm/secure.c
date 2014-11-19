@@ -36,7 +36,6 @@ unsigned char** init_tags(int size){
 struct tm_check_result_st code_check(tm_obj _mod,  unsigned char*s , int isFuncDef){
     struct tm_check_result_st st;
     int len = 0;
-    int idx;
     int stacksize = 1;
     int curstack = 0;
     int temp = 0;
@@ -49,40 +48,41 @@ struct tm_check_result_st code_check(tm_obj _mod,  unsigned char*s , int isFuncD
     tm_module* mod = get_mod(_mod);
     while(1){
         int ins = next_byte(s);
+        int val = next_short(s);
+        len+=3;
         switch(ins){
         case NEW_STRING:
-            temp = next_short(s);
-            len+=3+temp;
-            s+=temp;
-            break;
         case NEW_NUMBER:
-            len+=1 + sizeof(double);
-            s+=sizeof( double);
+            len += val;
+            s+=val;
             break;
         case ADD:case SUB:case MUL:case DIV:case MOD:
 		case GT:case LT:case GTEQ:case LTEQ:case EQEQ:case NOTEQ:
 		case IN:case NOTIN:case GET:case POP:
 		case RETURN:case AND: case OR:
         case LIST_APPEND:
-			len++;
+        case POP_JUMP_ON_TRUE:
+        case POP_JUMP_ON_FALSE:
 			stacksize--;
 			break;
-        case DICT_SET:
-            len++;
-            stacksize--;
-            break;
 		case NEG : case NOT:
         case LOAD_PARAMS:
-            len++;
+        case JUMP_ON_FALSE:
+        case JUMP_ON_TRUE:
+        case JUMP:
+        case TM_FOR:
+        case SETJUMP:
+        case LIST:
+        case DICT:
             break;
         case SET:
-			len++;
+            stacksize-=3;
+            break;
+        case DICT_SET:
             stacksize-=2;
 			break;
         case STORE_LOCAL:
         case LOAD_LOCAL:
-			idx = next_byte(s);
-			len+=2;
 			if( LOAD_LOCAL == ins) {
 				stacksize++;
 			}else{
@@ -90,66 +90,37 @@ struct tm_check_result_st code_check(tm_obj _mod,  unsigned char*s , int isFuncD
 			}
 			maxstack = max( maxstack, stacksize);
 			if( isFuncDef){
-				maxlocals = max(maxlocals, idx);
+				maxlocals = max(maxlocals, val);
 			}
 			break;
         case CALL:
-			idx = next_byte(s);
-			stacksize-=idx;
-			len+=2;
+			stacksize-=val;
 			break;
-        case LIST:
-        case DICT:
-            next_byte(s);
-            len+=2;
-            break;
         case LOAD_CONSTANT:
         case LOAD_GLOBAL:
         case STORE_GLOBAL:
-			idx = next_short(s);
 			if( STORE_GLOBAL == ins){
 				stacksize--;
 			}else{
 				stacksize++;
 			}
 			maxstack = max(maxstack, stacksize);
-			len+=3;
 			break;
         case TM_DEF:
 			stacksize++;
 			maxstack = max( maxstack, stacksize);
-            next_short(s);
-            len+=3;
             if( isFuncDef )
               def_count++;
             break;
-        case POP_JUMP_ON_TRUE:
-        case POP_JUMP_ON_FALSE:
-			idx = next_short(s);
-			len+=3;
-			stacksize--;
-			break;
-        case JUMP_ON_FALSE:
-        case JUMP_ON_TRUE:
-        case JUMP:
-        case TM_FOR:
-        case SETJUMP:
-            idx = next_short(s);
-            len+=3;
-            break;
         case TAGSIZE:
-            mod->tagsize = next_short(s);
+            mod->tagsize = val;
             // printf("tagsize = %d\n", mod->tagsize );
             mod->tags = init_tags(mod->tagsize);
-            len+=3;
             break;
         case TAG:
-			idx = next_short(s);
-			len+=3;
-			store_tag(mod, idx, s);
+			store_tag(mod, val, s);
 			break;
         case TM_EOF:
-			len++;
 			stacksize--;
 			if( isFuncDef){
 				def_count--;
@@ -159,7 +130,6 @@ struct tm_check_result_st code_check(tm_obj _mod,  unsigned char*s , int isFuncD
 			}
 			break;
         case TM_EOP:
-            len++;
             mod->checked = 1;
             goto ret;
         default:

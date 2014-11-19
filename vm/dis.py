@@ -31,32 +31,15 @@ def dis( fname ,type = None):
         ins = s[i]
         i+=1
         ins = ord(ins)
-        if ins == NEW_STRING:
-            ll = nextshort(s[i], s[i+1])
-            i+=2
-            val = s[i:i+ll]
-            i+=ll
-            constants.append(val)
-        elif ins == NEW_NUMBER:
-            val = 0
-            i+=8
-            constants.append(val)
-        elif ins in mode1:
-            print(codes[ins])
-        elif ins in mode2:
-            v = ord(s[i])
-            print(codes[ins]+ ' ' + str(v))
-            i+=1
-        elif ins in global_mod_list:
-            ll = nextshort(s[i], s[i+1])
-            print(codes[ins] + ' ' + str(constants[ll]))
-            i+=2
-        elif ins in mode3:
-            ll = nextshort(s[i], s[i+1])
-            print(codes[ins] + ' ' + str(ll))
-            i+=2
+        val = nextshort(s[i], s[i+1])
+        i+=2
+        if ins == NEW_STRING or ins == NEW_NUMBER:
+            vv = s[i:i+val]
+            i+=val
+            constants.append(vv)
+            print(codes[ins] + ' ' + str(vv))
         else:
-            print("unknown instruction " + str(ins))
+            print(codes[ins] + ' ' + str(val))
 
 
 def main():

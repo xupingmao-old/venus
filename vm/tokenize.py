@@ -14,7 +14,7 @@ def u_error(ctx,s,i):
     if y < 100: p += '  '
     r = p + str(y) + ": " + line + "\n"
     r += "     "+" "*x+"^" +'\n'
-    raise 'error: '+ctx+'\n'+r
+    raise( 'error: '+ctx+'\n'+r )
 
 ISYMBOLS = '`-=[];,./~!@$%^&*()+{}:<>?'
 SYMBOLS = [
