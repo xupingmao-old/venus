@@ -5,7 +5,7 @@ def py2bin(srclist, des):
         srclist = [srclist]
     txt = ""
     for src in srclist:
-        code = b_compile(src)
+        code = compile2(src)
         txt += "unsigned char " + src.replace(".py", "_pyc")+ "[] = {"
         codes = []
         for c in code:
@@ -13,12 +13,51 @@ def py2bin(srclist, des):
         txt += ','.join(codes) + "};\n"
     save(des, txt)
 
-def b_import(file):
-    if file in MODULES:
-        return
-    code = b_compile(file)
-    save( file.replace('.py', '.pyc'), code)
-
+opmap = {
+ADD:"tm_jit_add",
+SUB:"tm_jit_sub",
+MUL:"tm_jit_mul",
+DIV:"tm_jit_div",
+MOD:"tm_jit_mod"
+}
+oplist = opmap.keys()
+stackmap={
+LOAD_CONSTANT:"tm_jit_load_const",
+LOAD_GLOBAL:"tm_jit_load_global",
+LOAD_LOCAL:"tm_jit_load_local",
+STORE_GLOBAL:"tm_jit_store_global",
+STORE_LOCAL:"tm_jit_store_local",
+CALL:"tm_jit_call"
+}
+stacklist = stackmap.keys()
+def gen(ins):
+    code,val = ins
+    if code == TAGSIZE:
+        return "tm_tagsize("+str(val)+")"
+    elif code == NEW_STRING:
+        return "tm_newstring(\""+val+"\")"
+    elif code == NEW_NUMBER:
+        return "tm_newnumber("+str(val)+")"
+    elif code in oplist:
+        return opmap[code]+"()"
+    elif code in stacklist:
+        return stackmap[code]+"("+str(val)+")"
+    else:
+        return ""
+def py2c(srclist, des):
+    if istype( srclist, 'string'):srclist=[srclist]
+    txt = ''
+    for src in srclist:
+        lst = compile2list(src)
+        codes = []
+        for ins in lst:
+            print(ins)
+            codes.append(gen(ins))
+        txt += ';\n'.join(codes)
+    save(des, txt)
+        
+        
 if __name__ == "__main__":
-    py2bin(["_boot.py", "tokenize.py", "expression.py", "parse.py", "instruction.py", "encode.py"], "compile.c")
+    py2bin(["_boot.py", "tokenize.py", "expression.py", "parse.py","tmcode.py", "codegen.py", "encode.py"], "compile.c")
+    #py2c("_boot.py", "_boot.c")
 

@@ -1,4 +1,4 @@
-
+#include <stdio.h>
 #include "profile.c"
 
 #define TIMES 100000000
@@ -6,7 +6,8 @@ void test_stack(){
     double dstack[1000];
     double *stack = dstack;
     double rs;
-    for(long i = 0; i < TIMES; i++){
+    long i;
+    for(i = 0; i < TIMES; i++){
         *(stack++) = 1;
         *(stack++) = 2;
         stack[3] = *(--stack) + *(--stack);
@@ -18,7 +19,8 @@ void test_reg(){
     double rs;
     stack[1] = 1;
     stack[2] = 2;
-    for(long i = 0; i < TIMES; i++){
+    long i;
+    for(i = 0; i < TIMES; i++){
         stack[3] = stack[1] + stack[2];
     }
 }

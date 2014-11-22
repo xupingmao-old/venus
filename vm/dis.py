@@ -6,7 +6,7 @@ global_mod_list = [LOAD_GLOBAL, STORE_GLOBAL, LOAD_CONSTANT, TM_DEF]
 def dis( fname ,type = None):
     s = load(fname)
     i = 0; l = len(s)
-    constants = [None]
+    constants = ['None']
     if type == 'const':
         while i < l:
             ins = s[i]
@@ -38,6 +38,8 @@ def dis( fname ,type = None):
             i+=val
             constants.append(vv)
             print(codes[ins] + ' ' + str(vv))
+        elif ins == LOAD_CONSTANT or ins == LOAD_GLOBAL or ins == STORE_GLOBAL:
+            print(codes[ins] + ' ' + constants[val])
         else:
             print(codes[ins] + ' ' + str(val))
 

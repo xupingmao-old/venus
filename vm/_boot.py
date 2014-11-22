@@ -15,8 +15,8 @@ def _import(fname, tar = None):
     if fname in __modules__:
         pass
     else:
-        from encode import *
-        _code = b_compile(fname + '.py' )
+        from encode import compile2
+        _code = compile2(fname + '.py' )
         save(fname+".tmc", _code)
         load_module(fname, _code)
     g = __modules__[fname]
@@ -25,11 +25,14 @@ def _import(fname, tar = None):
         for k in g:
             if k != '__name__':
                 lg[k] = g[k]
+    else:
+        lg = get_last_frame_globals()
+        lg[tar] = g[tar]
 
 __builtins__['_import'] = _import
 def _execute_file(fname):
-    from encode import *
-    _code = b_compile(fname)
+    from encode import compile2
+    _code = compile2(fname)
     load_module(fname, _code, '__main__')
     
 def makesure( v , expect = None, cur = None):
@@ -38,7 +41,7 @@ def makesure( v , expect = None, cur = None):
 __builtins__['makesure'] = makesure    
 def _trace_execute_file(fname):
     from encode import *
-    _code = b_compile(fname)
+    _code = compile2(fname)
     from dis import *
     dis(_code)
     load_module(fname, _code, '__main__')
@@ -59,5 +62,5 @@ def _run_code(fname):
 def _eval( fname ):
     from encode import *
     txt = load(fname)
-    _code = b_compile(fname)
+    _code = compile2(fname)
     _run(_code)

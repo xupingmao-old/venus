@@ -26,10 +26,27 @@ int enable_debug = 0;
 #define tm_inline inline
 typedef char instruction;
 
+#define TM_STR 1
+#define TM_NUM 2
+#define TM_LST 3
+#define TM_DCT 4
+#define TM_FNC 5
+#define TM_STREAM 6 // stream
+#define TM_NON 7
+#define TM_END 8 // end of list or dict
+#define TM_MOD 9
+
+#define TM_NATIVE 1
+#define TM_METHOD 3
+#define TM_NATIVE_METHOD 4
+
+#define MAX_FILE_SIZE 1024 * 1024 * 5 // max file size loaded into memery
+
+
 typedef struct tm_str{
 	int marked;
 	int len;
-	int inHeap; // 0: value is static , 1: value is in heap;
+	int stype; /* 字符串类型 */
 	char *value;
 }tm_str;
 
@@ -127,6 +144,7 @@ typedef struct tm_frame
     during gc, new objects in current frame will marked not used,
     but new objects ahead current frame will be marked as used.*/
     tm_obj new_objs; 
+    tm_obj params;
 	// tm_obj file; // file name
 	// tm_obj code; // byte code
 	tm_obj ex; // exception info
@@ -181,7 +199,6 @@ tm_obj obj_mod_ext;
 tm_obj __chars__[256];
 //tm_obj empty_list;
 tm_obj g_arguments;
-#include "constants.h"
 #include "object.h"
 
 tm_inline
@@ -199,11 +216,30 @@ struct tm_check_result_st{
     unsigned char* pc;
 };
 
+
+void cprint(tm_obj v);
+void cprintln(tm_obj v);
+void cprintln_show_special(tm_obj o);
+tm_obj tm_print( tm_obj params);
+tm_obj _tm_format(char* fmt, va_list ap, int appendln);
+tm_obj tm_format(char*fmt, ...);
+void _tm_printf(char* fmt, va_list ap);
+void tm_printf(char* fmt, ...);
+void tm_printf_only_type(char* fmt, ...);
+tm_obj tm_int( tm_obj p);
+tm_obj tm_float(tm_obj p);
+tm_obj _obj_info(tm_obj o);
+tm_obj _tm_type(tm_obj o);
+tm_obj tm_system(tm_obj p);
+tm_obj _tm_chr(int n);
+
+tm_obj blt_add_type_method(tm_obj p);
+
+
 #define number_new tm_number
 
 #include "macros.h"
 #include "core.h"
-#include "builtins.h"
 #include "gc.h"
 #include "ops.h"
 #include "instruction.h"

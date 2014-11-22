@@ -28,7 +28,7 @@ def factor(p):
     if t in factor_op_list:
         p.next()
         p.add(token)
-        factor_next_if(p)
+        # factor_next_if(p)
     elif t == '[':
         p.next()
         node = AstNode()

@@ -5,6 +5,7 @@ from expression import *
 
 class ParserCtx:
     def __init__(self, r):
+        r.append(Token('nl'))
         r.append(Token('eof'))
         self.r = r
         self.i = 0
@@ -136,7 +137,6 @@ def do_stm(p):
         do_if(p)
     elif t == 'return':
         do_stm1(p, t)
-        #stm_next_if(p)
     elif t == 'raise':
         do_raise(p)
     elif t == 'break' or t == 'continue' or t == 'pass':
@@ -145,7 +145,6 @@ def do_stm(p):
         p.add( node )
     elif t == 'name':
         expr(p)
-        #stm_next_if(p)
     elif t == 'try':
         do_try(p)
     elif t == 'global':
@@ -157,7 +156,6 @@ def do_stm(p):
         p.next()
     else:
         raise Exception('unknown expression'+ p.error())
-    skip_nl(p)
 
 def do_try(p):
     p.next()
@@ -179,9 +177,15 @@ def do_block(p):
         p.next()
         while p.token.type != 'dedent':
             do_stm(p)
+            skip_nl(p)
         p.next()
     else:
-        do_stm(p)
+        while p.token.type != 'nl':
+            do_stm(p)
+            while p.token.type == ';':
+                p.next()
+        skip_nl(p)
+            
             
 
 def do_if(p):
@@ -311,115 +315,6 @@ def do_prog(p):
     return p.tree
 
 
-
-# def do_prog1(p):
-#     #p.showTokens()
-#     try:
-#         return compile_prog(p)
-#     except e
-#         print(e)
-#         p.error()
-
-
-def sp_str(v):
-    v = str(v)
-    if v.find('\r') == -1 and v.find('\n') == -1:
-        return v
-    x = ''
-    for i in v:
-        if i == '\r':x+='\\r'
-        elif i == '\n':x+='\\n'
-        elif i == '\0':x+='\\0'
-        else:x+=i
-    return x
-
-
-ops_list = [
-        'from', '+', '-', '*', '/', '%', ',' ,'=', 
-        '+=', '-=', '/=', '*=', 'get',
-        "==", "!=", ">", "<", ">=", "<=", "and",
-         "or", "for","while", "in", "notin", "import"]
-
-cond_list = ["if", "choose"]
-pre_list = ['neg', 'pos', 'not', 'list']
-
-def f(n, v, pre = ""):
-    rs = ''
-    if v == None:
-        rs = 'None'
-    elif istype(v, "list"):
-        s = ''
-        for i in v:
-            s += '\n' + f(n+2, i)
-        rs = s
-    elif v.type == 'string':
-        rs = "'" + sp_str(v.val) + "'"
-    elif v.type == 'number':
-        rs = sp_str(v.val)
-    elif v.type == 'name':
-        rs = sp_str(v.val)
-    elif v.type == 'None':
-        rs = v.val
-    elif v.type in pre_list:
-        rs = v.type + '\n' + f(n+2, v.val)
-    elif v.type in ops_list:
-        rs = v.type + '\n' + f(n+2, v.a) + '\n' + f(n+2, v.b)
-    elif v.type == '$':
-        rs = 'invoke\n' + f(n+2, v.name) + '\n' + f(n+2, v.args)
-    elif v.type in cond_list:
-        rs = v.type+'\n' + f(n+2, v.cond, 'cond => ') + \
-            '\n' + f(n+2, v.left, 'body => ') + '\n' + f(n+2, v.right, 'else => ')
-    elif v.type == 'def':
-        rs = 'def\n' + f(n + 2 , v.name , 'name => ') + \
-            '\n' + f(n+2, v.args, 'args => ') + '\n' + f(n+2, v.body, "body => ")
-    elif v.type == 'class':
-        rs = 'class ' + f( 0, v.name, 'name => ') + \
-            '\n' + f(n+2, v.body, 'body => ')
-    elif v.type == 'try':
-        rs = f(n, v.first, 'try:') + '\n' + f(n, v.second,'except:')
-    elif v.type in ['varg', 'arg']:
-        rs = v.type + f(1 , v.name, 'name => ') + '\n'+ f(n + 2,  v.val, 'dafault => ')
-    elif v.type in ['return', 'global', 'raise']:
-        rs = v.type + '\n' + f(n+2, v.val)
-    elif v.type in ["break", "continue", "pass"]:
-        rs = v.type
-    elif v.type == 'dict':
-        items = v.items
-        ss = ""
-        if items != None:
-            for item in items:
-                ss += f(n+2, item[0])
-                ss += f(1, item[1])+'\n'
-        rs = v.type + '\n'+ ss
-    else:
-        # print(str(type(v))+":"+str(v))
-        rs = sp_str(v)
-#        else:
-#            rs = sp_str(v)
-    return ' ' * n + pre + rs
-def show(tree):
-    if not istype(tree, 'list'):
-        print("parameter is not a list")
-        print(tree)
-        return
-    #print(self.tree)
-
-    for i in tree:
-        s = f(0, i)
-        print(s)
-# tree = parse(open('parse.py').read())
-
-def simple_show(tree):
-    if not istype(tree, "list"):
-        print(tree)
-    else:
-        for i in tree:
-            simple_show(i)
-
-def _parse(f):
-    tree = parse(load(f))
-    # print(tree)
-    show(tree)
 def main():
     if len(ARGV) > 1:
         f = ARGV[1]

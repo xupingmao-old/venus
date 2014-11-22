@@ -29,9 +29,6 @@ tm_obj* define_constant(tm_obj mod, tm_obj v){
 tm_obj _tm_call( tm_obj fnc, tm_obj params){
 	if( fnc.type == TM_FNC){
         if( get_func(fnc)->self.type != TM_NON) {
-        #if USE_NON_PARAM
-            if( TM_NON == params.type) params = list_new(1);
-        #endif
             list_insert( get_list(params), 0, get_func(fnc)->self);
         }
         if( get_func(fnc)->native_func != NULL ){
@@ -85,11 +82,15 @@ struct tm_def_st tm_def(tm_obj mod, char* s){
     return def;
 }
 
-#define TM_OP( OP_CODE, OP_FUNC ) case OP_CODE: x = TM_POP();\
-  v = TM_TOP();\
+#define TM_OP( OP_CODE, OP_FUNC ) case OP_CODE: \
   tm_log0("ins", #OP_CODE"");\
-  TM_TOP() = OP_FUNC(v, x);\
-  goto start;
+  *(top-1) = OP_FUNC(*(top-1), *top);--top;\
+  break;
+
+#define TM_OP2( OP_CODE, OP_FUNC) case OP_CODE:\
+    if( !OP_FUNC( *(top-1), *top) ){ \
+        s = tags[i]; top-=2; continue; \
+    }; top-=2; break;
 
 // if i == 1, j = top;
 // if i == 0, j = top + 1;
@@ -100,7 +101,11 @@ struct tm_def_st tm_def(tm_obj mod, char* s){
       list_append(_p, *j); \
     }  \
     top-=i;
-
+#define LOAD_LIST2(p_, i)\
+    tm_list*_p = get_list((p_));\
+    tm_obj*j;for(j = top - i + 1; j <= top; j++){\
+        list_append(_p, *j);\
+    } top-=i;
 // if n == 0, j = top + 1;
 // if n == 1, j = top - 1 ,
 #define LOAD_DICT( dict , n ) dict = dict_new();        \
@@ -139,6 +144,7 @@ tm_frame* build_frame(tm_obj fnc){
     f->code = get_func(fnc)->pc;
     if( ! get_mod(mod)->checked ){
         code_check( mod, f->code, 0);
+        // printf("code check done\n");
     }
     // constants will be built in modules.
     // get constants from function object.
@@ -147,6 +153,22 @@ tm_frame* build_frame(tm_obj fnc){
     f->tags = get_fnc_mod_ptr(fnc)->tags;
     list_len(f->new_objs) = 0;
     return f;
+}
+
+void printInst(int code, int val, tm_obj* constants){
+    if( code == LOAD_CONSTANT){
+        tm_printf("LOAD_CONSTANT @\n", constants[val]);
+    }else if( code == LOAD_GLOBAL){
+        tm_printf("LOAD_GLOBAL @\n", constants[val]);
+    }else if( code == STORE_GLOBAL){
+        tm_printf("STORE_GLOBAL @\n", constants[val]);
+    }else if( code == JUMP){
+        printf("JUMP %d\n", val);
+    }else if( code == UP_JUMP ){
+        printf("UP_JUMP %d\n", val);
+    }else{
+        printf("%d,%d\n", code, val);
+    }
 }
 
 tm_obj tm_eval( tm_obj fnc, tm_obj params ){
@@ -167,45 +189,45 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     int i, ins;
   
 
- start:
-  ins = next_byte(s);
-  i = next_short(s);
-  // printf("%d %d\n", ins, i);
+while(1){
+  ins = s[0];
+  i = (s[1] << 8) + s[2];
+  // printInst(ins, i, constants);
   switch( ins ) {
 
   case NEW_NUMBER: {
-    double d = atof(s);
+    double d = atof(s+3);
     s+=i;
     v = tm_number(d);
     constants = define_constant( get_fnc_mod(fnc), v);
     tm_log1("new", "NEW_NUMBER %f", d);
-    goto start;
+    break;
   }
 
   case NEW_STRING: {
-    v = str_new( s, i);
+    v = str_new( s+3, i);
     s+=i;
     constants = define_constant(get_fnc_mod(fnc), v);
     tm_log2("new", "NEW_STRING [%d] @", i, v);
-    goto start;
+    break;
   }
 
   case LOAD_CONSTANT: {
     TM_PUSH( constants[ i ] );
     tm_log2("ins", "LOAD_CONSTANT [%d] @", i, constants[i]);
-    goto start;
+    break;
   }
 
   case LOAD_LOCAL: {
     tm_log1("ins", "LOAD_LOCAL %d", i);
     TM_PUSH( locals[i] );
-    goto start;
+    break;
   }
 
   case STORE_LOCAL:
     locals[i] = TM_POP();
     tm_log1("ins", "STORE_LOCAL %d", i);
-    goto start;
+    break;
 
   case LOAD_GLOBAL: {
     tm_log2("ins", "LOAD_GLOBAL [%d] @", (i), constants[i]);
@@ -215,7 +237,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
       v = tm_get(globals, k);
     }
     TM_PUSH( v );
-    goto start;
+    break;
   }
 
   case STORE_GLOBAL:{
@@ -223,13 +245,13 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
     x = TM_POP();
     tm_set( globals, k, x );
     tm_log2("ins", "STORE_GLOBAL [%d] @", i, k);
-    goto start;
+    break;
   }
 
   case LIST:{
     tm_log1("ins", "LIST %d", i);
     TM_PUSH( list_new(i) );
-    goto start;
+    break;
   }
 
   case LIST_APPEND:
@@ -240,7 +262,7 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
       tm_raise("tm_eval: LIST_APPEND expect a list but see %t", x);
     }
     list_append(get_list(x), v);
-    goto start;
+    break;
   
   case DICT_SET:
     tm_log0("ins", "DICT_SET");
@@ -251,14 +273,14 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
         tm_raise("tm_eval(): DICT_SET expect a dict but see %t", x);
     }
     tm_set(x, k, v);
-    goto start;
+    break;
 
   case DICT:{
     tm_log1("ins", "DICT %d", i);
     tm_obj dict;
     LOAD_DICT( dict, i);
     TM_PUSH( dict );
-    goto start;
+    break;
   }
 
   TM_OP( ADD, tm_add);
@@ -278,57 +300,51 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   TM_OP( AND, tm_and);
   TM_OP( OR, tm_or);
   
+  TM_OP2( LT_JUMP_ON_FALSE, tm_bool_lt );
+  TM_OP2( GT_JUMP_ON_FALSE, tm_bool_gt );
+  TM_OP2( LTEQ_JUMP_ON_FALSE, tm_bool_lteq);
+  TM_OP2( GTEQ_JUMP_ON_FALSE, tm_bool_gteq);
+  TM_OP2( EQEQ_JUMP_ON_FALSE, tm_bool_eqeq);
+  TM_OP2( NOTEQ_JUMP_ON_FALSE, tm_bool_noteq);
+
+  
   case SET:
     k = TM_POP();
     x = TM_POP();
     v = TM_POP();
     tm_set(x, k, v);
     tm_log0("ins", "SET");
-    goto start;
+    break;
 
   case POP:{
     TM_POP();
     tm_log0("ins", "POP");
-    goto start;
+    break;
   }
 
   case NOT:
     TM_TOP() = tm_not(TM_TOP());
-    goto start;
+    break;
 
   case NEG:
     TM_TOP() = tm_neg(TM_TOP());
-    goto start;
+    break;
     
   case CALL: {
-    // i = next_byte( s );
-    tm_log1("ins", "CALL %d", i);
-    /* set a global `arguments to store arguments */
-    // list_len(g_arguments) = 0;
-    tm_obj p;
-#if USE_NON_PARAM
-    if( 0 == i) { p.type = TM_NON; }
-    else { LOAD_LIST(p, i); }
-#else
-    LOAD_LIST(p, i);
-#endif
+    list_len(f->params) = 0;
+    LOAD_LIST2(f->params, i);
     tm_obj func = TM_POP();
     // f->top = top;
-    TM_PUSH( _tm_call(func, p));
-    goto start;
+    TM_PUSH( _tm_call(func, f->params));
+    break;
   }break;
 
   case LOAD_PARAMS:{
-    if( TM_LST != params.type ){
-      // tm_raise("tm_eval(), expect params to be list, but see %t", params);
-      goto start;
-    }
     tm_log1("ins2", "LOAD_PARAMS %l", params);
     for(i = 0; i < list_len(params); i++){
       locals[i] = list_nodes(params)[i];
     }
-    // list_len(params) = 0;
-    goto start;
+    break;
   }
 
   case TM_FOR:{
@@ -341,20 +357,22 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
       // cprintln( x );
       TM_PUSH( k );
       // cprintln(v);
-      goto start;
+      break;
     }else{
+      //s += i * 3;
       s = tags[i];
+      continue;
     }
-    goto start;
+    break;
   }
 
   case TM_DEF:{
-    struct tm_def_st def = tm_def(get_fnc_mod(fnc), s);
+    struct tm_def_st def = tm_def(get_fnc_mod(fnc), s+3);
     get_func(def.fnc)->name = constants[i];
     s+= def.len;
     tm_log1("ins", "TM_DEF %d", def.len);
     TM_PUSH(def.fnc);
-    goto start;
+    break;
   }
 
   case RETURN:{
@@ -366,50 +384,60 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   case TAG:{
     tm_log1("info","TAG %d", i);
     // TODO store_tag(mod, i, s);
-    goto start;
+    break;
   }
 
   case TAGSIZE:{
     tm_log1("info", "TAGSIZE %d", i);
-    goto start;
+    break;
   }
 
   case POP_JUMP_ON_TRUE:{
     tm_log1("cond", "POP_JUMP_ON_TRUE %d", i);
     if( _tm_bool( TM_POP() )){
       s = tags[i];
+      // s += i * 3;
+      continue;
     }
-    goto start;
+    break;
   }
+  
 
   case POP_JUMP_ON_FALSE:{
     tm_log1("cond", "POP_JUMP_ON_FALSE %d", i);
     if( !_tm_bool( TM_POP() )){
       s = tags[i];
+      //s += i * 3;
+      continue;
     }
-    goto start;
+    break;
   }
 
   case JUMP_ON_TRUE:{
     tm_log1("cond", "JUMP_ON_TRUE %d", i);
     if( _tm_bool( TM_TOP() )){
+      // s += i * 3;
       s = tags[i];
+      continue;
     }
-    goto start;
+    break;
   }
 
   case JUMP_ON_FALSE:{
     tm_log1("cond", "JUMP_ON_FALSE %d", i);
     if( !_tm_bool( TM_TOP() )){
+      // s += i * 3;
       s = tags[i];
+      continue;
     }
-    goto start;
+    break;
   }
 
   case JUMP:
     tm_log1("cond", "JUMP %d", i);
+    // s += (i+1) * 3;
     s = tags[i];
-    goto start;
+    continue;
 
   case TM_EOF:{
     tm_log0("stack", "TM_EOF");
@@ -427,12 +455,20 @@ tm_obj tm_eval( tm_obj fnc, tm_obj params ){
   
   case SETJUMP:{
     f->jmp = tags[i];
-    goto start;
+    break;
   }
+  
+  /*
+  case UP_JUMP:{
+    s-=i*3;
+    continue;
+  }*/
 
   default:
     tm_raise("BAD INSTRUCTION, %d\n  globals() = \n@", ins,get_fnc_globals(f->fnc));
   goto end;
+}
+  s+=3;
 }
 
   end:

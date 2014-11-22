@@ -5,15 +5,17 @@ tm_obj str_new(char *s , int size)
 {
 	tm_str* str = tm_alloc( sizeof( tm_str ));
 	if( size > 0 ){
-		str->inHeap = 1;
+		str->stype = 1;
 		str->value = tm_alloc( size + 1);
 		str->len = size;
 		if( s != NULL ){
 			memcpy(str->value, s, size);
-		}
+		}else{
+            str->stype = 1;
+        }
 		str->value[size] = '\0'; 
 	}else{
-		str->inHeap = 0;
+		str->stype = 0;
 		if( size == 0 ){
 			str->value = "";
 			str->len = 0;
@@ -33,7 +35,7 @@ void str_free( tm_str *str){
     int old = tm->allocated_mem;
     printf("free string %p...\n", str);
 #endif
-	if( str->inHeap ){
+	if( str->stype ){
 		tm_free( str->value, str->len + 1);
 	}
 	tm_free(str, sizeof(tm_str));

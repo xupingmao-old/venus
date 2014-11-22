@@ -1,5 +1,5 @@
 from parse import *
-from instruction import *
+from codegen import *
 
 def store(t):
     if t.type == 'name':
@@ -23,7 +23,6 @@ def jump( p, ins = JUMP):
 
 def tag( p):
     emit(TAG, p)
-
 op_map = {
     '+':ADD,
     '-':SUB,
@@ -40,7 +39,6 @@ op_map = {
     'notin' : NOTIN,
     'get':GET
 }
-op_list = op_map.keys()
 op_ext_map = {
     '+=' : ADD,
     '-=' : SUB,
@@ -48,7 +46,6 @@ op_ext_map = {
     '/=' : DIV,
     '%=' : MOD
 }
-op_ext_list = op_ext_map.keys()
 
 start_tag_list = [-1]
 end_tag_list = [-1]
@@ -166,13 +163,15 @@ def encode_while(tk):
     encode_item(tk.a)
     jump(end_tag, POP_JUMP_ON_FALSE)
     encode_item(tk.b)
+    #emit(UP_JUMP, start_tag)
     jump(start_tag)
     tag(end_tag)
     # clear while stack
     start_tag_list.pop()
     end_tag_list.pop()
 def encode_continue(tk):
-    jump( start_tag_list[-1] )
+    #emit( UP_JUMP, start_tag_list[-1] )
+    jump(start_tag_list[-1])
 def encode_break(tk):
     jump( end_tag_list [-1] )
 def encode_from(tk):
@@ -221,6 +220,7 @@ def encode_for(tk):
     # if it is not in globals of the scope
     store( tk.a.a )
     encode_item(tk.b)
+    #emit(UP_JUMP, start_tag)
     jump(start_tag)
     tag(end_tag)
     # clear for stack
@@ -294,30 +294,29 @@ def encode_item( tk ):
 load_type_list = ['number', 'name', "string", 'None']
 
 def encode(content):
-    r = parse(content)
-    encode_item(r)
-
-def b_compile(src, des = None):
-    return _compile(load(src), des)
-
-def _compile(txt, des = None):
     global tag_count
     tag_count = 0
     ins_init()
+    r = parse(content)
+    encode_item(r)
+
+def compile2(src, des = None):
+    return _compile(load(src), des)
+
+def _compile(txt, des = None):
     encode( txt )
     code = gen_code(tag_count)
     if des: save(des, code)
     return code
+def compile2list(src):
+    encode(load(src))
+    return gen_code(tag_count, True)
     
 def main( ):
-    # import sys
     if len(ARGV) < 2:pass
     elif len(ARGV) == 2:
-        b_compile(ARGV[1], 'bin')
+        compile2(ARGV[1], 'bin')
     elif len(ARGV) == 3:
-        b_compile(ARGV[1], ARGV[2])
-    # print('\n\n==========constants=============')
-    # print_constants()
-    # input("pause")
+        compile2(ARGV[1], ARGV[2])
 if __name__ == "__main__":
     main()

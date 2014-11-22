@@ -30,6 +30,7 @@ tm_dict* _dict_new();
 void dict_free(tm_dict* dict);
 void dict_set( tm_dict* dict, tm_obj key, tm_obj val);
 int dict_iget(tm_dict* dict, tm_obj key, tm_obj *des);
+dict_node* dict_get_node(tm_dict* dict, tm_obj key);
 int dict_inext(tm_dict* dict, tm_obj *key, tm_obj* val);
 void dict_print(tm_dict* dict);
 void dict_iter_init(tm_dict* dict);

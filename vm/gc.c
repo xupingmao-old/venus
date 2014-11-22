@@ -11,11 +11,6 @@ void gc_init( ){
 
 	int init_size = 100;
 	tm->all = _list_new(init_size);
-
-	// tm->black = _list_new(init_size);
-	// tm->white = _list_new(init_size);
-	// tm->strings = dict_new_();
-	// tm->strings = _dict_new();
 }
 tm_obj gc_track( tm_obj v){
 	switch( v.type ){
@@ -54,19 +49,14 @@ tm_obj gc_track( tm_obj v){
 void gc_mark(tm_obj o){
 	if( o.type == TM_NUM || o.type == TM_NON)
         return;
-//    tm_log("mark", "mark object @", _tm_type(o));
-    /*
-	if( GC_REACHED_SIGN == o.value.gc->marked )
-		return;*/
-    // tm_printf_only_type("mark object @\n", o);
 	switch(o.type){
 		case TM_STR:{
             if( o.value.str->marked ) return;
 			o.value.str->marked = GC_REACHED_SIGN;
-			break;
+            break;
 		}
 		case TM_LST:{
-                if( get_list(o)->marked ) return;
+            if( get_list(o)->marked ) return;
 				get_list(o)->marked = GC_REACHED_SIGN;
 				tm_list* list = get_list(o);
 				int i;for(i = 0; i < list->len; i++){
@@ -97,7 +87,6 @@ void gc_mark(tm_obj o){
             if( get_mod(o)->marked ) return;
 			get_mod(o)->marked = GC_REACHED_SIGN;
 			gc_mark(get_mod(o)->code);
-			//gc_mark(get_mod(o)->name);
 			gc_mark(get_mod(o)->file);
 			gc_mark(get_mod(o)->constants);
 			gc_mark(get_mod(o)->globals);
@@ -112,8 +101,7 @@ void gc_mark_frames(){
 		tm_frame* f = tm->frames+i;
         tm_log("mark", "mark frame %d", i);
 		gc_mark(f->new_objs);
-        // gc_mark(f->globals);
-        // gc_mark(f->constants);
+        gc_mark(f->params);
         gc_mark(f->fnc);
 	}
 }
@@ -185,9 +173,8 @@ void gc_full(tm_obj ret){
     tm_log0("gc", "full gc start ...");
 
     tm_log("gc", "mark ret %t", ret);
+    
     gc_mark(ret);
-
-    tm_log0("gc", "mark root");
 	gc_mark(tm->root);
 
 	gc_mark_frames();
@@ -218,7 +205,6 @@ void gc_free(){
 	list_free( tm->all);
 	// list_free( tm->black );
 	// list_free( tm->white);
-	// dict_free( tm->strings);
 
 #if DEBUG_GC
 	printf("\nafter gc , allocated_mem: %d\n", tm->allocated_mem);

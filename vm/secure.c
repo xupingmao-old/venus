@@ -49,6 +49,7 @@ struct tm_check_result_st code_check(tm_obj _mod,  unsigned char*s , int isFuncD
     while(1){
         int ins = next_byte(s);
         int val = next_short(s);
+        // printf("code check %d, %d\n", ins, val);
         len+=3;
         switch(ins){
         case NEW_STRING:
@@ -72,6 +73,7 @@ struct tm_check_result_st code_check(tm_obj _mod,  unsigned char*s , int isFuncD
         case JUMP:
         case TM_FOR:
         case SETJUMP:
+        case UP_JUMP:
         case LIST:
         case DICT:
             break;
@@ -79,6 +81,12 @@ struct tm_check_result_st code_check(tm_obj _mod,  unsigned char*s , int isFuncD
             stacksize-=3;
             break;
         case DICT_SET:
+        case LT_JUMP_ON_FALSE:
+        case GT_JUMP_ON_FALSE:
+        case LTEQ_JUMP_ON_FALSE:
+        case GTEQ_JUMP_ON_FALSE:
+        case EQEQ_JUMP_ON_FALSE:
+        case NOTEQ_JUMP_ON_FALSE:
             stacksize-=2;
 			break;
         case STORE_LOCAL:
@@ -133,7 +141,7 @@ struct tm_check_result_st code_check(tm_obj _mod,  unsigned char*s , int isFuncD
             mod->checked = 1;
             goto ret;
         default:
-			tm_raise("code_check: BAD INSTRUCTION @, handled code len = @", number_new(ins),number_new(len));
+			tm_raise("code_check: BAD INSTRUCTION %d, handled code len = %d\n", ins, len);
         }
     }
     ret:

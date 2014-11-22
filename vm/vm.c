@@ -112,6 +112,7 @@ void reg_builtins(){
         {"add_type_method", tm_add_type_method},
         {"_raise", btm_raise},
         {"raise", btm_raise},
+        {"system", tm_system},
         {NULL, 0}
     };
     for(i = 0; builtins[i].name != NULL; i++){
@@ -184,6 +185,7 @@ void load_bultin_module(char* fname, unsigned char* s, int codelen){
   get_func(fnc)->name = obj__main__;
   protected_run( fnc , obj_none);
   // tm_set( tm->modules, mod_name, get_mod(mod)->globals);
+  // printf("build module %s\n", fname);
 }
 
 void frames_init(){
@@ -194,6 +196,7 @@ void frames_init(){
     f->stack = tm_alloc(f->stacksize * sizeof(tm_obj));
     tm_log3("frame", "alloc frame %d: %p, stack = %p", i, f , f->stack);
     f->new_objs = list_new(2);
+    f->params = list_new(2);
     f->ex = obj_none;
     f->line = obj_none;
     f->fnc = obj_none;
@@ -302,7 +305,8 @@ int tm_run(int argc, char* argv[]){
     load_bultin_module("tokenize", tokenize_pyc, -1);  
     load_bultin_module("expression", expression_pyc, -1);  
     load_bultin_module("parse", parse_pyc,-1);  
-    load_bultin_module("instruction", instruction_pyc, -1);  
+    load_bultin_module("tmcode", tmcode_pyc,-1);  
+    load_bultin_module("codegen", codegen_pyc, -1);  
     load_bultin_module("encode", encode_pyc, -1);  
     enable_log();
     tm_log0("mod", "modules loading done");

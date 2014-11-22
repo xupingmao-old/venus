@@ -180,11 +180,28 @@ tm_obj tm_not_equals( tm_obj a, tm_obj b){
 	}                           \
 }
 
+#define tm_comp2( fnc_name, op) int fnc_name(tm_obj a, tm_obj b) {      \
+	if( a.type != b.type )                             \
+		tm_raise( #fnc_name"(): can not compare [@] and [@]", _obj_info(a), _obj_info(b));                 \
+	switch(a.type){                      \
+		case TM_NUM: return  get_num(a) op get_num(b); \
+		case TM_STR: return  strcmp( get_str(a) , get_str(b)) op 0; \
+		default : tm_raise(#fnc_name"() not support yet"); \
+	}                           \
+    return 0;\
+}
+
 tm_comp( tm_lt, < );
 tm_comp( tm_gt, >);
 tm_comp( tm_lteq, <=);
 tm_comp( tm_gteq, >=);
 
+tm_comp2( tm_bool_lt, <);
+tm_comp2( tm_bool_gt, >);
+tm_comp2( tm_bool_lteq, <= );
+tm_comp2( tm_bool_gteq, >= );
+#define tm_bool_eqeq tm_eq
+#define tm_bool_noteq !tm_eq
 
 tm_obj tm_mul( tm_obj a, tm_obj b){
 	if( a.type == b.type && a.type == TM_NUM){

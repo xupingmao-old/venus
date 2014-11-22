@@ -679,6 +679,12 @@ tm_obj tm_slice( tm_obj p){
     return obj_none;
 }
 
+tm_obj tm_system(tm_obj p){
+    tm_obj m = get_arg(p, 0, TM_STR);
+    int rs = system(get_str(m));
+    return number_new(rs);
+}
+
 /*
 tm_obj def_mod_global(tm_obj p){
     tm_obj mod = get_arg(p, 0, TM_STR);

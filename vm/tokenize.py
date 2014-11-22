@@ -14,7 +14,8 @@ def u_error(ctx,s,i):
     if y < 100: p += '  '
     r = p + str(y) + ": " + line + "\n"
     r += "     "+" "*x+"^" +'\n'
-    raise( 'error: '+ctx+'\n'+r )
+    print( 'error: '+ctx+'\n'+r )
+    raise
 
 ISYMBOLS = '`-=[];,./~!@$%^&*()+{}:<>?'
 SYMBOLS = [
@@ -131,7 +132,7 @@ def do_symbol(s,i,l):
 
 def do_number(s,i,l):
     # v,i,c =s[i],i+1,s[i]
-    v=s[i];i+=1;c=s[i]
+    v=s[i];i+=1;c=None
     while i<l:
         c = s[i]
         if (c < '0' or c > '9') and (c < 'a' or c > 'f') and c != 'x': break

@@ -232,13 +232,25 @@ void dict_set(tm_dict* dict, tm_obj key, tm_obj val){
 	*pre = node;
 }
 
+dict_node* dict_get_node(tm_dict* dict, tm_obj key){
+    int hash = dict_index( key, dict->cap);
+	dict_node* node = dict->nodes[hash];
+	while( node != NULL ){
+		if(tm_equals(node->key, key)){
+			return node;
+		}
+		node = node->next;
+	}
+	return NULL;
+}
+
 
 int dict_iget(tm_dict* dict,tm_obj key,tm_obj *des){
 	int hash = dict_index( key, dict->cap);
 	dict_node* node = dict->nodes[hash];
 	while( node != NULL ){
 		if(tm_equals(node->key, key)){
-			*des = node->val;
+            *des = node->val;
 			return 1;
 		}
 		node = node->next;
